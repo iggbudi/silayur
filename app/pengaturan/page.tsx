@@ -1,12 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_MODULE_CONFIG,
   loadModuleConfig,
   type ModuleKey,
+  type ModuleState,
   saveModuleConfig,
 } from "../lib/module-config";
+import {
+  DEFAULT_ROLE_PERMISSIONS,
+  loadRolePermissions,
+  PERMISSION_MODULES,
+  ROLE_DEFINITIONS,
+  saveRolePermissions,
+  type AccessLevel,
+  type PermissionModuleKey,
+  type RoleKey,
+} from "../lib/role-permissions";
 
 type SectionKey =
   | "modules"
@@ -148,6 +160,12 @@ const initialItems: Record<SectionKey, ConfigItem[]> = {
   ],
 };
 
+const accessOptions: Array<{ value: AccessLevel; label: string }> = [
+  { value: "none", label: "Tidak ada" },
+  { value: "view", label: "Lihat" },
+  { value: "manage", label: "Kelola" },
+];
+
 function LocalToggle({
   active,
   label,
@@ -182,13 +200,27 @@ export default function SettingsPage() {
   const [newName, setNewName] = useState("");
   const [newDetail, setNewDetail] = useState("");
   const [savedNotice, setSavedNotice] = useState(false);
+  const [moduleConfig, setModuleConfig] = useState<ModuleState>(
+    DEFAULT_MODULE_CONFIG,
+  );
+  const [selectedRole, setSelectedRole] = useState<RoleKey>("manager");
+  const [rolePermissions, setRolePermissions] = useState(
+    DEFAULT_ROLE_PERMISSIONS,
+  );
 
   const section = sections.find((item) => item.key === activeSection)!;
   const currentItems = items[activeSection];
   const activeTotal = currentItems.filter((item) => item.active).length;
+  const selectedRoleDefinition = ROLE_DEFINITIONS.find(
+    (role) => role.key === selectedRole,
+  )!;
 
+  /* Local storage is intentionally applied after hydration. */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const storedConfig = loadModuleConfig();
+    setModuleConfig(storedConfig);
+    setRolePermissions(loadRolePermissions());
     setItems((current) => ({
       ...current,
       modules: current.modules.map((item) =>
@@ -198,6 +230,7 @@ export default function SettingsPage() {
       ),
     }));
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -217,23 +250,44 @@ export default function SettingsPage() {
   }
 
   function toggleItem(id: number) {
-    setItems((current) => {
-      const nextSection = current[activeSection].map((item) =>
+    const selectedItem = items[activeSection].find((item) => item.id === id);
+    if (!selectedItem) return;
+
+    setItems((current) => ({
+      ...current,
+      [activeSection]: current[activeSection].map((item) =>
         item.id === id ? { ...item, active: !item.active } : item,
-      );
+      ),
+    }));
 
-      if (activeSection === "modules") {
-        const nextConfig = nextSection.reduce(
-          (config, item) => {
-            if (item.moduleKey) config[item.moduleKey] = item.active;
-            return config;
-          },
-          { ...DEFAULT_MODULE_CONFIG },
-        );
-        saveModuleConfig(nextConfig);
-      }
+    if (activeSection === "modules" && selectedItem.moduleKey) {
+      const nextConfig = {
+        ...moduleConfig,
+        [selectedItem.moduleKey]: !selectedItem.active,
+      };
+      saveModuleConfig(nextConfig);
+      setModuleConfig(nextConfig);
+    }
 
-      return { ...current, [activeSection]: nextSection };
+    setSavedNotice(true);
+  }
+
+  function changeRoleAccess(
+    moduleKey: PermissionModuleKey,
+    access: AccessLevel,
+  ) {
+    if (selectedRole === "super_admin") return;
+
+    setRolePermissions((current) => {
+      const next = {
+        ...current,
+        [selectedRole]: {
+          ...current[selectedRole],
+          [moduleKey]: access,
+        },
+      };
+      saveRolePermissions(next);
+      return next;
     });
     setSavedNotice(true);
   }
@@ -275,12 +329,12 @@ export default function SettingsPage() {
         </div>
 
         <nav aria-label="Navigasi utama">
-          <a className="nav-link" href="/">
+          <Link className="nav-link" href="/">
             <span className="nav-icon" aria-hidden="true">
               ⌂
             </span>
             <span>Dashboard</span>
-          </a>
+          </Link>
           <a className="nav-link nav-active" href="/pengaturan">
             <span className="nav-icon" aria-hidden="true">
               ⚙
@@ -291,7 +345,7 @@ export default function SettingsPage() {
 
         <div className="settings-side-note">
           <span>Mode prototype</span>
-          <strong>Status modul sudah tersimpan</strong>
+          <strong>Modul dan akses role tersimpan</strong>
           <p>Konfigurasi lain masih kembali ke awal setelah halaman dimuat ulang.</p>
         </div>
 
@@ -307,9 +361,9 @@ export default function SettingsPage() {
       <section className="workspace settings-workspace">
         <header className="settings-header">
           <div>
-            <a href="/" className="back-link">
+            <Link href="/" className="back-link">
               ← Kembali ke dashboard
-            </a>
+            </Link>
             <div className="settings-title-line">
               <div>
                 <h1>Pengaturan Operasional</h1>
@@ -325,7 +379,7 @@ export default function SettingsPage() {
 
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 2</span>
+            <span className="section-kicker">Checkpoint 4</span>
             <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
@@ -437,7 +491,10 @@ export default function SettingsPage() {
                 />
               </label>
               <span className={savedNotice ? "saved-notice saved-notice-show" : "saved-notice"}>
-                ✓ {activeSection === "modules" ? "Tersimpan di perangkat" : "Perubahan lokal diterapkan"}
+                ✓{" "}
+                {activeSection === "modules" || activeSection === "users"
+                  ? "Tersimpan di perangkat"
+                  : "Perubahan lokal diterapkan"}
               </span>
             </div>
 
@@ -478,6 +535,98 @@ export default function SettingsPage() {
               ) : null}
             </div>
 
+            {activeSection === "users" ? (
+              <section className="role-access-panel" aria-labelledby="role-access-title">
+                <div className="role-access-header">
+                  <div>
+                    <span className="section-kicker">Hak akses</span>
+                    <h3 id="role-access-title">Akses Modul per Role</h3>
+                    <p>
+                      Pilih role, lalu tentukan apakah modul disembunyikan,
+                      hanya dapat dilihat, atau dapat dikelola.
+                    </p>
+                  </div>
+                  <label className="role-picker">
+                    <span>Pilih role</span>
+                    <select
+                      value={selectedRole}
+                      onChange={(event) => {
+                        setSelectedRole(event.target.value as RoleKey);
+                        setSavedNotice(false);
+                      }}
+                    >
+                      {ROLE_DEFINITIONS.map((role) => (
+                        <option value={role.key} key={role.key}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="selected-role-summary">
+                  <div>
+                    <strong>{selectedRoleDefinition.label}</strong>
+                    <p>{selectedRoleDefinition.description}</p>
+                  </div>
+                  {selectedRole === "super_admin" ? (
+                    <span className="permission-lock-badge">Akses penuh terkunci</span>
+                  ) : (
+                    <span className="permission-local-badge">Tersimpan lokal</span>
+                  )}
+                </div>
+
+                <div className="permission-list">
+                  {PERMISSION_MODULES.map((module) => {
+                    const globallyInactive =
+                      module.globalModuleKey &&
+                      !moduleConfig[module.globalModuleKey];
+                    const currentAccess =
+                      rolePermissions[selectedRole][module.key];
+
+                    return (
+                      <article className="permission-row" key={module.key}>
+                        <div className="permission-copy">
+                          <div>
+                            <strong>{module.label}</strong>
+                            {globallyInactive ? (
+                              <span className="module-off-badge">
+                                Modul nonaktif
+                              </span>
+                            ) : null}
+                          </div>
+                          <p>{module.description}</p>
+                        </div>
+                        <div
+                          className="permission-levels"
+                          aria-label={`Akses ${module.label} untuk ${selectedRoleDefinition.label}`}
+                        >
+                          {accessOptions.map((option) => (
+                            <button
+                              className={`permission-level permission-${option.value} ${
+                                currentAccess === option.value
+                                  ? "permission-selected"
+                                  : ""
+                              }`}
+                              type="button"
+                              key={option.value}
+                              disabled={selectedRole === "super_admin"}
+                              aria-pressed={currentAccess === option.value}
+                              onClick={() =>
+                                changeRoleAccess(module.key, option.value)
+                              }
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
             <div className="settings-help">
               <span>i</span>
               <p>
@@ -485,6 +634,12 @@ export default function SettingsPage() {
                   <>
                     <strong>Status modul sudah persisten.</strong> Refresh halaman
                     atau kembali ke dashboard untuk melihat konfigurasi yang sama.
+                  </>
+                ) : activeSection === "users" ? (
+                  <>
+                    <strong>Hak akses role sudah tersimpan di perangkat.</strong>{" "}
+                    Penerapan izin ke pengguna menunggu fitur login pada fase
+                    berikutnya.
                   </>
                 ) : (
                   <>
