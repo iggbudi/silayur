@@ -1,23 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-type ModuleKey =
-  | "visitors"
-  | "finance"
-  | "operations"
-  | "facilities"
-  | "complaints";
-
-type ModuleState = Record<ModuleKey, boolean>;
-
-const initialModules: ModuleState = {
-  visitors: true,
-  finance: true,
-  operations: true,
-  facilities: true,
-  complaints: true,
-};
+import { useEffect, useMemo, useState } from "react";
+import {
+  DEFAULT_MODULE_CONFIG,
+  loadModuleConfig,
+  MODULE_CHANGE_EVENT,
+  type ModuleKey,
+  type ModuleState,
+  saveModuleConfig,
+} from "./lib/module-config";
 
 const moduleOptions: Array<{
   key: ModuleKey;
@@ -112,11 +103,24 @@ function Toggle({
 }
 
 export default function DashboardPage() {
-  const [modules, setModules] = useState<ModuleState>(initialModules);
+  const [modules, setModules] = useState<ModuleState>(DEFAULT_MODULE_CONFIG);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const activeCount = Object.values(modules).filter(Boolean).length;
+
+  useEffect(() => {
+    const syncModules = () => setModules(loadModuleConfig());
+
+    syncModules();
+    window.addEventListener("storage", syncModules);
+    window.addEventListener(MODULE_CHANGE_EVENT, syncModules);
+
+    return () => {
+      window.removeEventListener("storage", syncModules);
+      window.removeEventListener(MODULE_CHANGE_EVENT, syncModules);
+    };
+  }, []);
 
   const metrics = useMemo(() => {
     const items = [];
@@ -218,7 +222,17 @@ export default function DashboardPage() {
   }, [modules]);
 
   function toggleModule(key: ModuleKey) {
-    setModules((current) => ({ ...current, [key]: !current[key] }));
+    setModules((current) => {
+      const next = { ...current, [key]: !current[key] };
+      saveModuleConfig(next);
+      return next;
+    });
+  }
+
+  function activateAllModules() {
+    const next = { ...DEFAULT_MODULE_CONFIG };
+    saveModuleConfig(next);
+    setModules(next);
   }
 
   return (
@@ -357,8 +371,8 @@ export default function DashboardPage() {
             </div>
 
             <div className="module-panel-footer">
-              <span>Prototype ini belum menyimpan perubahan.</span>
-              <button type="button" onClick={() => setModules(initialModules)}>
+              <span>Konfigurasi modul tersimpan di perangkat ini.</span>
+              <button type="button" onClick={activateAllModules}>
                 Aktifkan semua
               </button>
             </div>

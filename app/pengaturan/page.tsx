@@ -1,6 +1,12 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  DEFAULT_MODULE_CONFIG,
+  loadModuleConfig,
+  type ModuleKey,
+  saveModuleConfig,
+} from "../lib/module-config";
 
 type SectionKey =
   | "modules"
@@ -16,6 +22,7 @@ type ConfigItem = {
   detail: string;
   active: boolean;
   badge?: string;
+  moduleKey?: ModuleKey;
 };
 
 const sections: Array<{
@@ -79,11 +86,41 @@ const sections: Array<{
 const initialItems: Record<SectionKey, ConfigItem[]> = {
   modules: [
     { id: 1, name: "Dashboard", detail: "Ringkasan informasi utama", active: true, badge: "Wajib" },
-    { id: 2, name: "Pengunjung", detail: "Kunjungan dan ticketing", active: true },
-    { id: 3, name: "Keuangan", detail: "Pendapatan dan kas harian", active: true },
-    { id: 4, name: "Operasional", detail: "Checklist buka dan tutup", active: true },
-    { id: 5, name: "Fasilitas", detail: "Wahana, inspeksi, dan kebersihan", active: true },
-    { id: 6, name: "Komplain", detail: "Keluhan dan tindak lanjut", active: true },
+    {
+      id: 2,
+      name: "Pengunjung",
+      detail: "Kunjungan dan ticketing",
+      active: true,
+      moduleKey: "visitors",
+    },
+    {
+      id: 3,
+      name: "Keuangan",
+      detail: "Pendapatan dan kas harian",
+      active: true,
+      moduleKey: "finance",
+    },
+    {
+      id: 4,
+      name: "Operasional",
+      detail: "Checklist buka dan tutup",
+      active: true,
+      moduleKey: "operations",
+    },
+    {
+      id: 5,
+      name: "Fasilitas",
+      detail: "Wahana, inspeksi, dan kebersihan",
+      active: true,
+      moduleKey: "facilities",
+    },
+    {
+      id: 6,
+      name: "Komplain",
+      detail: "Keluhan dan tindak lanjut",
+      active: true,
+      moduleKey: "complaints",
+    },
   ],
   tickets: [
     { id: 11, name: "Tiket masuk umum", detail: "Rp15.000 • Data contoh", active: true },
@@ -150,6 +187,18 @@ export default function SettingsPage() {
   const currentItems = items[activeSection];
   const activeTotal = currentItems.filter((item) => item.active).length;
 
+  useEffect(() => {
+    const storedConfig = loadModuleConfig();
+    setItems((current) => ({
+      ...current,
+      modules: current.modules.map((item) =>
+        item.moduleKey
+          ? { ...item, active: storedConfig[item.moduleKey] }
+          : item,
+      ),
+    }));
+  }, []);
+
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return currentItems;
@@ -168,12 +217,24 @@ export default function SettingsPage() {
   }
 
   function toggleItem(id: number) {
-    setItems((current) => ({
-      ...current,
-      [activeSection]: current[activeSection].map((item) =>
+    setItems((current) => {
+      const nextSection = current[activeSection].map((item) =>
         item.id === id ? { ...item, active: !item.active } : item,
-      ),
-    }));
+      );
+
+      if (activeSection === "modules") {
+        const nextConfig = nextSection.reduce(
+          (config, item) => {
+            if (item.moduleKey) config[item.moduleKey] = item.active;
+            return config;
+          },
+          { ...DEFAULT_MODULE_CONFIG },
+        );
+        saveModuleConfig(nextConfig);
+      }
+
+      return { ...current, [activeSection]: nextSection };
+    });
     setSavedNotice(true);
   }
 
@@ -230,8 +291,8 @@ export default function SettingsPage() {
 
         <div className="settings-side-note">
           <span>Mode prototype</span>
-          <strong>Perubahan bersifat sementara</strong>
-          <p>Data kembali ke kondisi awal setelah halaman dimuat ulang.</p>
+          <strong>Status modul sudah tersimpan</strong>
+          <p>Konfigurasi lain masih kembali ke awal setelah halaman dimuat ulang.</p>
         </div>
 
         <div className="sidebar-footer">
@@ -376,7 +437,7 @@ export default function SettingsPage() {
                 />
               </label>
               <span className={savedNotice ? "saved-notice saved-notice-show" : "saved-notice"}>
-                ✓ Perubahan lokal diterapkan
+                ✓ {activeSection === "modules" ? "Tersimpan di perangkat" : "Perubahan lokal diterapkan"}
               </span>
             </div>
 
@@ -420,8 +481,17 @@ export default function SettingsPage() {
             <div className="settings-help">
               <span>i</span>
               <p>
-                <strong>Belum ada penyimpanan.</strong> Tambah dan aktivasi pada
-                halaman ini hanya untuk memvalidasi alur operator.
+                {activeSection === "modules" ? (
+                  <>
+                    <strong>Status modul sudah persisten.</strong> Refresh halaman
+                    atau kembali ke dashboard untuk melihat konfigurasi yang sama.
+                  </>
+                ) : (
+                  <>
+                    <strong>Bagian ini belum disimpan.</strong> Tambah dan aktivasi
+                    hanya untuk memvalidasi alur operator.
+                  </>
+                )}
               </p>
             </div>
           </section>
