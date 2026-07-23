@@ -256,6 +256,12 @@ export default function DashboardPage() {
               </button>
             );
           })}
+          <a className="nav-link" href="/pengaturan">
+            <span className="nav-icon" aria-hidden="true">
+              ⚙
+            </span>
+            <span>Pengaturan</span>
+          </a>
         </nav>
 
         <div className="sidebar-card">
