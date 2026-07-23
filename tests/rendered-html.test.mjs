@@ -42,7 +42,27 @@ test("server-renders the settings route", async () => {
   const html = await response.text();
   assert.match(html, /Pengaturan Operasional/);
   assert.match(html, /Pengguna &amp; role/);
-  assert.match(html, /Checkpoint 4/);
+  assert.match(html, /Checkpoint 5/);
+});
+
+test("defines persistent users with one assigned role", async () => {
+  const [settingsPage, users] = await Promise.all([
+    readFile(
+      new URL("../app/pengaturan/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../app/lib/user-config.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(settingsPage, /Tambah pengguna/);
+  assert.match(settingsPage, /Edit pengguna/);
+  assert.match(settingsPage, /Akses turunan/);
+  assert.match(settingsPage, /Minimal satu Super Admin harus tetap aktif/);
+
+  assert.match(users, /silayur\.users\.v1/);
+  assert.match(users, /role: RoleKey/);
+  assert.match(users, /username/);
+  assert.match(users, /saveUsers/);
 });
 
 test("defines persistent access levels for every role and module", async () => {

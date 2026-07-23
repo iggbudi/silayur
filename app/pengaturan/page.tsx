@@ -19,6 +19,12 @@ import {
   type PermissionModuleKey,
   type RoleKey,
 } from "../lib/role-permissions";
+import {
+  DEFAULT_USERS,
+  loadUsers,
+  saveUsers,
+  type LocalUser,
+} from "../lib/user-config";
 
 type SectionKey =
   | "modules"
@@ -154,10 +160,7 @@ const initialItems: Record<SectionKey, ConfigItem[]> = {
     { id: 43, name: "Tenant", detail: "Setoran atau bagi hasil", active: false },
     { id: 44, name: "Outbound", detail: "Paket kegiatan kelompok", active: false },
   ],
-  users: [
-    { id: 51, name: "Admin Resepsionis", detail: "Administrator • Aktif", active: true },
-    { id: 52, name: "Manajer Operasional", detail: "Manajer • Belum diundang", active: false },
-  ],
+  users: [],
 };
 
 const accessOptions: Array<{ value: AccessLevel; label: string }> = [
@@ -165,6 +168,15 @@ const accessOptions: Array<{ value: AccessLevel; label: string }> = [
   { value: "view", label: "Lihat" },
   { value: "manage", label: "Kelola" },
 ];
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
 
 function LocalToggle({
   active,
@@ -207,10 +219,19 @@ export default function SettingsPage() {
   const [rolePermissions, setRolePermissions] = useState(
     DEFAULT_ROLE_PERMISSIONS,
   );
+  const [users, setUsers] = useState<LocalUser[]>(DEFAULT_USERS);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
+  const [userUsername, setUserUsername] = useState("");
+  const [userRole, setUserRole] = useState<RoleKey>("viewer");
+  const [userFormError, setUserFormError] = useState("");
 
   const section = sections.find((item) => item.key === activeSection)!;
   const currentItems = items[activeSection];
-  const activeTotal = currentItems.filter((item) => item.active).length;
+  const activeTotal =
+    activeSection === "users"
+      ? users.filter((user) => user.active).length
+      : currentItems.filter((item) => item.active).length;
   const selectedRoleDefinition = ROLE_DEFINITIONS.find(
     (role) => role.key === selectedRole,
   )!;
@@ -221,6 +242,7 @@ export default function SettingsPage() {
     const storedConfig = loadModuleConfig();
     setModuleConfig(storedConfig);
     setRolePermissions(loadRolePermissions());
+    setUsers(loadUsers());
     setItems((current) => ({
       ...current,
       modules: current.modules.map((item) =>
@@ -242,11 +264,33 @@ export default function SettingsPage() {
     );
   }, [currentItems, query]);
 
+  const filteredUsers = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return users;
+    return users.filter((user) => {
+      const role = ROLE_DEFINITIONS.find((item) => item.key === user.role);
+      return (
+        user.name.toLowerCase().includes(normalized) ||
+        user.username.toLowerCase().includes(normalized) ||
+        role?.label.toLowerCase().includes(normalized)
+      );
+    });
+  }, [query, users]);
+
+  function resetUserForm() {
+    setEditingUserId(null);
+    setUserName("");
+    setUserUsername("");
+    setUserRole("viewer");
+    setUserFormError("");
+  }
+
   function chooseSection(key: SectionKey) {
     setActiveSection(key);
     setQuery("");
     setAdding(false);
     setSavedNotice(false);
+    resetUserForm();
   }
 
   function toggleItem(id: number) {
@@ -289,6 +333,101 @@ export default function SettingsPage() {
       saveRolePermissions(next);
       return next;
     });
+    setSavedNotice(true);
+  }
+
+  function editUser(user: LocalUser) {
+    setEditingUserId(user.id);
+    setUserName(user.name);
+    setUserUsername(user.username);
+    setUserRole(user.role);
+    setUserFormError("");
+    setAdding(true);
+    setSavedNotice(false);
+  }
+
+  function submitUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const name = userName.trim();
+    const username = userUsername.trim().toLowerCase();
+    if (!name || !username) {
+      setUserFormError("Nama dan username wajib diisi.");
+      return;
+    }
+    if (!/^[a-z0-9._@-]+$/.test(username)) {
+      setUserFormError(
+        "Username hanya boleh memakai huruf kecil, angka, titik, @, _ atau -.",
+      );
+      return;
+    }
+    const duplicate = users.some(
+      (user) => user.username === username && user.id !== editingUserId,
+    );
+    if (duplicate) {
+      setUserFormError("Username sudah dipakai pengguna lain.");
+      return;
+    }
+    const editedUser = users.find((user) => user.id === editingUserId);
+    const activeSuperAdmins = users.filter(
+      (user) => user.active && user.role === "super_admin",
+    ).length;
+    if (
+      editedUser?.active &&
+      editedUser.role === "super_admin" &&
+      userRole !== "super_admin" &&
+      activeSuperAdmins === 1
+    ) {
+      setUserFormError("Minimal satu Super Admin harus tetap aktif.");
+      return;
+    }
+
+    const nextUsers = editingUserId
+      ? users.map((user) =>
+          user.id === editingUserId
+            ? { ...user, name, username, role: userRole }
+            : user,
+        )
+      : [
+          ...users,
+          {
+            id: `user-${Date.now()}`,
+            name,
+            username,
+            role: userRole,
+            active: true,
+          },
+        ];
+
+    setUsers(nextUsers);
+    saveUsers(nextUsers);
+    resetUserForm();
+    setAdding(false);
+    setSavedNotice(true);
+  }
+
+  function toggleUser(userId: string) {
+    const selectedUser = users.find((user) => user.id === userId);
+    if (!selectedUser) return;
+
+    const activeSuperAdmins = users.filter(
+      (user) => user.active && user.role === "super_admin",
+    ).length;
+    if (
+      selectedUser.active &&
+      selectedUser.role === "super_admin" &&
+      activeSuperAdmins === 1
+    ) {
+      setUserFormError("Minimal satu Super Admin harus tetap aktif.");
+      return;
+    }
+
+    const nextUsers = users.map((user) =>
+      user.id === userId ? { ...user, active: !user.active } : user,
+    );
+    setUsers(nextUsers);
+    saveUsers(nextUsers);
+    setUserFormError("");
     setSavedNotice(true);
   }
 
@@ -345,7 +484,7 @@ export default function SettingsPage() {
 
         <div className="settings-side-note">
           <span>Mode prototype</span>
-          <strong>Modul dan akses role tersimpan</strong>
+          <strong>Modul, pengguna, dan role tersimpan</strong>
           <p>Konfigurasi lain masih kembali ke awal setelah halaman dimuat ulang.</p>
         </div>
 
@@ -379,7 +518,7 @@ export default function SettingsPage() {
 
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 4</span>
+            <span className="section-kicker">Checkpoint 5</span>
             <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
@@ -439,7 +578,9 @@ export default function SettingsPage() {
                     className="primary-action"
                     type="button"
                     onClick={() => {
-                      setAdding((value) => !value);
+                      const willOpen = !adding;
+                      if (activeSection === "users") resetUserForm();
+                      setAdding(willOpen);
                       setSavedNotice(false);
                     }}
                   >
@@ -449,7 +590,79 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {adding ? (
+            {adding && activeSection === "users" ? (
+              <form className="user-form" onSubmit={submitUser}>
+                <div className="user-form-heading">
+                  <div>
+                    <strong>
+                      {editingUserId ? "Edit pengguna" : "Tambah pengguna"}
+                    </strong>
+                    <p>Satu pengguna memiliki satu role utama.</p>
+                  </div>
+                  <span>Data lokal</span>
+                </div>
+                <div className="user-form-grid">
+                  <label>
+                    <span>Nama lengkap</span>
+                    <input
+                      value={userName}
+                      placeholder="Contoh: Siti Rahma"
+                      autoFocus
+                      onChange={(event) => {
+                        setUserName(event.target.value);
+                        setUserFormError("");
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span>Username</span>
+                    <input
+                      value={userUsername}
+                      placeholder="contoh: siti.rahma"
+                      onChange={(event) => {
+                        setUserUsername(event.target.value);
+                        setUserFormError("");
+                      }}
+                    />
+                  </label>
+                  <label>
+                    <span>Role</span>
+                    <select
+                      value={userRole}
+                      onChange={(event) =>
+                        setUserRole(event.target.value as RoleKey)
+                      }
+                    >
+                      {ROLE_DEFINITIONS.map((role) => (
+                        <option value={role.key} key={role.key}>
+                          {role.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                {userFormError ? (
+                  <p className="user-form-error" role="alert">
+                    {userFormError}
+                  </p>
+                ) : null}
+                <div className="user-form-actions">
+                  <button type="submit">
+                    {editingUserId ? "Simpan perubahan" : "Tambahkan pengguna"}
+                  </button>
+                  <button
+                    className="cancel-action"
+                    type="button"
+                    onClick={() => {
+                      resetUserForm();
+                      setAdding(false);
+                    }}
+                  >
+                    Batal
+                  </button>
+                </div>
+              </form>
+            ) : adding ? (
               <form className="quick-add-form" onSubmit={addItem}>
                 <div>
                   <label htmlFor="config-name">Nama</label>
@@ -498,7 +711,11 @@ export default function SettingsPage() {
               </span>
             </div>
 
-            <div className="config-list">
+            <div
+              className={`config-list ${
+                activeSection === "users" ? "config-list-hidden" : ""
+              }`}
+            >
               {filteredItems.map((item) => {
                 const locked = activeSection === "modules" && item.name === "Dashboard";
                 return (
@@ -534,6 +751,108 @@ export default function SettingsPage() {
                 </div>
               ) : null}
             </div>
+
+            {activeSection === "users" ? (
+              <div className="user-list">
+                {filteredUsers.map((user) => {
+                  const role = ROLE_DEFINITIONS.find(
+                    (item) => item.key === user.role,
+                  )!;
+                  const grantedModules = PERMISSION_MODULES.filter(
+                    (module) =>
+                      rolePermissions[user.role][module.key] !== "none",
+                  );
+
+                  return (
+                    <article
+                      className={`user-card ${
+                        user.active ? "" : "user-card-inactive"
+                      }`}
+                      key={user.id}
+                    >
+                      <div className="user-card-main">
+                        <span className="user-avatar" aria-hidden="true">
+                          {getInitials(user.name)}
+                        </span>
+                        <div className="user-identity">
+                          <div>
+                            <strong>{user.name}</strong>
+                            <span
+                              className={`user-status ${
+                                user.active ? "user-status-active" : ""
+                              }`}
+                            >
+                              {user.active ? "Aktif" : "Nonaktif"}
+                            </span>
+                          </div>
+                          <p>@{user.username}</p>
+                          <span className="user-role-badge">{role.label}</span>
+                        </div>
+                        <div className="user-card-actions">
+                          <button type="button" onClick={() => editUser(user)}>
+                            Edit
+                          </button>
+                          <LocalToggle
+                            active={user.active}
+                            label={user.name}
+                            onChange={() => toggleUser(user.id)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="user-access-preview">
+                        <span>Akses turunan</span>
+                        <div>
+                          {grantedModules.map((module) => {
+                            const access =
+                              rolePermissions[user.role][module.key];
+                            const globallyInactive =
+                              module.globalModuleKey &&
+                              !moduleConfig[module.globalModuleKey];
+                            return (
+                              <span
+                                className={`user-access-chip access-${access} ${
+                                  globallyInactive ? "access-inactive" : ""
+                                }`}
+                                title={
+                                  globallyInactive
+                                    ? "Modul sedang dinonaktifkan secara global"
+                                    : undefined
+                                }
+                                key={module.key}
+                              >
+                                {module.label}
+                                <small>
+                                  {globallyInactive
+                                    ? "Nonaktif"
+                                    : access === "manage"
+                                      ? "Kelola"
+                                      : "Lihat"}
+                                </small>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+
+                {filteredUsers.length === 0 ? (
+                  <div className="config-empty">
+                    <span>⌕</span>
+                    <strong>Tidak ada pengguna</strong>
+                    <p>Coba kata kunci lain atau tambahkan pengguna baru.</p>
+                  </div>
+                ) : null}
+
+                {!adding && userFormError ? (
+                  <p className="user-form-error user-list-error" role="alert">
+                    {userFormError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {activeSection === "users" ? (
               <section className="role-access-panel" aria-labelledby="role-access-title">
@@ -637,9 +956,9 @@ export default function SettingsPage() {
                   </>
                 ) : activeSection === "users" ? (
                   <>
-                    <strong>Hak akses role sudah tersimpan di perangkat.</strong>{" "}
-                    Penerapan izin ke pengguna menunggu fitur login pada fase
-                    berikutnya.
+                    <strong>Pengguna dan hak akses role tersimpan di perangkat.</strong>{" "}
+                    Login dan pengamanan route belum diterapkan pada checkpoint
+                    ini.
                   </>
                 ) : (
                   <>
