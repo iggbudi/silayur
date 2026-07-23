@@ -10,15 +10,18 @@ import {
   saveModuleConfig,
 } from "../lib/module-config";
 import {
+  createRolePermissionRow,
+  DEFAULT_ROLE_DEFINITIONS,
   DEFAULT_ROLE_PERMISSIONS,
   loadRolePermissions,
   PERMISSION_MODULES,
-  ROLE_DEFINITIONS,
   saveRolePermissions,
   type AccessLevel,
   type PermissionModuleKey,
+  type RoleDefinition,
   type RoleKey,
 } from "../lib/role-permissions";
+import { loadRoles, saveRoles } from "../lib/role-config";
 import {
   DEFAULT_USERS,
   loadUsers,
@@ -216,9 +219,17 @@ export default function SettingsPage() {
     DEFAULT_MODULE_CONFIG,
   );
   const [selectedRole, setSelectedRole] = useState<RoleKey>("manager");
+  const [roles, setRoles] = useState<RoleDefinition[]>(
+    DEFAULT_ROLE_DEFINITIONS,
+  );
   const [rolePermissions, setRolePermissions] = useState(
     DEFAULT_ROLE_PERMISSIONS,
   );
+  const [roleFormOpen, setRoleFormOpen] = useState(false);
+  const [editingRoleKey, setEditingRoleKey] = useState<RoleKey | null>(null);
+  const [roleLabel, setRoleLabel] = useState("");
+  const [roleDescription, setRoleDescription] = useState("");
+  const [roleFormError, setRoleFormError] = useState("");
   const [users, setUsers] = useState<LocalUser[]>(DEFAULT_USERS);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
@@ -232,16 +243,20 @@ export default function SettingsPage() {
     activeSection === "users"
       ? users.filter((user) => user.active).length
       : currentItems.filter((item) => item.active).length;
-  const selectedRoleDefinition = ROLE_DEFINITIONS.find(
+  const selectedRoleDefinition = roles.find(
     (role) => role.key === selectedRole,
-  )!;
+  ) ?? roles[0];
 
   /* Local storage is intentionally applied after hydration. */
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const storedConfig = loadModuleConfig();
+    const storedRoles = loadRoles();
     setModuleConfig(storedConfig);
-    setRolePermissions(loadRolePermissions());
+    setRoles(storedRoles);
+    setRolePermissions(
+      loadRolePermissions(storedRoles.map((role) => role.key)),
+    );
     setUsers(loadUsers());
     setItems((current) => ({
       ...current,
@@ -268,20 +283,24 @@ export default function SettingsPage() {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return users;
     return users.filter((user) => {
-      const role = ROLE_DEFINITIONS.find((item) => item.key === user.role);
+      const role = roles.find((item) => item.key === user.role);
       return (
         user.name.toLowerCase().includes(normalized) ||
         user.username.toLowerCase().includes(normalized) ||
         role?.label.toLowerCase().includes(normalized)
       );
     });
-  }, [query, users]);
+  }, [query, roles, users]);
 
   function resetUserForm() {
     setEditingUserId(null);
     setUserName("");
     setUserUsername("");
-    setUserRole("viewer");
+    setUserRole(
+      roles.find((role) => role.key === "viewer" && role.active)?.key ??
+        roles.find((role) => role.active)?.key ??
+        "super_admin",
+    );
     setUserFormError("");
   }
 
@@ -326,13 +345,128 @@ export default function SettingsPage() {
       const next = {
         ...current,
         [selectedRole]: {
-          ...current[selectedRole],
+          ...(current[selectedRole] ?? createRolePermissionRow()),
           [moduleKey]: access,
         },
       };
       saveRolePermissions(next);
       return next;
     });
+    setSavedNotice(true);
+  }
+
+  function resetRoleForm() {
+    setRoleFormOpen(false);
+    setEditingRoleKey(null);
+    setRoleLabel("");
+    setRoleDescription("");
+    setRoleFormError("");
+  }
+
+  function addRole() {
+    setEditingRoleKey(null);
+    setRoleLabel("");
+    setRoleDescription("");
+    setRoleFormError("");
+    setRoleFormOpen(true);
+    setSavedNotice(false);
+  }
+
+  function editRole(role: RoleDefinition) {
+    if (role.key === "super_admin") return;
+    setEditingRoleKey(role.key);
+    setRoleLabel(role.label);
+    setRoleDescription(role.description);
+    setRoleFormError("");
+    setRoleFormOpen(true);
+    setSavedNotice(false);
+  }
+
+  function submitRole(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = roleLabel.trim();
+    const description = roleDescription.trim();
+    if (!label) {
+      setRoleFormError("Nama role wajib diisi.");
+      return;
+    }
+    const duplicate = roles.some(
+      (role) =>
+        role.label.toLowerCase() === label.toLowerCase() &&
+        role.key !== editingRoleKey,
+    );
+    if (duplicate) {
+      setRoleFormError("Nama role sudah digunakan.");
+      return;
+    }
+
+    if (editingRoleKey) {
+      const nextRoles = roles.map((role) =>
+        role.key === editingRoleKey
+          ? {
+              ...role,
+              label,
+              description: description || "Belum ada keterangan.",
+            }
+          : role,
+      );
+      setRoles(nextRoles);
+      saveRoles(nextRoles);
+    } else {
+      const newRole: RoleDefinition = {
+        key: `role-${Date.now()}`,
+        label,
+        description: description || "Belum ada keterangan.",
+        active: true,
+        system: false,
+      };
+      const nextRoles = [...roles, newRole];
+      const nextPermissions = {
+        ...rolePermissions,
+        [newRole.key]: createRolePermissionRow(),
+      };
+      setRoles(nextRoles);
+      setRolePermissions(nextPermissions);
+      setSelectedRole(newRole.key);
+      saveRoles(nextRoles);
+      saveRolePermissions(nextPermissions);
+    }
+
+    resetRoleForm();
+    setSavedNotice(true);
+  }
+
+  function toggleRole(roleKey: RoleKey) {
+    if (roleKey === "super_admin") return;
+    const nextRoles = roles.map((role) =>
+      role.key === roleKey ? { ...role, active: !role.active } : role,
+    );
+    setRoles(nextRoles);
+    saveRoles(nextRoles);
+    setSavedNotice(true);
+  }
+
+  function deleteRole(roleKey: RoleKey) {
+    const role = roles.find((item) => item.key === roleKey);
+    if (!role || role.system) return;
+    if (users.some((user) => user.role === roleKey)) {
+      setRoleFormError("Role masih dipakai pengguna dan tidak dapat dihapus.");
+      return;
+    }
+
+    const nextRoles = roles.filter((item) => item.key !== roleKey);
+    const nextPermissions = { ...rolePermissions };
+    delete nextPermissions[roleKey];
+    setRoles(nextRoles);
+    setRolePermissions(nextPermissions);
+    saveRoles(nextRoles);
+    saveRolePermissions(nextPermissions);
+    if (selectedRole === roleKey) {
+      setSelectedRole(
+        nextRoles.find((item) => item.active)?.key ?? "super_admin",
+      );
+    }
+    setRoleFormError("");
     setSavedNotice(true);
   }
 
@@ -518,7 +652,7 @@ export default function SettingsPage() {
 
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 5</span>
+            <span className="section-kicker">Checkpoint 5A</span>
             <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
@@ -633,11 +767,17 @@ export default function SettingsPage() {
                         setUserRole(event.target.value as RoleKey)
                       }
                     >
-                      {ROLE_DEFINITIONS.map((role) => (
+                      {roles
+                        .filter(
+                          (role) =>
+                            role.active ||
+                            (editingUserId !== null && role.key === userRole),
+                        )
+                        .map((role) => (
                         <option value={role.key} key={role.key}>
                           {role.label}
                         </option>
-                      ))}
+                        ))}
                     </select>
                   </label>
                 </div>
@@ -755,12 +895,21 @@ export default function SettingsPage() {
             {activeSection === "users" ? (
               <div className="user-list">
                 {filteredUsers.map((user) => {
-                  const role = ROLE_DEFINITIONS.find(
+                  const role = roles.find(
                     (item) => item.key === user.role,
-                  )!;
+                  ) ?? {
+                    key: user.role,
+                    label: "Role tidak tersedia",
+                    description: "",
+                    active: false,
+                    system: false,
+                  };
                   const grantedModules = PERMISSION_MODULES.filter(
-                    (module) =>
-                      rolePermissions[user.role][module.key] !== "none",
+                    (module) => {
+                      const access =
+                        rolePermissions[user.role]?.[module.key];
+                      return access === "view" || access === "manage";
+                    },
                   );
 
                   return (
@@ -805,7 +954,8 @@ export default function SettingsPage() {
                         <div>
                           {grantedModules.map((module) => {
                             const access =
-                              rolePermissions[user.role][module.key];
+                              rolePermissions[user.role]?.[module.key] ??
+                              "none";
                             const globallyInactive =
                               module.globalModuleKey &&
                               !moduleConfig[module.globalModuleKey];
@@ -856,13 +1006,160 @@ export default function SettingsPage() {
 
             {activeSection === "users" ? (
               <section className="role-access-panel" aria-labelledby="role-access-title">
+                <div className="role-master-header">
+                  <div>
+                    <span className="section-kicker">Master data</span>
+                    <h3>Master Role</h3>
+                    <p>
+                      Role aktif dapat dipilih saat menambah atau mengedit
+                      pengguna.
+                    </p>
+                  </div>
+                  <button type="button" onClick={addRole}>
+                    ＋ Tambah role
+                  </button>
+                </div>
+
+                {roleFormOpen ? (
+                  <form className="role-master-form" onSubmit={submitRole}>
+                    <div>
+                      <label htmlFor="role-name">Nama role</label>
+                      <input
+                        id="role-name"
+                        value={roleLabel}
+                        placeholder="Contoh: Koordinator Loket"
+                        autoFocus
+                        onChange={(event) => {
+                          setRoleLabel(event.target.value);
+                          setRoleFormError("");
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="role-description">Keterangan</label>
+                      <input
+                        id="role-description"
+                        value={roleDescription}
+                        placeholder="Tanggung jawab utama role"
+                        onChange={(event) => {
+                          setRoleDescription(event.target.value);
+                          setRoleFormError("");
+                        }}
+                      />
+                    </div>
+                    <button type="submit">
+                      {editingRoleKey ? "Simpan role" : "Tambahkan role"}
+                    </button>
+                    <button
+                      className="cancel-action"
+                      type="button"
+                      onClick={resetRoleForm}
+                    >
+                      Batal
+                    </button>
+                    {roleFormError ? (
+                      <p className="user-form-error" role="alert">
+                        {roleFormError}
+                      </p>
+                    ) : null}
+                  </form>
+                ) : null}
+
+                <div className="role-master-list">
+                  {roles.map((role) => {
+                    const assignedUsers = users.filter(
+                      (user) => user.role === role.key,
+                    ).length;
+                    const locked = role.key === "super_admin";
+                    return (
+                      <article
+                        className={`role-master-row ${
+                          selectedRole === role.key
+                            ? "role-master-selected"
+                            : ""
+                        } ${role.active ? "" : "role-master-inactive"}`}
+                        key={role.key}
+                      >
+                        <button
+                          className="role-master-select"
+                          type="button"
+                          onClick={() => {
+                            setSelectedRole(role.key);
+                            setRoleFormError("");
+                            setSavedNotice(false);
+                          }}
+                        >
+                          <span>
+                            <strong>{role.label}</strong>
+                            {role.system ? <small>Role sistem</small> : null}
+                          </span>
+                          <p>{role.description}</p>
+                        </button>
+                        <div className="role-master-meta">
+                          <span
+                            className={
+                              role.active
+                                ? "role-status-active"
+                                : "role-status-inactive"
+                            }
+                          >
+                            {role.active ? "Aktif" : "Nonaktif"}
+                          </span>
+                          <small>{assignedUsers} pengguna</small>
+                        </div>
+                        <div className="role-master-actions">
+                          {locked ? (
+                            <span>Dilindungi</span>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => editRole(role)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleRole(role.key)}
+                              >
+                                {role.active ? "Nonaktifkan" : "Aktifkan"}
+                              </button>
+                              {!role.system ? (
+                                <button
+                                  className="role-delete-action"
+                                  type="button"
+                                  disabled={assignedUsers > 0}
+                                  title={
+                                    assignedUsers > 0
+                                      ? "Role masih dipakai pengguna"
+                                      : "Hapus role"
+                                  }
+                                  onClick={() => deleteRole(role.key)}
+                                >
+                                  Hapus
+                                </button>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {!roleFormOpen && roleFormError ? (
+                  <p className="user-form-error role-master-error" role="alert">
+                    {roleFormError}
+                  </p>
+                ) : null}
+
                 <div className="role-access-header">
                   <div>
                     <span className="section-kicker">Hak akses</span>
-                    <h3 id="role-access-title">Akses Modul per Role</h3>
+                    <h3 id="role-access-title">Akses Role Terpilih</h3>
                     <p>
-                      Pilih role, lalu tentukan apakah modul disembunyikan,
-                      hanya dapat dilihat, atau dapat dikelola.
+                      Atur apakah modul disembunyikan, hanya dapat dilihat, atau
+                      dapat dikelola oleh role terpilih.
                     </p>
                   </div>
                   <label className="role-picker">
@@ -874,7 +1171,7 @@ export default function SettingsPage() {
                         setSavedNotice(false);
                       }}
                     >
-                      {ROLE_DEFINITIONS.map((role) => (
+                      {roles.map((role) => (
                         <option value={role.key} key={role.key}>
                           {role.label}
                         </option>
@@ -901,7 +1198,7 @@ export default function SettingsPage() {
                       module.globalModuleKey &&
                       !moduleConfig[module.globalModuleKey];
                     const currentAccess =
-                      rolePermissions[selectedRole][module.key];
+                      rolePermissions[selectedRole]?.[module.key] ?? "none";
 
                     return (
                       <article className="permission-row" key={module.key}>
@@ -956,9 +1253,8 @@ export default function SettingsPage() {
                   </>
                 ) : activeSection === "users" ? (
                   <>
-                    <strong>Pengguna dan hak akses role tersimpan di perangkat.</strong>{" "}
-                    Login dan pengamanan route belum diterapkan pada checkpoint
-                    ini.
+                    <strong>Pengguna, Master Role, dan hak akses tersimpan di perangkat.</strong>{" "}
+                    Login dan pengamanan route belum diterapkan pada checkpoint ini.
                   </>
                 ) : (
                   <>

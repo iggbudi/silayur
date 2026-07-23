@@ -42,7 +42,7 @@ test("server-renders the settings route", async () => {
   const html = await response.text();
   assert.match(html, /Pengaturan Operasional/);
   assert.match(html, /Pengguna &amp; role/);
-  assert.match(html, /Checkpoint 5/);
+  assert.match(html, /Checkpoint 5A/);
 });
 
 test("defines persistent users with one assigned role", async () => {
@@ -65,6 +65,31 @@ test("defines persistent users with one assigned role", async () => {
   assert.match(users, /saveUsers/);
 });
 
+test("defines a persistent dynamic role master", async () => {
+  const [settingsPage, roles, permissions] = await Promise.all([
+    readFile(
+      new URL("../app/pengaturan/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("../app/lib/role-config.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../app/lib/role-permissions.ts", import.meta.url),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(settingsPage, /Master Role/);
+  assert.match(settingsPage, /Tambah role/);
+  assert.match(settingsPage, /Role masih dipakai pengguna/);
+  assert.match(settingsPage, /role\.key === "super_admin"/);
+
+  assert.match(roles, /silayur\.roles\.v1/);
+  assert.match(roles, /saveRoles/);
+  assert.match(roles, /system: false/);
+  assert.match(permissions, /createRolePermissionRow/);
+  assert.match(permissions, /roleKeys\.forEach/);
+});
+
 test("defines persistent access levels for every role and module", async () => {
   const [settingsPage, permissions] = await Promise.all([
     readFile(
@@ -77,14 +102,14 @@ test("defines persistent access levels for every role and module", async () => {
     ),
   ]);
 
-  assert.match(settingsPage, /Akses Modul per Role/);
+  assert.match(settingsPage, /Akses Role Terpilih/);
   assert.match(settingsPage, /Tidak ada/);
   assert.match(settingsPage, /Lihat/);
   assert.match(settingsPage, /Kelola/);
   assert.match(settingsPage, /selectedRole === "super_admin"/);
 
   assert.match(permissions, /silayur\.role-permissions\.v1/);
-  assert.match(permissions, /result\.super_admin = \{ \.\.\.fullAccess \}/);
+  assert.match(permissions, /result\.super_admin = \{ \.\.\.FULL_ACCESS \}/);
 
   for (const role of [
     "super_admin",

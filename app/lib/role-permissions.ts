@@ -2,7 +2,7 @@ import type { ModuleKey } from "./module-config";
 
 export type AccessLevel = "none" | "view" | "manage";
 
-export type RoleKey =
+export type BuiltInRoleKey =
   | "super_admin"
   | "manager"
   | "supervisor"
@@ -11,6 +11,16 @@ export type RoleKey =
   | "field_officer"
   | "customer_service"
   | "viewer";
+
+export type RoleKey = string;
+
+export type RoleDefinition = {
+  key: RoleKey;
+  label: string;
+  description: string;
+  active: boolean;
+  system: boolean;
+};
 
 export type PermissionModuleKey =
   | "dashboard"
@@ -29,50 +39,62 @@ export type RolePermissionState = Record<
 
 export const ROLE_PERMISSION_STORAGE_KEY = "silayur.role-permissions.v1";
 
-export const ROLE_DEFINITIONS: Array<{
-  key: RoleKey;
-  label: string;
-  description: string;
-}> = [
+export const DEFAULT_ROLE_DEFINITIONS: RoleDefinition[] = [
   {
     key: "super_admin",
     label: "Super Admin",
     description: "Akses penuh dan tidak dapat dibatasi dari halaman ini.",
+    active: true,
+    system: true,
   },
   {
     key: "manager",
     label: "Manajer",
     description: "Memantau dan mengelola seluruh aktivitas operasional.",
+    active: true,
+    system: true,
   },
   {
     key: "supervisor",
     label: "Supervisor",
     description: "Mengawasi operasional lapangan dan fasilitas.",
+    active: true,
+    system: true,
   },
   {
     key: "ticket_officer",
     label: "Petugas Tiket",
     description: "Mencatat tiket dan kunjungan harian.",
+    active: true,
+    system: true,
   },
   {
     key: "finance_officer",
     label: "Petugas Keuangan",
     description: "Mengelola transaksi keuangan dan laporan.",
+    active: true,
+    system: true,
   },
   {
     key: "field_officer",
     label: "Petugas Lapangan",
     description: "Menangani checklist, fasilitas, dan kendala.",
+    active: true,
+    system: true,
   },
   {
     key: "customer_service",
     label: "Customer Service",
     description: "Menangani informasi pengunjung dan komplain.",
+    active: true,
+    system: true,
   },
   {
     key: "viewer",
     label: "Viewer",
     description: "Hanya melihat ringkasan dan laporan.",
+    active: true,
+    system: true,
   },
 ];
 
@@ -129,7 +151,7 @@ export const PERMISSION_MODULES: Array<{
   },
 ];
 
-const fullAccess: Record<PermissionModuleKey, AccessLevel> = {
+export const FULL_ACCESS: Record<PermissionModuleKey, AccessLevel> = {
   dashboard: "manage",
   operations: "manage",
   visitors: "manage",
@@ -141,8 +163,8 @@ const fullAccess: Record<PermissionModuleKey, AccessLevel> = {
 };
 
 export const DEFAULT_ROLE_PERMISSIONS: RolePermissionState = {
-  super_admin: { ...fullAccess },
-  manager: { ...fullAccess },
+  super_admin: { ...FULL_ACCESS },
+  manager: { ...FULL_ACCESS },
   supervisor: {
     dashboard: "view",
     operations: "manage",
@@ -207,16 +229,43 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissionState = {
 
 const accessLevels: AccessLevel[] = ["none", "view", "manage"];
 
-export function parseRolePermissions(value: string | null): RolePermissionState {
-  if (!value) return structuredClone(DEFAULT_ROLE_PERMISSIONS);
+export function createRolePermissionRow(): Record<
+  PermissionModuleKey,
+  AccessLevel
+> {
+  return {
+    dashboard: "view",
+    operations: "none",
+    visitors: "none",
+    finance: "none",
+    facilities: "none",
+    complaints: "none",
+    reports: "none",
+    settings: "none",
+  };
+}
+
+function createPermissionState(roleKeys: RoleKey[]): RolePermissionState {
+  const result = structuredClone(DEFAULT_ROLE_PERMISSIONS);
+  roleKeys.forEach((roleKey) => {
+    if (!result[roleKey]) result[roleKey] = createRolePermissionRow();
+  });
+  return result;
+}
+
+export function parseRolePermissions(
+  value: string | null,
+  roleKeys: RoleKey[] = DEFAULT_ROLE_DEFINITIONS.map((role) => role.key),
+): RolePermissionState {
+  const result = createPermissionState(roleKeys);
+  if (!value) return result;
 
   try {
     const parsed = JSON.parse(value) as Partial<
       Record<RoleKey, Partial<Record<PermissionModuleKey, AccessLevel>>>
     >;
-    const result = structuredClone(DEFAULT_ROLE_PERMISSIONS);
 
-    ROLE_DEFINITIONS.forEach(({ key: roleKey }) => {
+    roleKeys.forEach((roleKey) => {
       PERMISSION_MODULES.forEach(({ key: moduleKey }) => {
         const candidate = parsed[roleKey]?.[moduleKey];
         if (candidate && accessLevels.includes(candidate)) {
@@ -225,19 +274,22 @@ export function parseRolePermissions(value: string | null): RolePermissionState 
       });
     });
 
-    result.super_admin = { ...fullAccess };
+    result.super_admin = { ...FULL_ACCESS };
     return result;
   } catch {
-    return structuredClone(DEFAULT_ROLE_PERMISSIONS);
+    return result;
   }
 }
 
-export function loadRolePermissions(): RolePermissionState {
+export function loadRolePermissions(
+  roleKeys?: RoleKey[],
+): RolePermissionState {
   if (typeof window === "undefined") {
-    return structuredClone(DEFAULT_ROLE_PERMISSIONS);
+    return parseRolePermissions(null, roleKeys);
   }
   return parseRolePermissions(
     window.localStorage.getItem(ROLE_PERMISSION_STORAGE_KEY),
+    roleKeys,
   );
 }
 

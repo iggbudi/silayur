@@ -1,7 +1,4 @@
-import {
-  ROLE_DEFINITIONS,
-  type RoleKey,
-} from "./role-permissions";
+import type { RoleKey } from "./role-permissions";
 
 export type LocalUser = {
   id: string;
@@ -30,8 +27,6 @@ export const DEFAULT_USERS: LocalUser[] = [
   },
 ];
 
-const roleKeys = new Set(ROLE_DEFINITIONS.map((role) => role.key));
-
 function cloneDefaultUsers(): LocalUser[] {
   return DEFAULT_USERS.map((user) => ({ ...user }));
 }
@@ -56,8 +51,9 @@ export function parseUsers(value: string | null): LocalUser[] {
           ? raw.username.trim().toLowerCase()
           : "";
       const role =
-        typeof raw.role === "string" && roleKeys.has(raw.role as RoleKey)
-          ? (raw.role as RoleKey)
+        typeof raw.role === "string" &&
+        /^[a-z0-9_-]+$/.test(raw.role.trim())
+          ? (raw.role.trim() as RoleKey)
           : null;
 
       if (

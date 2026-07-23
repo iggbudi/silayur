@@ -1868,6 +1868,239 @@ button:focus-visible {
   margin: 4px 0 0;
 }
 
+.role-master-header {
+  align-items: end;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.role-master-header h3 {
+  font-size: 16px;
+  margin: 5px 0 4px;
+}
+
+.role-master-header p {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.role-master-header > button {
+  background: var(--green);
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 8.5px;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.role-master-form {
+  align-items: end;
+  background: #f6faf7;
+  border: 1px solid #dce9df;
+  border-radius: 11px;
+  display: grid;
+  gap: 9px;
+  grid-template-columns: 1fr 1.4fr auto auto;
+  margin-top: 14px;
+  padding: 12px;
+}
+
+.role-master-form > div {
+  display: grid;
+  gap: 5px;
+}
+
+.role-master-form label {
+  color: #67756c;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.role-master-form input {
+  background: #fff;
+  border: 1px solid #d8e2db;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 9px;
+  height: 34px;
+  outline: 0;
+  padding: 0 9px;
+  width: 100%;
+}
+
+.role-master-form input:focus {
+  border-color: #72b886;
+  box-shadow: 0 0 0 3px rgba(45, 155, 82, 0.1);
+}
+
+.role-master-form > button {
+  background: var(--green);
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+  height: 34px;
+  padding: 0 10px;
+}
+
+.role-master-form > .cancel-action {
+  background: transparent;
+  border: 1px solid #cfdad2;
+  color: #56675c;
+}
+
+.role-master-form > .user-form-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.role-master-list {
+  border: 1px solid #e4eae6;
+  border-radius: 12px;
+  margin-top: 12px;
+  max-height: 330px;
+  overflow-y: auto;
+}
+
+.role-master-row {
+  align-items: center;
+  border-bottom: 1px solid #edf0ed;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(190px, 1fr) auto minmax(150px, auto);
+  min-height: 62px;
+  padding: 9px 11px;
+}
+
+.role-master-row:last-child {
+  border-bottom: 0;
+}
+
+.role-master-selected {
+  background: #f2f8f4;
+  box-shadow: inset 3px 0 0 var(--green);
+}
+
+.role-master-inactive {
+  opacity: 0.68;
+}
+
+.role-master-select {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.role-master-select > span {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-master-select strong {
+  font-size: 10px;
+}
+
+.role-master-select small {
+  background: #edf1ee;
+  border-radius: 999px;
+  color: #6e7972;
+  font-size: 6.5px;
+  font-weight: 700;
+  padding: 3px 5px;
+}
+
+.role-master-select p {
+  color: #7f8d84;
+  font-size: 8px;
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-master-meta {
+  align-items: flex-end;
+  display: grid;
+  gap: 4px;
+  justify-items: end;
+}
+
+.role-master-meta > span {
+  border-radius: 999px;
+  font-size: 7px;
+  font-weight: 700;
+  padding: 4px 7px;
+}
+
+.role-status-active {
+  background: var(--green-soft);
+  color: #287c45;
+}
+
+.role-status-inactive {
+  background: #f0f2f0;
+  color: #78837c;
+}
+
+.role-master-meta small {
+  color: #849088;
+  font-size: 7px;
+}
+
+.role-master-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.role-master-actions button,
+.role-master-actions > span {
+  background: #fff;
+  border: 1px solid #dce4de;
+  border-radius: 7px;
+  color: #58675e;
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 700;
+  min-height: 27px;
+  padding: 0 7px;
+}
+
+.role-master-actions > span {
+  align-items: center;
+  background: #f2f4f2;
+  color: #7c867f;
+  cursor: default;
+  display: inline-flex;
+}
+
+.role-master-actions .role-delete-action {
+  color: var(--red);
+}
+
+.role-master-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.role-master-error {
+  margin-top: 9px;
+}
+
 .role-access-panel {
   border-top: 1px solid var(--line);
   margin-top: 18px;
@@ -1879,6 +2112,9 @@ button:focus-visible {
   display: flex;
   gap: 20px;
   justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
 }
 
 .role-access-header h3 {
@@ -2338,6 +2574,36 @@ button:focus-visible {
   .role-access-header {
     align-items: stretch;
     display: grid;
+  }
+
+  .role-master-header {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .role-master-header > button {
+    justify-self: start;
+  }
+
+  .role-master-form {
+    grid-template-columns: 1fr;
+  }
+
+  .role-master-row {
+    align-items: start;
+    grid-template-columns: 1fr auto;
+  }
+
+  .role-master-select {
+    grid-column: 1 / -1;
+  }
+
+  .role-master-meta {
+    justify-items: start;
+  }
+
+  .role-master-actions {
+    flex-wrap: wrap;
   }
 
   .role-picker {
