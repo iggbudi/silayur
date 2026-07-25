@@ -1,4 +1,5 @@
-const ITERATIONS = 210_000;
+// Workerd enforces a maximum of 100,000 PBKDF2 iterations in production.
+const ITERATIONS = 100_000;
 const KEY_LENGTH = 32;
 
 function bytesToBase64(bytes) {

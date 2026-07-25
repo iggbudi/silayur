@@ -59,7 +59,7 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     );
     assert.match(
       String(password.rows[0]?.password_hash),
-      /^pbkdf2-sha256\$210000\$/,
+      /^pbkdf2-sha256\$100000\$/,
     );
 
     const configCount = await client.execute(
