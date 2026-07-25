@@ -31,6 +31,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local Turso/libSQL sqlite files (Checkpoint 7)
+.data/
 
 # vercel
 .vercel
@@ -41,3 +45,6 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Cloudflare/Wrangler local secrets
+.dev.vars

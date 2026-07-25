@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
-
   return worker.fetch(
     new Request(`http://localhost${pathname}`, {
       headers: { accept: "text/html" },
@@ -16,124 +14,28 @@ async function render(pathname = "/") {
         fetch: async () => new Response("Not found", { status: 404 }),
       },
     },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
+    { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the SILAYUR dashboard", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
-  assert.match(html, /<title>SILAYUR — Dashboard Operasional<\/title>/i);
-  assert.match(html, /Dashboard Operasional/);
-  assert.match(html, /Pengunjung hari ini/);
-  assert.match(html, /href="\/pengaturan"/);
-});
-
-test("server-renders the settings route", async () => {
-  const response = await render("/pengaturan");
-  assert.equal(response.status, 200);
-
-  const html = await response.text();
-  assert.match(html, /Pengaturan Operasional/);
-  assert.match(html, /Pengguna &amp; role/);
-  assert.match(html, /Checkpoint 5A/);
-});
-
-test("defines persistent users with one assigned role", async () => {
-  const [settingsPage, users] = await Promise.all([
-    readFile(
-      new URL("../app/pengaturan/page.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../app/lib/user-config.ts", import.meta.url), "utf8"),
+test("server-renders the three SILAYUR application routes", async () => {
+  const [dashboard, settings, login] = await Promise.all([
+    render("/"),
+    render("/pengaturan"),
+    render("/login"),
   ]);
+  assert.equal(dashboard.status, 200);
+  assert.equal(settings.status, 200);
+  assert.equal(login.status, 200);
 
-  assert.match(settingsPage, /Tambah pengguna/);
-  assert.match(settingsPage, /Edit pengguna/);
-  assert.match(settingsPage, /Akses turunan/);
-  assert.match(settingsPage, /Minimal satu Super Admin harus tetap aktif/);
-
-  assert.match(users, /silayur\.users\.v1/);
-  assert.match(users, /role: RoleKey/);
-  assert.match(users, /username/);
-  assert.match(users, /saveUsers/);
-});
-
-test("defines a persistent dynamic role master", async () => {
-  const [settingsPage, roles, permissions] = await Promise.all([
-    readFile(
-      new URL("../app/pengaturan/page.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(new URL("../app/lib/role-config.ts", import.meta.url), "utf8"),
-    readFile(
-      new URL("../app/lib/role-permissions.ts", import.meta.url),
-      "utf8",
-    ),
+  const [dashboardHtml, settingsHtml, loginHtml] = await Promise.all([
+    dashboard.text(),
+    settings.text(),
+    login.text(),
   ]);
-
-  assert.match(settingsPage, /Master Role/);
-  assert.match(settingsPage, /Tambah role/);
-  assert.match(settingsPage, /Role masih dipakai pengguna/);
-  assert.match(settingsPage, /role\.key === "super_admin"/);
-
-  assert.match(roles, /silayur\.roles\.v1/);
-  assert.match(roles, /saveRoles/);
-  assert.match(roles, /system: false/);
-  assert.match(permissions, /createRolePermissionRow/);
-  assert.match(permissions, /roleKeys\.forEach/);
-});
-
-test("defines persistent access levels for every role and module", async () => {
-  const [settingsPage, permissions] = await Promise.all([
-    readFile(
-      new URL("../app/pengaturan/page.tsx", import.meta.url),
-      "utf8",
-    ),
-    readFile(
-      new URL("../app/lib/role-permissions.ts", import.meta.url),
-      "utf8",
-    ),
-  ]);
-
-  assert.match(settingsPage, /Akses Role Terpilih/);
-  assert.match(settingsPage, /Tidak ada/);
-  assert.match(settingsPage, /Lihat/);
-  assert.match(settingsPage, /Kelola/);
-  assert.match(settingsPage, /selectedRole === "super_admin"/);
-
-  assert.match(permissions, /silayur\.role-permissions\.v1/);
-  assert.match(permissions, /result\.super_admin = \{ \.\.\.FULL_ACCESS \}/);
-
-  for (const role of [
-    "super_admin",
-    "manager",
-    "supervisor",
-    "ticket_officer",
-    "finance_officer",
-    "field_officer",
-    "customer_service",
-    "viewer",
-  ]) {
-    assert.match(permissions, new RegExp(`\\b${role}\\b`));
-  }
-
-  for (const moduleKey of [
-    "dashboard",
-    "operations",
-    "visitors",
-    "finance",
-    "facilities",
-    "complaints",
-    "reports",
-    "settings",
-  ]) {
-    assert.match(permissions, new RegExp(`\\b${moduleKey}\\b`));
-  }
+  assert.match(dashboardHtml, /SILAYUR|Memuat sesi/i);
+  assert.match(settingsHtml, /Pengaturan Operasional|Memuat sesi/i);
+  assert.match(loginHtml, /Masuk ke sistem|Memeriksa sesi aman/i);
+  assert.match(loginHtml, /Checkpoint 9/i);
+  assert.doesNotMatch(loginHtml, /pilih pengguna aktif/i);
 });

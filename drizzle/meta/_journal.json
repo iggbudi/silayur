@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1784890621197,
+      "tag": "0000_checkpoint_7_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784951018009,
+      "tag": "0001_checkpoint_9_secure_persistence",
+      "breakpoints": true
+    }
+  ]
 }

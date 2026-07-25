@@ -9,33 +9,50 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "test": "npm run type-check && npm run build && tsx --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "type-check": "tsc --noEmit --incremental false",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file=.env scripts/db-migrate.mjs",
+    "db:seed": "node --env-file=.env scripts/db-seed.mjs",
+    "db:check": "node --env-file=.env scripts/db-check.mjs",
+    "db:setup": "npm run db:migrate && npm run db:seed && npm run db:check",
+    "db:sync-dev-vars": "node scripts/sync-dev-vars.mjs",
+    "auth:set-password": "node --env-file=.env scripts/auth-set-password.mjs"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "drizzle-orm": "0.45.2",
-    "next": "16.2.6",
-    "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "next": "^16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
+    "@cloudflare/vite-plugin": "^1.47.0",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.2",
-    "@vitejs/plugin-rsc": "0.5.26",
+    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-rsc": "^0.5.30",
     "drizzle-kit": "0.31.10",
-    "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
-    "react-server-dom-webpack": "19.2.6",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.7.0",
+    "react-server-dom-webpack": "^19.2.8",
     "tailwindcss": "4.2.1",
+    "tsx": "^4.23.1",
+    "typescript-eslint": "^8.65.0",
     "typescript": "5.9.3",
     "vinext": "0.0.50",
-    "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "vite": "^8.1.5",
+    "wrangler": "^4.114.0"
+  },
+  "overrides": {
+    "postcss": "8.5.23",
+    "sharp": "0.35.3",
+    "esbuild": "0.28.1"
   },
   "type": "module"
 }

@@ -2,49 +2,37 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { canManage, canView } from "../lib/access";
+import { fetchRemoteConfig, putRemoteConfig } from "../lib/config-api";
+import { useSession } from "../hooks/use-session";
+import { Brand } from "../components/brand";
+import { SessionGate } from "../components/session-gate";
+import { Toggle } from "../components/toggle";
+import { SettingsUserForm } from "../components/settings-user-form";
 import {
   DEFAULT_MODULE_CONFIG,
-  loadModuleConfig,
-  type ModuleKey,
   type ModuleState,
-  saveModuleConfig,
 } from "../lib/module-config";
 import {
   createRolePermissionRow,
   DEFAULT_ROLE_DEFINITIONS,
   DEFAULT_ROLE_PERMISSIONS,
-  loadRolePermissions,
   PERMISSION_MODULES,
-  saveRolePermissions,
   type AccessLevel,
   type PermissionModuleKey,
   type RoleDefinition,
   type RoleKey,
 } from "../lib/role-permissions";
-import { loadRoles, saveRoles } from "../lib/role-config";
+import { DEFAULT_USERS, type LocalUser } from "../lib/user-config";
 import {
-  DEFAULT_USERS,
-  loadUsers,
-  saveUsers,
-  type LocalUser,
-} from "../lib/user-config";
-
-type SectionKey =
-  | "modules"
-  | "tickets"
-  | "hours"
-  | "facilities"
-  | "revenue"
-  | "users";
-
-type ConfigItem = {
-  id: number;
-  name: string;
-  detail: string;
-  active: boolean;
-  badge?: string;
-  moduleKey?: ModuleKey;
-};
+  toConfigItemsState,
+  type SettingsItem as ConfigItem,
+  type SettingsSectionKey as SectionKey,
+} from "../lib/settings-items";
+import type {
+  ConfigItemsState,
+  UserMutation,
+} from "../../shared/config";
 
 const sections: Array<{
   key: SectionKey;
@@ -106,63 +94,47 @@ const sections: Array<{
 
 const initialItems: Record<SectionKey, ConfigItem[]> = {
   modules: [
-    { id: 1, name: "Dashboard", detail: "Ringkasan informasi utama", active: true, badge: "Wajib" },
+    { id: "module-dashboard", name: "Dashboard", detail: "Ringkasan informasi utama", active: true, badge: "Wajib" },
     {
-      id: 2,
+      id: "module-visitors",
       name: "Pengunjung",
       detail: "Kunjungan dan ticketing",
       active: true,
       moduleKey: "visitors",
     },
     {
-      id: 3,
+      id: "module-finance",
       name: "Keuangan",
       detail: "Pendapatan dan kas harian",
       active: true,
       moduleKey: "finance",
     },
     {
-      id: 4,
+      id: "module-operations",
       name: "Operasional",
       detail: "Checklist buka dan tutup",
       active: true,
       moduleKey: "operations",
     },
     {
-      id: 5,
+      id: "module-facilities",
       name: "Fasilitas",
       detail: "Wahana, inspeksi, dan kebersihan",
       active: true,
       moduleKey: "facilities",
     },
     {
-      id: 6,
+      id: "module-complaints",
       name: "Komplain",
       detail: "Keluhan dan tindak lanjut",
       active: true,
       moduleKey: "complaints",
     },
   ],
-  tickets: [
-    { id: 11, name: "Tiket masuk umum", detail: "Rp15.000 • Data contoh", active: true },
-    { id: 12, name: "Tiket akhir pekan", detail: "Rp20.000 • Data contoh", active: false },
-  ],
-  hours: [
-    { id: 21, name: "Jadwal reguler", detail: "Senin–Minggu • 08.00–16.00", active: true },
-    { id: 22, name: "Hari libur khusus", detail: "Belum dikonfigurasi", active: false },
-  ],
-  facilities: [
-    { id: 31, name: "Kolam Renang", detail: "Area rekreasi air", active: true },
-    { id: 32, name: "Playground", detail: "Area bermain anak", active: true },
-    { id: 33, name: "Area Parkir", detail: "Fasilitas kendaraan", active: true },
-    { id: 34, name: "Camping Ground", detail: "Kandidat dari riset internet", active: false },
-  ],
-  revenue: [
-    { id: 41, name: "Tiket & kunjungan", detail: "Pemasukan loket", active: true },
-    { id: 42, name: "Parkir", detail: "Motor dan mobil", active: true },
-    { id: 43, name: "Tenant", detail: "Setoran atau bagi hasil", active: false },
-    { id: 44, name: "Outbound", detail: "Paket kegiatan kelompok", active: false },
-  ],
+  tickets: [],
+  hours: [],
+  facilities: [],
+  revenue: [],
   users: [],
 };
 
@@ -181,33 +153,9 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function LocalToggle({
-  active,
-  label,
-  disabled,
-  onChange,
-}: {
-  active: boolean;
-  label: string;
-  disabled?: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      className={`switch ${active ? "switch-on" : ""}`}
-      type="button"
-      role="switch"
-      aria-checked={active}
-      aria-label={`${active ? "Nonaktifkan" : "Aktifkan"} ${label}`}
-      disabled={disabled}
-      onClick={onChange}
-    >
-      <span />
-    </button>
-  );
-}
-
 export default function SettingsPage() {
+  const { session, ready: authReady, logout } = useSession();
+  const currentUser = session?.user ?? null;
   const [activeSection, setActiveSection] = useState<SectionKey>("modules");
   const [items, setItems] = useState(initialItems);
   const [query, setQuery] = useState("");
@@ -234,8 +182,13 @@ export default function SettingsPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [userUsername, setUserUsername] = useState("");
+  const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState<RoleKey>("viewer");
   const [userFormError, setUserFormError] = useState("");
+  const [dbStatus, setDbStatus] = useState<string>(
+    "Turso: memeriksa… (Checkpoint 9)",
+  );
+  const [persistError, setPersistError] = useState("");
 
   const section = sections.find((item) => item.key === activeSection)!;
   const currentItems = items[activeSection];
@@ -246,28 +199,104 @@ export default function SettingsPage() {
   const selectedRoleDefinition = roles.find(
     (role) => role.key === selectedRole,
   ) ?? roles[0];
+  const settingsAccess = session?.access.settings ?? "none";
+  const canViewSettings = canView(settingsAccess);
+  const canManageSettings = canManage(settingsAccess);
+  const currentRoleLabel =
+    roles.find((role) => role.key === currentUser?.role)?.label ??
+    currentUser?.role ??
+    "—";
 
-  /* Local storage is intentionally applied after hydration. */
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const storedConfig = loadModuleConfig();
-    const storedRoles = loadRoles();
-    setModuleConfig(storedConfig);
-    setRoles(storedRoles);
-    setRolePermissions(
-      loadRolePermissions(storedRoles.map((role) => role.key)),
-    );
-    setUsers(loadUsers());
-    setItems((current) => ({
-      ...current,
-      modules: current.modules.map((item) =>
-        item.moduleKey
-          ? { ...item, active: storedConfig[item.moduleKey] }
-          : item,
-      ),
-    }));
-  }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
+    if (!session || !canView(session.access.settings)) return;
+    let cancelled = false;
+
+    async function syncAll() {
+      try {
+        const config = await fetchRemoteConfig();
+        if (cancelled) return;
+        setModuleConfig(config.modules);
+        setRoles(config.roles);
+        setRolePermissions(config.permissions);
+        setUsers(config.users);
+        setItems((current) => ({
+          ...current,
+          modules: current.modules.map((item) =>
+            item.moduleKey
+              ? { ...item, active: config.modules[item.moduleKey] }
+              : item,
+          ),
+          tickets: config.configItems.tickets,
+          hours: config.configItems.hours,
+          facilities: config.configItems.facilities,
+          revenue: config.configItems.revenue,
+        }));
+        setDbStatus(
+          `Turso OK · ${config.users.length} user · ${config.roles.length} role (CP9)`,
+        );
+      } catch (error) {
+        if (cancelled) return;
+        setDbStatus(
+          error instanceof Error
+            ? `Turso error: ${error.message}`
+            : "Turso error: gagal memuat konfigurasi",
+        );
+      }
+    }
+
+    void syncAll();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  async function persistConfig(partial: {
+    modules?: ModuleState;
+    roles?: RoleDefinition[];
+    permissions?: typeof rolePermissions;
+    users?: UserMutation[];
+    configItems?: ConfigItemsState;
+  }) {
+    setPersistError("");
+    try {
+      const saved = await putRemoteConfig(partial);
+      if (partial.modules) {
+        setModuleConfig(saved.modules);
+        setItems((current) => ({
+          ...current,
+          modules: current.modules.map((item) =>
+            item.moduleKey
+              ? { ...item, active: saved.modules[item.moduleKey] }
+              : item,
+          ),
+        }));
+      }
+      if (partial.roles) setRoles(saved.roles);
+      if (partial.permissions) setRolePermissions(saved.permissions);
+      if (partial.users) setUsers(saved.users);
+      if (partial.configItems) {
+        setItems((current) => ({
+          ...current,
+          tickets: saved.configItems.tickets,
+          hours: saved.configItems.hours,
+          facilities: saved.configItems.facilities,
+          revenue: saved.configItems.revenue,
+        }));
+      }
+      setDbStatus(
+        `Turso OK · ${saved.users.length} user · ${saved.roles.length} role (CP9)`,
+      );
+      setSavedNotice(true);
+      return saved;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Gagal menyimpan konfigurasi ke Turso.";
+      setPersistError(message);
+      throw error;
+    }
+  }
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -296,6 +325,7 @@ export default function SettingsPage() {
     setEditingUserId(null);
     setUserName("");
     setUserUsername("");
+    setUserPassword("");
     setUserRole(
       roles.find((role) => role.key === "viewer" && role.active)?.key ??
         roles.find((role) => role.active)?.key ??
@@ -312,24 +342,52 @@ export default function SettingsPage() {
     resetUserForm();
   }
 
-  function toggleItem(id: number) {
+  function handleLogout() {
+    void logout();
+  }
+
+  function toggleItem(id: string) {
+    if (!canManageSettings) return;
     const selectedItem = items[activeSection].find((item) => item.id === id);
     if (!selectedItem) return;
 
-    setItems((current) => ({
-      ...current,
-      [activeSection]: current[activeSection].map((item) =>
+    const nextItems = {
+      ...items,
+      [activeSection]: items[activeSection].map((item) =>
         item.id === id ? { ...item, active: !item.active } : item,
       ),
-    }));
+    };
+    setItems(nextItems);
+
+    if (
+      activeSection !== "modules" &&
+      activeSection !== "users"
+    ) {
+      void persistConfig({
+        configItems: toConfigItemsState(nextItems),
+      }).catch(() => setItems(items));
+      return;
+    }
 
     if (activeSection === "modules" && selectedItem.moduleKey) {
       const nextConfig = {
         ...moduleConfig,
         [selectedItem.moduleKey]: !selectedItem.active,
       };
-      saveModuleConfig(nextConfig);
       setModuleConfig(nextConfig);
+      void persistConfig({ modules: nextConfig }).catch(() => {
+        // revert UI on failure
+        setModuleConfig(moduleConfig);
+        setItems((current) => ({
+          ...current,
+          modules: current.modules.map((item) =>
+            item.moduleKey
+              ? { ...item, active: moduleConfig[item.moduleKey] }
+              : item,
+          ),
+        }));
+      });
+      return;
     }
 
     setSavedNotice(true);
@@ -339,20 +397,20 @@ export default function SettingsPage() {
     moduleKey: PermissionModuleKey,
     access: AccessLevel,
   ) {
+    if (!canManageSettings) return;
     if (selectedRole === "super_admin") return;
 
-    setRolePermissions((current) => {
-      const next = {
-        ...current,
-        [selectedRole]: {
-          ...(current[selectedRole] ?? createRolePermissionRow()),
-          [moduleKey]: access,
-        },
-      };
-      saveRolePermissions(next);
-      return next;
+    const next = {
+      ...rolePermissions,
+      [selectedRole]: {
+        ...(rolePermissions[selectedRole] ?? createRolePermissionRow()),
+        [moduleKey]: access,
+      },
+    };
+    setRolePermissions(next);
+    void persistConfig({ permissions: next }).catch(() => {
+      setRolePermissions(rolePermissions);
     });
-    setSavedNotice(true);
   }
 
   function resetRoleForm() {
@@ -364,6 +422,7 @@ export default function SettingsPage() {
   }
 
   function addRole() {
+    if (!canManageSettings) return;
     setEditingRoleKey(null);
     setRoleLabel("");
     setRoleDescription("");
@@ -373,6 +432,7 @@ export default function SettingsPage() {
   }
 
   function editRole(role: RoleDefinition) {
+    if (!canManageSettings) return;
     if (role.key === "super_admin") return;
     setEditingRoleKey(role.key);
     setRoleLabel(role.label);
@@ -384,6 +444,7 @@ export default function SettingsPage() {
 
   function submitRole(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canManageSettings) return;
     const label = roleLabel.trim();
     const description = roleDescription.trim();
     if (!label) {
@@ -411,7 +472,16 @@ export default function SettingsPage() {
           : role,
       );
       setRoles(nextRoles);
-      saveRoles(nextRoles);
+      void persistConfig({ roles: nextRoles })
+        .then(() => {
+          resetRoleForm();
+        })
+        .catch((error: unknown) => {
+          setRoleFormError(
+            error instanceof Error ? error.message : "Gagal menyimpan role.",
+          );
+          setRoles(roles);
+        });
     } else {
       const newRole: RoleDefinition = {
         key: `role-${Date.now()}`,
@@ -428,25 +498,32 @@ export default function SettingsPage() {
       setRoles(nextRoles);
       setRolePermissions(nextPermissions);
       setSelectedRole(newRole.key);
-      saveRoles(nextRoles);
-      saveRolePermissions(nextPermissions);
+      void persistConfig({ roles: nextRoles, permissions: nextPermissions })
+        .then(() => {
+          resetRoleForm();
+        })
+        .catch((error: unknown) => {
+          setRoleFormError(
+            error instanceof Error ? error.message : "Gagal menambah role.",
+          );
+          setRoles(roles);
+          setRolePermissions(rolePermissions);
+        });
     }
-
-    resetRoleForm();
-    setSavedNotice(true);
   }
 
   function toggleRole(roleKey: RoleKey) {
+    if (!canManageSettings) return;
     if (roleKey === "super_admin") return;
     const nextRoles = roles.map((role) =>
       role.key === roleKey ? { ...role, active: !role.active } : role,
     );
     setRoles(nextRoles);
-    saveRoles(nextRoles);
-    setSavedNotice(true);
+    void persistConfig({ roles: nextRoles }).catch(() => setRoles(roles));
   }
 
   function deleteRole(roleKey: RoleKey) {
+    if (!canManageSettings) return;
     const role = roles.find((item) => item.key === roleKey);
     if (!role || role.system) return;
     if (users.some((user) => user.role === roleKey)) {
@@ -459,21 +536,30 @@ export default function SettingsPage() {
     delete nextPermissions[roleKey];
     setRoles(nextRoles);
     setRolePermissions(nextPermissions);
-    saveRoles(nextRoles);
-    saveRolePermissions(nextPermissions);
-    if (selectedRole === roleKey) {
-      setSelectedRole(
-        nextRoles.find((item) => item.active)?.key ?? "super_admin",
-      );
-    }
-    setRoleFormError("");
-    setSavedNotice(true);
+    void persistConfig({ roles: nextRoles, permissions: nextPermissions })
+      .then(() => {
+        if (selectedRole === roleKey) {
+          setSelectedRole(
+            nextRoles.find((item) => item.active)?.key ?? "super_admin",
+          );
+        }
+        setRoleFormError("");
+      })
+      .catch((error: unknown) => {
+        setRoles(roles);
+        setRolePermissions(rolePermissions);
+        setRoleFormError(
+          error instanceof Error ? error.message : "Gagal menghapus role.",
+        );
+      });
   }
 
   function editUser(user: LocalUser) {
+    if (!canManageSettings) return;
     setEditingUserId(user.id);
     setUserName(user.name);
     setUserUsername(user.username);
+    setUserPassword("");
     setUserRole(user.role);
     setUserFormError("");
     setAdding(true);
@@ -482,11 +568,20 @@ export default function SettingsPage() {
 
   function submitUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canManageSettings) return;
 
     const name = userName.trim();
     const username = userUsername.trim().toLowerCase();
     if (!name || !username) {
       setUserFormError("Nama dan username wajib diisi.");
+      return;
+    }
+    if (!editingUserId && userPassword.length < 10) {
+      setUserFormError("Password pengguna baru minimal 10 karakter.");
+      return;
+    }
+    if (userPassword && userPassword.length < 10) {
+      setUserFormError("Password minimal 10 karakter.");
       return;
     }
     if (!/^[a-z0-9._@-]+$/.test(username)) {
@@ -533,14 +628,28 @@ export default function SettingsPage() {
           },
         ];
 
+    const mutationUsers: UserMutation[] = nextUsers.map((user) =>
+      user.id === (editingUserId ?? nextUsers.at(-1)?.id) && userPassword
+        ? { ...user, password: userPassword }
+        : user,
+    );
+
     setUsers(nextUsers);
-    saveUsers(nextUsers);
-    resetUserForm();
-    setAdding(false);
-    setSavedNotice(true);
+    void persistConfig({ users: mutationUsers })
+      .then(() => {
+        resetUserForm();
+        setAdding(false);
+      })
+      .catch((error: unknown) => {
+        setUsers(users);
+        setUserFormError(
+          error instanceof Error ? error.message : "Gagal menyimpan pengguna.",
+        );
+      });
   }
 
   function toggleUser(userId: string) {
+    if (!canManageSettings) return;
     const selectedUser = users.find((user) => user.id === userId);
     if (!selectedUser) return;
 
@@ -560,46 +669,73 @@ export default function SettingsPage() {
       user.id === userId ? { ...user, active: !user.active } : user,
     );
     setUsers(nextUsers);
-    saveUsers(nextUsers);
-    setUserFormError("");
-    setSavedNotice(true);
+    void persistConfig({ users: nextUsers })
+      .then(() => setUserFormError(""))
+      .catch((error: unknown) => {
+        setUsers(users);
+        setUserFormError(
+          error instanceof Error ? error.message : "Gagal mengubah status.",
+        );
+      });
   }
 
   function addItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canManageSettings) return;
     if (!newName.trim()) return;
+    if (activeSection === "modules" || activeSection === "users") return;
 
     const nextItem: ConfigItem = {
-      id: Date.now(),
+      id: `item-${crypto.randomUUID()}`,
       name: newName.trim(),
       detail: newDetail.trim() || "Belum ada keterangan",
       active: true,
+      section: activeSection,
+      sortOrder: (items[activeSection].length + 1) * 10,
     };
 
-    setItems((current) => ({
-      ...current,
-      [activeSection]: [...current[activeSection], nextItem],
-    }));
+    const previous = items;
+    const nextItems = {
+      ...items,
+      [activeSection]: [...items[activeSection], nextItem],
+    };
+    setItems(nextItems);
     setNewName("");
     setNewDetail("");
     setAdding(false);
-    setSavedNotice(true);
+    void persistConfig({
+      configItems: toConfigItemsState(nextItems),
+    }).catch(() => setItems(previous));
+  }
+
+  if (!authReady || !currentUser) {
+    return <SessionGate />;
+  }
+
+  if (!canViewSettings) {
+    return (
+      <main className="session-gate">
+        <div className="session-gate-card">
+          <h1>Akses pengaturan ditolak</h1>
+          <p>
+            Role <strong>{currentRoleLabel}</strong> tidak memiliki izin
+            membuka halaman Pengaturan.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <Link href="/">Kembali ke dashboard</Link>
+            <button type="button" onClick={handleLogout}>
+              Keluar
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="app-shell settings-shell">
       <aside className="sidebar settings-sidebar">
-        <div className="brand">
-          <div className="brand-mark" aria-hidden="true">
-            <span className="sun-dot" />
-            <span className="hill hill-one" />
-            <span className="hill hill-two" />
-          </div>
-          <div>
-            <strong>SILAYUR</strong>
-            <span>Park Management</span>
-          </div>
-        </div>
+        <Brand />
 
         <nav aria-label="Navigasi utama">
           <Link className="nav-link" href="/">
@@ -617,16 +753,22 @@ export default function SettingsPage() {
         </nav>
 
         <div className="settings-side-note">
-          <span>Mode prototype</span>
-          <strong>Modul, pengguna, dan role tersimpan</strong>
-          <p>Konfigurasi lain masih kembali ke awal setelah halaman dimuat ulang.</p>
+          <span>Persistence aktif</span>
+          <strong>Seluruh konfigurasi tersimpan</strong>
+          <p>Perubahan ditulis ke Turso dan berlaku lintas perangkat.</p>
+          <p className="db-status-line">{dbStatus}</p>
         </div>
 
         <div className="sidebar-footer">
-          <div className="avatar">AR</div>
+          <div className="avatar">{getInitials(currentUser.name)}</div>
           <div>
-            <strong>Admin Resepsionis</strong>
-            <span>manage_configuration</span>
+            <strong>{currentUser.name}</strong>
+            <span>{currentRoleLabel}</span>
+          </div>
+          <div className="sidebar-footer-actions">
+            <button className="logout-button" type="button" onClick={handleLogout}>
+              Keluar
+            </button>
           </div>
         </div>
       </aside>
@@ -644,15 +786,36 @@ export default function SettingsPage() {
               </div>
               <span className="local-pill">
                 <i />
-                Mode lokal
+                Mode aman
               </span>
             </div>
           </div>
         </header>
 
+        {!canManageSettings ? (
+          <div className="access-banner" role="status">
+            <strong>Mode lihat saja</strong>
+            Role Anda dapat membuka pengaturan tetapi tidak dapat mengubah data.
+          </div>
+        ) : null}
+
+        {persistError ? (
+          <div className="access-banner" role="alert">
+            <strong>Gagal menyimpan ke Turso</strong>
+            {persistError}
+          </div>
+        ) : null}
+
+        {savedNotice ? (
+          <div className="access-banner" role="status" style={{ background: "var(--green-soft)", color: "#4f40b8", borderColor: "rgba(108,92,231,0.28)" }}>
+            <strong>Tersimpan</strong>
+            Perubahan konfigurasi sudah ditulis ke Turso.
+          </div>
+        ) : null}
+
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 5A</span>
+            <span className="section-kicker">Checkpoint 9</span>
             <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
@@ -707,7 +870,7 @@ export default function SettingsPage() {
                 <span>
                   <strong>{activeTotal}</strong> aktif
                 </span>
-                {section.addLabel ? (
+                {section.addLabel && canManageSettings ? (
                   <button
                     className="primary-action"
                     type="button"
@@ -724,84 +887,34 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {adding && activeSection === "users" ? (
-              <form className="user-form" onSubmit={submitUser}>
-                <div className="user-form-heading">
-                  <div>
-                    <strong>
-                      {editingUserId ? "Edit pengguna" : "Tambah pengguna"}
-                    </strong>
-                    <p>Satu pengguna memiliki satu role utama.</p>
-                  </div>
-                  <span>Data lokal</span>
-                </div>
-                <div className="user-form-grid">
-                  <label>
-                    <span>Nama lengkap</span>
-                    <input
-                      value={userName}
-                      placeholder="Contoh: Siti Rahma"
-                      autoFocus
-                      onChange={(event) => {
-                        setUserName(event.target.value);
-                        setUserFormError("");
-                      }}
-                    />
-                  </label>
-                  <label>
-                    <span>Username</span>
-                    <input
-                      value={userUsername}
-                      placeholder="contoh: siti.rahma"
-                      onChange={(event) => {
-                        setUserUsername(event.target.value);
-                        setUserFormError("");
-                      }}
-                    />
-                  </label>
-                  <label>
-                    <span>Role</span>
-                    <select
-                      value={userRole}
-                      onChange={(event) =>
-                        setUserRole(event.target.value as RoleKey)
-                      }
-                    >
-                      {roles
-                        .filter(
-                          (role) =>
-                            role.active ||
-                            (editingUserId !== null && role.key === userRole),
-                        )
-                        .map((role) => (
-                        <option value={role.key} key={role.key}>
-                          {role.label}
-                        </option>
-                        ))}
-                    </select>
-                  </label>
-                </div>
-                {userFormError ? (
-                  <p className="user-form-error" role="alert">
-                    {userFormError}
-                  </p>
-                ) : null}
-                <div className="user-form-actions">
-                  <button type="submit">
-                    {editingUserId ? "Simpan perubahan" : "Tambahkan pengguna"}
-                  </button>
-                  <button
-                    className="cancel-action"
-                    type="button"
-                    onClick={() => {
-                      resetUserForm();
-                      setAdding(false);
-                    }}
-                  >
-                    Batal
-                  </button>
-                </div>
-              </form>
+            {adding && activeSection === "users" && canManageSettings ? (
+              <SettingsUserForm
+                editingUserId={editingUserId}
+                name={userName}
+                username={userUsername}
+                password={userPassword}
+                role={userRole}
+                roles={roles}
+                error={userFormError}
+                onNameChange={(value) => {
+                  setUserName(value);
+                  setUserFormError("");
+                }}
+                onUsernameChange={(value) => {
+                  setUserUsername(value);
+                  setUserFormError("");
+                }}
+                onPasswordChange={(value) => {
+                  setUserPassword(value);
+                  setUserFormError("");
+                }}
+                onRoleChange={setUserRole}
+                onSubmit={submitUser}
+                onCancel={() => {
+                  resetUserForm();
+                  setAdding(false);
+                }}
+              />
             ) : adding ? (
               <form className="quick-add-form" onSubmit={addItem}>
                 <div>
@@ -873,10 +986,10 @@ export default function SettingsPage() {
                     <span className={`config-status ${item.active ? "config-active" : ""}`}>
                       {item.active ? "Aktif" : "Nonaktif"}
                     </span>
-                    <LocalToggle
+                    <Toggle
                       active={item.active}
                       label={item.name}
-                      disabled={locked}
+                      disabled={locked || !canManageSettings}
                       onChange={() => toggleItem(item.id)}
                     />
                   </article>
@@ -938,12 +1051,15 @@ export default function SettingsPage() {
                           <span className="user-role-badge">{role.label}</span>
                         </div>
                         <div className="user-card-actions">
-                          <button type="button" onClick={() => editUser(user)}>
-                            Edit
-                          </button>
-                          <LocalToggle
+                          {canManageSettings ? (
+                            <button type="button" onClick={() => editUser(user)}>
+                              Edit
+                            </button>
+                          ) : null}
+                          <Toggle
                             active={user.active}
                             label={user.name}
+                            disabled={!canManageSettings}
                             onChange={() => toggleUser(user.id)}
                           />
                         </div>
@@ -1015,12 +1131,14 @@ export default function SettingsPage() {
                       pengguna.
                     </p>
                   </div>
-                  <button type="button" onClick={addRole}>
-                    ＋ Tambah role
-                  </button>
+                  {canManageSettings ? (
+                    <button type="button" onClick={addRole}>
+                      ＋ Tambah role
+                    </button>
+                  ) : null}
                 </div>
 
-                {roleFormOpen ? (
+                {roleFormOpen && canManageSettings ? (
                   <form className="role-master-form" onSubmit={submitRole}>
                     <div>
                       <label htmlFor="role-name">Nama role</label>
@@ -1112,32 +1230,36 @@ export default function SettingsPage() {
                             <span>Dilindungi</span>
                           ) : (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => editRole(role)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => toggleRole(role.key)}
-                              >
-                                {role.active ? "Nonaktifkan" : "Aktifkan"}
-                              </button>
-                              {!role.system ? (
-                                <button
-                                  className="role-delete-action"
-                                  type="button"
-                                  disabled={assignedUsers > 0}
-                                  title={
-                                    assignedUsers > 0
-                                      ? "Role masih dipakai pengguna"
-                                      : "Hapus role"
-                                  }
-                                  onClick={() => deleteRole(role.key)}
-                                >
-                                  Hapus
-                                </button>
+                              {canManageSettings ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => editRole(role)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleRole(role.key)}
+                                  >
+                                    {role.active ? "Nonaktifkan" : "Aktifkan"}
+                                  </button>
+                                  {!role.system ? (
+                                    <button
+                                      className="role-delete-action"
+                                      type="button"
+                                      disabled={assignedUsers > 0}
+                                      title={
+                                        assignedUsers > 0
+                                          ? "Role masih dipakai pengguna"
+                                          : "Hapus role"
+                                      }
+                                      onClick={() => deleteRole(role.key)}
+                                    >
+                                      Hapus
+                                    </button>
+                                  ) : null}
+                                </>
                               ) : null}
                             </>
                           )}
@@ -1188,7 +1310,7 @@ export default function SettingsPage() {
                   {selectedRole === "super_admin" ? (
                     <span className="permission-lock-badge">Akses penuh terkunci</span>
                   ) : (
-                    <span className="permission-local-badge">Tersimpan lokal</span>
+                    <span className="permission-local-badge">Tersimpan di Turso</span>
                   )}
                 </div>
 
@@ -1226,7 +1348,10 @@ export default function SettingsPage() {
                               }`}
                               type="button"
                               key={option.value}
-                              disabled={selectedRole === "super_admin"}
+                              disabled={
+                                selectedRole === "super_admin" ||
+                                !canManageSettings
+                              }
                               aria-pressed={currentAccess === option.value}
                               onClick={() =>
                                 changeRoleAccess(module.key, option.value)
@@ -1253,13 +1378,13 @@ export default function SettingsPage() {
                   </>
                 ) : activeSection === "users" ? (
                   <>
-                    <strong>Pengguna, Master Role, dan hak akses tersimpan di perangkat.</strong>{" "}
-                    Login dan pengamanan route belum diterapkan pada checkpoint ini.
+                    <strong>Pengguna, Master Role, hak akses, dan password tersimpan aman.</strong>{" "}
+                    Route dilindungi sesi server dengan cookie HttpOnly.
                   </>
                 ) : (
                   <>
-                    <strong>Bagian ini belum disimpan.</strong> Tambah dan aktivasi
-                    hanya untuk memvalidasi alur operator.
+                    <strong>Bagian ini sudah persisten.</strong> Tambah dan aktivasi
+                    akan tersimpan di Turso dan tersedia setelah halaman dimuat ulang.
                   </>
                 )}
               </p>

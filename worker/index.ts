@@ -3,8 +3,11 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 
 interface Env {
-  ASSETS: Fetcher;
-  DB: D1Database;
+  ASSETS: {
+    fetch(request: Request): Promise<Response>;
+  };
+  TURSO_DATABASE_URL?: string;
+  TURSO_AUTH_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -25,8 +28,22 @@ interface ExecutionContext {
 // dangerouslyAllowSVG: true in next.config.js and uncomment below:
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
+function exposeTursoEnv(env?: Env | null) {
+  // Make Turso credentials visible to route handlers via process.env.
+  // vinext prod-server may call fetch without Cloudflare env bindings.
+  if (!env) return;
+  if (env.TURSO_DATABASE_URL) {
+    process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
+  }
+  if (env.TURSO_AUTH_TOKEN) {
+    process.env.TURSO_AUTH_TOKEN = env.TURSO_AUTH_TOKEN;
+  }
+}
+
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    exposeTursoEnv(env);
+    // Fallback: keep host process.env when Worker bindings are absent.
     const url = new URL(request.url);
 
     if (url.pathname === "/_vinext/image") {

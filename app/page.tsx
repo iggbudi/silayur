@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { canManage, canView } from "./lib/access";
+import { putRemoteConfig } from "./lib/config-api";
+import { useSession } from "./hooks/use-session";
+import { Brand } from "./components/brand";
+import { SessionGate } from "./components/session-gate";
+import { MetricCard } from "./components/dashboard-widgets";
+import { Toggle } from "./components/toggle";
 import {
   DEFAULT_MODULE_CONFIG,
-  loadModuleConfig,
-  MODULE_CHANGE_EVENT,
   type ModuleKey,
   type ModuleState,
-  saveModuleConfig,
 } from "./lib/module-config";
+import type { PermissionModuleKey } from "./lib/role-permissions";
 
 const moduleOptions: Array<{
   key: ModuleKey;
@@ -22,13 +28,29 @@ const moduleOptions: Array<{
   { key: "complaints", title: "Komplain", description: "Keluhan dan tindak lanjut" },
 ];
 
-const navigation = [
-  { label: "Dashboard", icon: "⌂", key: null },
-  { label: "Operasional", icon: "✓", key: "operations" as ModuleKey },
-  { label: "Pengunjung", icon: "◎", key: "visitors" as ModuleKey },
-  { label: "Keuangan", icon: "Rp", key: "finance" as ModuleKey },
-  { label: "Komplain", icon: "!", key: "complaints" as ModuleKey },
-  { label: "Laporan", icon: "↗", key: null },
+const NO_ACCESS = {
+  dashboard: "none",
+  operations: "none",
+  visitors: "none",
+  finance: "none",
+  facilities: "none",
+  complaints: "none",
+  reports: "none",
+  settings: "none",
+} as const;
+
+const navigation: Array<{
+  label: string;
+  icon: string;
+  key: ModuleKey | null;
+  permission: PermissionModuleKey;
+}> = [
+  { label: "Dashboard", icon: "⌂", key: null, permission: "dashboard" },
+  { label: "Operasional", icon: "✓", key: "operations", permission: "operations" },
+  { label: "Pengunjung", icon: "◎", key: "visitors", permission: "visitors" },
+  { label: "Keuangan", icon: "Rp", key: "finance", permission: "finance" },
+  { label: "Komplain", icon: "!", key: "complaints", permission: "complaints" },
+  { label: "Laporan", icon: "↗", key: null, permission: "reports" },
 ];
 
 const facilityRows = [
@@ -44,88 +66,47 @@ const complaintRows = [
   { time: "13.05", title: "Pilihan makanan kurang", status: "Baru" },
 ];
 
-function MetricCard({
-  eyebrow,
-  value,
-  suffix,
-  note,
-  icon,
-  tone,
-  badge,
-}: {
-  eyebrow: string;
-  value: string;
-  suffix?: string;
-  note: string;
-  icon: string;
-  tone: string;
-  badge?: string;
-}) {
-  return (
-    <article className={`metric-card metric-${tone}`}>
-      <div className="metric-heading">
-        <span className="metric-icon" aria-hidden="true">
-          {icon}
-        </span>
-        {badge ? <span className="metric-badge">{badge}</span> : null}
-      </div>
-      <p>{eyebrow}</p>
-      <div className="metric-value">
-        <strong>{value}</strong>
-        {suffix ? <span>{suffix}</span> : null}
-      </div>
-      <small>{note}</small>
-    </article>
-  );
-}
-
-function Toggle({
-  active,
-  label,
-  onChange,
-}: {
-  active: boolean;
-  label: string;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      className={`switch ${active ? "switch-on" : ""}`}
-      type="button"
-      role="switch"
-      aria-checked={active}
-      aria-label={`${active ? "Nonaktifkan" : "Aktifkan"} modul ${label}`}
-      onClick={onChange}
-    >
-      <span />
-    </button>
-  );
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 export default function DashboardPage() {
-  const [modules, setModules] = useState<ModuleState>(DEFAULT_MODULE_CONFIG);
+  const { session, ready: authReady, logout } = useSession();
+  const [moduleOverride, setModuleOverride] = useState<ModuleState | null>(
+    null,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const currentUser = session?.user ?? null;
+  const access = session?.access ?? NO_ACCESS;
+  const modules =
+    moduleOverride ?? session?.modules ?? DEFAULT_MODULE_CONFIG;
+
+  const canViewDashboard = canView(access.dashboard);
+  const canManageSettings = canManage(access.settings);
+  const canViewSettings = canView(access.settings);
+  const roleLabel = session?.role?.label ?? currentUser?.role ?? "—";
 
   const activeCount = Object.values(modules).filter(Boolean).length;
 
-  useEffect(() => {
-    const syncModules = () => setModules(loadModuleConfig());
-
-    syncModules();
-    window.addEventListener("storage", syncModules);
-    window.addEventListener(MODULE_CHANGE_EVENT, syncModules);
-
-    return () => {
-      window.removeEventListener("storage", syncModules);
-      window.removeEventListener(MODULE_CHANGE_EVENT, syncModules);
-    };
-  }, []);
-
   const metrics = useMemo(() => {
-    const items = [];
+    if (!canViewDashboard) return [];
 
-    if (modules.visitors) {
+    const items = [];
+    const showVisitors = modules.visitors && canView(access.visitors);
+    const showFinance = modules.finance && canView(access.finance);
+    const showOperations = modules.operations && canView(access.operations);
+    const showFacilities = modules.facilities && canView(access.facilities);
+    const showComplaints = modules.complaints && canView(access.complaints);
+
+    if (showVisitors) {
       items.push(
         <MetricCard
           key="visitors"
@@ -139,7 +120,7 @@ export default function DashboardPage() {
       );
     }
 
-    if (modules.finance) {
+    if (showFinance) {
       items.push(
         <MetricCard
           key="finance"
@@ -150,7 +131,7 @@ export default function DashboardPage() {
           tone="blue"
         />,
       );
-    } else if (modules.facilities) {
+    } else if (showFacilities) {
       items.push(
         <MetricCard
           key="facility-fallback"
@@ -164,7 +145,7 @@ export default function DashboardPage() {
       );
     }
 
-    if (modules.operations) {
+    if (showOperations) {
       items.push(
         <MetricCard
           key="operations"
@@ -178,7 +159,7 @@ export default function DashboardPage() {
       );
     }
 
-    if (modules.facilities) {
+    if (showFacilities) {
       items.push(
         <MetricCard
           key="attention"
@@ -192,7 +173,7 @@ export default function DashboardPage() {
       );
     }
 
-    if (modules.complaints) {
+    if (showComplaints) {
       items.push(
         <MetricCard
           key="complaints"
@@ -204,7 +185,7 @@ export default function DashboardPage() {
           tone="red"
         />,
       );
-    } else if (modules.operations) {
+    } else if (showOperations) {
       items.push(
         <MetricCard
           key="issue-fallback"
@@ -219,45 +200,61 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [modules]);
+  }, [access, canViewDashboard, modules]);
+
+  async function persistModules(next: ModuleState) {
+    setSaveError("");
+    const previous = modules;
+    setModuleOverride(next);
+    try {
+      const saved = await putRemoteConfig({ modules: next });
+      setModuleOverride(saved.modules);
+    } catch (error) {
+      setModuleOverride(previous);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Gagal menyimpan modul ke Turso.",
+      );
+    }
+  }
 
   function toggleModule(key: ModuleKey) {
-    setModules((current) => {
-      const next = { ...current, [key]: !current[key] };
-      saveModuleConfig(next);
-      return next;
-    });
+    if (!canManageSettings) return;
+    const next = { ...modules, [key]: !modules[key] };
+    void persistModules(next);
   }
 
   function activateAllModules() {
-    const next = { ...DEFAULT_MODULE_CONFIG };
-    saveModuleConfig(next);
-    setModules(next);
+    if (!canManageSettings) return;
+    void persistModules({ ...DEFAULT_MODULE_CONFIG });
+  }
+
+  function handleLogout() {
+    void logout();
+  }
+
+  if (!authReady || !currentUser) {
+    return <SessionGate />;
   }
 
   return (
     <main className="app-shell">
       <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
-        <div className="brand">
-          <div className="brand-mark" aria-hidden="true">
-            <span className="sun-dot" />
-            <span className="hill hill-one" />
-            <span className="hill hill-two" />
-          </div>
-          <div>
-            <strong>SILAYUR</strong>
-            <span>Park Management</span>
-          </div>
-        </div>
+        <Brand />
 
         <nav aria-label="Navigasi utama">
-          {navigation.map((item, index) => {
-            const enabled = item.key === null || modules[item.key];
+          {navigation.map((item) => {
+            const moduleEnabled = item.key === null || modules[item.key];
+            const permissionOk = canView(access[item.permission]);
+            const enabled = moduleEnabled && permissionOk;
+            const lockedByPermission = moduleEnabled && !permissionOk;
+
             return (
               <button
-                className={`${index === 0 ? "nav-active" : ""} ${
+                className={`${item.label === "Dashboard" ? "nav-active" : ""} ${
                   !enabled ? "nav-disabled" : ""
-                }`}
+                } ${lockedByPermission ? "nav-locked" : ""}`}
                 type="button"
                 key={item.label}
                 disabled={!enabled}
@@ -266,16 +263,27 @@ export default function DashboardPage() {
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
-                {!enabled ? <small>nonaktif</small> : null}
+                {!moduleEnabled ? <small>nonaktif</small> : null}
+                {lockedByPermission ? <small>terkunci</small> : null}
               </button>
             );
           })}
-          <a className="nav-link" href="/pengaturan">
-            <span className="nav-icon" aria-hidden="true">
-              ⚙
-            </span>
-            <span>Pengaturan</span>
-          </a>
+          {canViewSettings ? (
+            <Link className="nav-link" href="/pengaturan">
+              <span className="nav-icon" aria-hidden="true">
+                ⚙
+              </span>
+              <span>Pengaturan</span>
+            </Link>
+          ) : (
+            <button className="nav-disabled nav-locked" type="button" disabled>
+              <span className="nav-icon" aria-hidden="true">
+                ⚙
+              </span>
+              <span>Pengaturan</span>
+              <small>terkunci</small>
+            </button>
+          )}
         </nav>
 
         <div className="sidebar-card">
@@ -286,10 +294,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="sidebar-footer">
-          <div className="avatar">AR</div>
+          <div className="avatar">{getInitials(currentUser.name)}</div>
           <div>
-            <strong>Admin Resepsionis</strong>
-            <span>Operator</span>
+            <strong>{currentUser.name}</strong>
+            <span>{roleLabel}</span>
+          </div>
+          <div className="sidebar-footer-actions">
+            <button className="logout-button" type="button" onClick={handleLogout}>
+              Keluar
+            </button>
           </div>
         </div>
       </aside>
@@ -322,14 +335,16 @@ export default function DashboardPage() {
               <span aria-hidden="true">□</span>
               Kamis, 23 Juli 2026
             </button>
-            <button
-              className={`settings-button ${settingsOpen ? "settings-active" : ""}`}
-              type="button"
-              onClick={() => setSettingsOpen((value) => !value)}
-            >
-              <span aria-hidden="true">⚙</span>
-              Atur modul
-            </button>
+            {canManageSettings ? (
+              <button
+                className={`settings-button ${settingsOpen ? "settings-active" : ""}`}
+                type="button"
+                onClick={() => setSettingsOpen((value) => !value)}
+              >
+                <span aria-hidden="true">⚙</span>
+                Atur modul
+              </button>
+            ) : null}
             <button className="notification-button" type="button" aria-label="Notifikasi">
               ♢
               <span>3</span>
@@ -337,7 +352,17 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {settingsOpen ? (
+        {!canViewDashboard ? (
+          <section className="session-gate-card" style={{ margin: "8px 0 18px" }}>
+            <h1>Akses dashboard ditolak</h1>
+            <p>
+              Role <strong>{roleLabel}</strong> tidak memiliki izin melihat
+              dashboard. Hubungi Super Admin untuk menyesuaikan akses.
+            </p>
+          </section>
+        ) : null}
+
+        {settingsOpen && canManageSettings ? (
           <section className="module-panel" aria-label="Simulasi aktivasi modul">
             <div className="module-panel-heading">
               <div>
@@ -371,7 +396,10 @@ export default function DashboardPage() {
             </div>
 
             <div className="module-panel-footer">
-              <span>Konfigurasi modul tersimpan di perangkat ini.</span>
+              <span>
+                Konfigurasi modul tersimpan di Turso.
+                {saveError ? ` ${saveError}` : ""}
+              </span>
               <button type="button" onClick={activateAllModules}>
                 Aktifkan semua
               </button>
@@ -379,179 +407,191 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
-        <section className="metric-grid" aria-label="Ringkasan utama">
-          {metrics}
-          {metrics.length === 0 ? (
-            <div className="empty-dashboard">
-              <span>＋</span>
-              <strong>Belum ada modul yang aktif</strong>
-              <p>Gunakan tombol “Atur modul” untuk menyusun dashboard.</p>
-              <button type="button" onClick={() => setSettingsOpen(true)}>
-                Buka konfigurasi
-              </button>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="content-grid">
-          {modules.operations || modules.facilities ? (
-            <article className="panel status-panel">
-              <div className="panel-heading">
-                <div>
-                  <span className="section-kicker">Kondisi hari ini</span>
-                  <h2>Status operasional</h2>
-                </div>
-                <button type="button">Lihat detail</button>
+        {canViewDashboard ? (
+          <section className="metric-grid" aria-label="Ringkasan utama">
+            {metrics}
+            {metrics.length === 0 ? (
+              <div className="empty-dashboard">
+                <span>＋</span>
+                <strong>Belum ada modul yang aktif</strong>
+                <p>
+                  {canManageSettings
+                    ? "Gunakan tombol “Atur modul” untuk menyusun dashboard."
+                    : "Tidak ada kartu yang diizinkan untuk role Anda."}
+                </p>
+                {canManageSettings ? (
+                  <button type="button" onClick={() => setSettingsOpen(true)}>
+                    Buka konfigurasi
+                  </button>
+                ) : null}
               </div>
+            ) : null}
+          </section>
+        ) : null}
 
-              <div className="status-content">
-                <div className="donut-wrap">
-                  <div className="donut donut-status">
-                    <div>
-                      <strong>8</strong>
-                      <span>terpantau</span>
+        {canViewDashboard ? (
+          <section className="content-grid">
+            {(modules.operations && canView(access.operations)) ||
+            (modules.facilities && canView(access.facilities)) ? (
+              <article className="panel status-panel">
+                <div className="panel-heading">
+                  <div>
+                    <span className="section-kicker">Kondisi hari ini</span>
+                    <h2>Status operasional</h2>
+                  </div>
+                  <button type="button">Lihat detail</button>
+                </div>
+
+                <div className="status-content">
+                  <div className="donut-wrap">
+                    <div className="donut donut-status">
+                      <div>
+                        <strong>8</strong>
+                        <span>terpantau</span>
+                      </div>
+                    </div>
+                    <div className="legend">
+                      <span>
+                        <i className="legend-green" /> Beroperasi <strong>7</strong>
+                      </span>
+                      <span>
+                        <i className="legend-orange" /> Perlu cek <strong>1</strong>
+                      </span>
+                      <span>
+                        <i className="legend-red" /> Ditutup <strong>0</strong>
+                      </span>
                     </div>
                   </div>
-                  <div className="legend">
-                    <span>
-                      <i className="legend-green" /> Beroperasi <strong>7</strong>
-                    </span>
-                    <span>
-                      <i className="legend-orange" /> Perlu cek <strong>1</strong>
-                    </span>
-                    <span>
-                      <i className="legend-red" /> Ditutup <strong>0</strong>
-                    </span>
-                  </div>
-                </div>
 
-                <div className="checklist-progress">
-                  <div className="progress-heading">
-                    <div>
-                      <span>Checklist pembukaan</span>
-                      <strong>8 dari 10 selesai</strong>
+                  <div className="checklist-progress">
+                    <div className="progress-heading">
+                      <div>
+                        <span>Checklist pembukaan</span>
+                        <strong>8 dari 10 selesai</strong>
+                      </div>
+                      <b>80%</b>
                     </div>
-                    <b>80%</b>
-                  </div>
-                  <div className="progress-track">
-                    <span />
-                  </div>
-                  <div className="pending-items">
-                    <p>
-                      <i>!</i>
-                      Lampu area parkir belum diperiksa
-                    </p>
-                    <p>
-                      <i>!</i>
-                      Foto kebersihan food court belum ada
-                    </p>
+                    <div className="progress-track">
+                      <span />
+                    </div>
+                    <div className="pending-items">
+                      <p>
+                        <i>!</i>
+                        Lampu area parkir belum diperiksa
+                      </p>
+                      <p>
+                        <i>!</i>
+                        Foto kebersihan food court belum ada
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ) : null}
+              </article>
+            ) : null}
 
-          {modules.finance ? (
-            <article className="panel revenue-panel">
-              <div className="panel-heading">
-                <div>
-                  <span className="section-kicker">Keuangan</span>
-                  <h2>Komposisi pendapatan</h2>
-                </div>
-                <button type="button">Hari ini⌄</button>
-              </div>
-
-              <div className="revenue-content">
-                <div className="donut donut-revenue">
+            {modules.finance && canView(access.finance) ? (
+              <article className="panel revenue-panel">
+                <div className="panel-heading">
                   <div>
-                    <strong>7,85</strong>
-                    <span>juta</span>
+                    <span className="section-kicker">Keuangan</span>
+                    <h2>Komposisi pendapatan</h2>
+                  </div>
+                  <button type="button">Hari ini⌄</button>
+                </div>
+
+                <div className="revenue-content">
+                  <div className="donut donut-revenue">
+                    <div>
+                      <strong>7,85</strong>
+                      <span>juta</span>
+                    </div>
+                  </div>
+                  <div className="revenue-list">
+                    <div>
+                      <span>
+                        <i className="revenue-green" /> Tiket & kunjungan
+                      </span>
+                      <strong>Rp5,60 jt</strong>
+                    </div>
+                    <div>
+                      <span>
+                        <i className="revenue-blue" /> Parkir
+                      </span>
+                      <strong>Rp1,20 jt</strong>
+                    </div>
+                    <div>
+                      <span>
+                        <i className="revenue-purple" /> Tenant
+                      </span>
+                      <strong>Rp850 rb</strong>
+                    </div>
+                    <div>
+                      <span>
+                        <i className="revenue-orange" /> Lainnya
+                      </span>
+                      <strong>Rp200 rb</strong>
+                    </div>
                   </div>
                 </div>
-                <div className="revenue-list">
+              </article>
+            ) : null}
+
+            {modules.facilities && canView(access.facilities) ? (
+              <article className="panel facility-panel">
+                <div className="panel-heading">
                   <div>
-                    <span>
-                      <i className="revenue-green" /> Tiket & kunjungan
-                    </span>
-                    <strong>Rp5,60 jt</strong>
+                    <span className="section-kicker">Pemantauan</span>
+                    <h2>Kesiapan fasilitas</h2>
                   </div>
-                  <div>
-                    <span>
-                      <i className="revenue-blue" /> Parkir
-                    </span>
-                    <strong>Rp1,20 jt</strong>
-                  </div>
-                  <div>
-                    <span>
-                      <i className="revenue-purple" /> Tenant
-                    </span>
-                    <strong>Rp850 rb</strong>
-                  </div>
-                  <div>
-                    <span>
-                      <i className="revenue-orange" /> Lainnya
-                    </span>
-                    <strong>Rp200 rb</strong>
-                  </div>
+                  <span className="updated-label">Diperbarui 10 menit lalu</span>
                 </div>
-              </div>
-            </article>
-          ) : null}
 
-          {modules.facilities ? (
-            <article className="panel facility-panel">
-              <div className="panel-heading">
-                <div>
-                  <span className="section-kicker">Pemantauan</span>
-                  <h2>Kesiapan fasilitas</h2>
+                <div className="facility-list">
+                  {facilityRows.map((facility) => (
+                    <div key={facility.name}>
+                      <span className="facility-symbol" aria-hidden="true">
+                        ◇
+                      </span>
+                      <strong>{facility.name}</strong>
+                      <span className={`status-pill status-${facility.tone}`}>
+                        {facility.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <span className="updated-label">Diperbarui 10 menit lalu</span>
-              </div>
+              </article>
+            ) : null}
 
-              <div className="facility-list">
-                {facilityRows.map((facility) => (
-                  <div key={facility.name}>
-                    <span className="facility-symbol" aria-hidden="true">
-                      ◇
-                    </span>
-                    <strong>{facility.name}</strong>
-                    <span className={`status-pill status-${facility.tone}`}>
-                      {facility.status}
-                    </span>
+            {modules.complaints && canView(access.complaints) ? (
+              <article className="panel complaints-panel">
+                <div className="panel-heading">
+                  <div>
+                    <span className="section-kicker">Layanan pengunjung</span>
+                    <h2>Komplain terbaru</h2>
                   </div>
-                ))}
-              </div>
-            </article>
-          ) : null}
-
-          {modules.complaints ? (
-            <article className="panel complaints-panel">
-              <div className="panel-heading">
-                <div>
-                  <span className="section-kicker">Layanan pengunjung</span>
-                  <h2>Komplain terbaru</h2>
+                  <button type="button">Semua komplain</button>
                 </div>
-                <button type="button">Semua komplain</button>
-              </div>
 
-              <div className="complaint-list">
-                {complaintRows.map((complaint) => (
-                  <div key={`${complaint.time}-${complaint.title}`}>
-                    <time>{complaint.time}</time>
-                    <span>{complaint.title}</span>
-                    <strong>{complaint.status}</strong>
-                  </div>
-                ))}
-              </div>
-            </article>
-          ) : null}
-        </section>
+                <div className="complaint-list">
+                  {complaintRows.map((complaint) => (
+                    <div key={`${complaint.time}-${complaint.title}`}>
+                      <time>{complaint.time}</time>
+                      <span>{complaint.title}</span>
+                      <strong>{complaint.status}</strong>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ) : null}
+          </section>
+        ) : null}
 
         <footer className="prototype-note">
           <span>i</span>
           <p>
-            <strong>Prototype Checkpoint 1.</strong> Seluruh angka adalah data
-            simulasi untuk memvalidasi struktur dan tampilan dashboard.
+            <strong>SILAYUR Checkpoint 9.</strong> Sesi aman sebagai{" "}
+            {currentUser.name} ({roleLabel}). Sumber data:{" "}
+            Turso dengan akses berbasis role.
           </p>
         </footer>
       </section>

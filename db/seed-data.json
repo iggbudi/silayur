@@ -1,0 +1,302 @@
+{
+  "modules": [
+    {
+      "key": "visitors",
+      "label": "Pengunjung",
+      "description": "Kunjungan dan tiket",
+      "active": true
+    },
+    {
+      "key": "finance",
+      "label": "Keuangan",
+      "description": "Pendapatan dan kas",
+      "active": true
+    },
+    {
+      "key": "operations",
+      "label": "Operasional",
+      "description": "Checklist harian",
+      "active": true
+    },
+    {
+      "key": "facilities",
+      "label": "Fasilitas",
+      "description": "Wahana dan kebersihan",
+      "active": true
+    },
+    {
+      "key": "complaints",
+      "label": "Komplain",
+      "description": "Keluhan dan tindak lanjut",
+      "active": true
+    }
+  ],
+  "roles": [
+    {
+      "key": "super_admin",
+      "label": "Super Admin",
+      "description": "Akses penuh dan tidak dapat dibatasi dari halaman ini.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "manager",
+      "label": "Manajer",
+      "description": "Memantau dan mengelola seluruh aktivitas operasional.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "supervisor",
+      "label": "Supervisor",
+      "description": "Mengawasi operasional lapangan dan fasilitas.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "ticket_officer",
+      "label": "Petugas Tiket",
+      "description": "Mencatat tiket dan kunjungan harian.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "finance_officer",
+      "label": "Petugas Keuangan",
+      "description": "Mengelola transaksi keuangan dan laporan.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "field_officer",
+      "label": "Petugas Lapangan",
+      "description": "Menangani checklist, fasilitas, dan kendala.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "customer_service",
+      "label": "Customer Service",
+      "description": "Menangani informasi pengunjung dan komplain.",
+      "active": true,
+      "system": true
+    },
+    {
+      "key": "viewer",
+      "label": "Viewer",
+      "description": "Hanya melihat ringkasan dan laporan.",
+      "active": true,
+      "system": true
+    }
+  ],
+  "permissions": {
+    "super_admin": {
+      "dashboard": "manage",
+      "operations": "manage",
+      "visitors": "manage",
+      "finance": "manage",
+      "facilities": "manage",
+      "complaints": "manage",
+      "reports": "manage",
+      "settings": "manage"
+    },
+    "manager": {
+      "dashboard": "manage",
+      "operations": "manage",
+      "visitors": "manage",
+      "finance": "manage",
+      "facilities": "manage",
+      "complaints": "manage",
+      "reports": "manage",
+      "settings": "manage"
+    },
+    "supervisor": {
+      "dashboard": "view",
+      "operations": "manage",
+      "visitors": "view",
+      "finance": "view",
+      "facilities": "manage",
+      "complaints": "view",
+      "reports": "view",
+      "settings": "none"
+    },
+    "ticket_officer": {
+      "dashboard": "view",
+      "operations": "none",
+      "visitors": "manage",
+      "finance": "none",
+      "facilities": "none",
+      "complaints": "none",
+      "reports": "none",
+      "settings": "none"
+    },
+    "finance_officer": {
+      "dashboard": "view",
+      "operations": "none",
+      "visitors": "view",
+      "finance": "manage",
+      "facilities": "none",
+      "complaints": "none",
+      "reports": "view",
+      "settings": "none"
+    },
+    "field_officer": {
+      "dashboard": "view",
+      "operations": "manage",
+      "visitors": "none",
+      "finance": "none",
+      "facilities": "manage",
+      "complaints": "view",
+      "reports": "none",
+      "settings": "none"
+    },
+    "customer_service": {
+      "dashboard": "view",
+      "operations": "none",
+      "visitors": "view",
+      "finance": "none",
+      "facilities": "view",
+      "complaints": "manage",
+      "reports": "none",
+      "settings": "none"
+    },
+    "viewer": {
+      "dashboard": "view",
+      "operations": "none",
+      "visitors": "none",
+      "finance": "none",
+      "facilities": "none",
+      "complaints": "none",
+      "reports": "view",
+      "settings": "none"
+    }
+  },
+  "users": [
+    {
+      "id": "admin-resepsionis",
+      "name": "Admin Resepsionis",
+      "username": "admin.resepsionis",
+      "role": "super_admin",
+      "active": true
+    },
+    {
+      "id": "manajer-operasional",
+      "name": "Manajer Operasional",
+      "username": "manajer.operasional",
+      "role": "manager",
+      "active": true
+    },
+    {
+      "id": "siti-tiket",
+      "name": "Siti Tiket",
+      "username": "siti.tiket",
+      "role": "ticket_officer",
+      "active": true
+    },
+    {
+      "id": "pimpinan-viewer",
+      "name": "Pimpinan Viewer",
+      "username": "pimpinan.viewer",
+      "role": "viewer",
+      "active": true
+    }
+  ],
+  "configItems": [
+    {
+      "id": "ticket-general",
+      "section": "tickets",
+      "name": "Tiket masuk umum",
+      "detail": "Rp15.000",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "ticket-weekend",
+      "section": "tickets",
+      "name": "Tiket akhir pekan",
+      "detail": "Rp20.000",
+      "active": false,
+      "sortOrder": 20
+    },
+    {
+      "id": "hours-regular",
+      "section": "hours",
+      "name": "Jadwal reguler",
+      "detail": "Senin-Minggu · 08.00-16.00",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "hours-holiday",
+      "section": "hours",
+      "name": "Hari libur khusus",
+      "detail": "Belum dikonfigurasi",
+      "active": false,
+      "sortOrder": 20
+    },
+    {
+      "id": "facility-pool",
+      "section": "facilities",
+      "name": "Kolam Renang",
+      "detail": "Area rekreasi air",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "facility-playground",
+      "section": "facilities",
+      "name": "Playground",
+      "detail": "Area bermain anak",
+      "active": true,
+      "sortOrder": 20
+    },
+    {
+      "id": "facility-parking",
+      "section": "facilities",
+      "name": "Area Parkir",
+      "detail": "Fasilitas kendaraan",
+      "active": true,
+      "sortOrder": 30
+    },
+    {
+      "id": "facility-camping",
+      "section": "facilities",
+      "name": "Camping Ground",
+      "detail": "Area kegiatan luar ruang",
+      "active": false,
+      "sortOrder": 40
+    },
+    {
+      "id": "revenue-ticket",
+      "section": "revenue",
+      "name": "Tiket & kunjungan",
+      "detail": "Pemasukan loket",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "revenue-parking",
+      "section": "revenue",
+      "name": "Parkir",
+      "detail": "Motor dan mobil",
+      "active": true,
+      "sortOrder": 20
+    },
+    {
+      "id": "revenue-tenant",
+      "section": "revenue",
+      "name": "Tenant",
+      "detail": "Setoran atau bagi hasil",
+      "active": false,
+      "sortOrder": 30
+    },
+    {
+      "id": "revenue-outbound",
+      "section": "revenue",
+      "name": "Outbound",
+      "detail": "Paket kegiatan kelompok",
+      "active": false,
+      "sortOrder": 40
+    }
+  ]
+}

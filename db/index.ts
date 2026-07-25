@@ -1,13 +1,18 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./schema";
-
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
-
-  return drizzle(env.DB, { schema });
-}
+/**
+ * Database entrypoint for SILAYUR.
+ *
+ * Prefer:
+ * - `createDb()` / `getDb()` from `./client` in Node scripts and Node runtimes
+ * - `createWebDb()` from `./client-web` on Cloudflare Workers / edge
+ *
+ * Schema is Turso/libSQL (SQLite dialect). Cloudflare D1 is not used.
+ */
+export { createDb, getDb, type AppDatabase, type DbBundle } from "./client";
+export { createWebDb, type AppWebDatabase, type WebDbBundle } from "./client-web";
+export {
+  resolveTursoEnv,
+  localDbFilePath,
+  DEFAULT_LOCAL_URL,
+  type TursoEnv,
+} from "./env";
+export * from "./schema";
