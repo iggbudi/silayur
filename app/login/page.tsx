@@ -1,19 +1,23 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchSession, loginRemote } from "../lib/config-api";
 import { Brand } from "../components/brand";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const searchParams = useSearchParams();
+  const loggedOut = searchParams.get("loggedOut") === "1";
+  const [ready, setReady] = useState(loggedOut);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (loggedOut) return;
+
     let cancelled = false;
     fetchSession()
       .then(() => {
@@ -25,7 +29,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [loggedOut, router]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,7 +54,7 @@ export default function LoginPage() {
     return (
       <main className="login-shell">
         <div className="login-card login-loading">
-          <span className="section-kicker">Checkpoint 9</span>
+          <span className="section-kicker">Sesi SILAYUR</span>
           <h1>Memeriksa sesi aman…</h1>
           <p>Menyiapkan akses SILAYUR.</p>
         </div>
@@ -64,7 +68,7 @@ export default function LoginPage() {
         <Brand compact />
 
         <div className="login-copy">
-          <span className="section-kicker">Checkpoint 9</span>
+          <span className="section-kicker">Akses operasional</span>
           <h1>Masuk ke sistem</h1>
           <p>
             Gunakan akun operasional Anda. Sesi disimpan aman di server dan

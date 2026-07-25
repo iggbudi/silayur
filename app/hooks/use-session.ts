@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import {
   fetchSession,
   logoutRemote,
+  peekSession,
   type SessionBootstrap,
 } from "../lib/config-api";
 
 export function useSession() {
   const router = useRouter();
-  const [session, setSession] = useState<SessionBootstrap | null>(null);
-  const [ready, setReady] = useState(false);
+  const [session, setSession] = useState<SessionBootstrap | null>(() =>
+    peekSession(),
+  );
+  const [ready, setReady] = useState(() => peekSession() !== null);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
     try {
-      const next = await fetchSession();
+      const next = await fetchSession({ force: true });
       setSession(next);
       setError("");
       return next;
@@ -62,9 +65,9 @@ export function useSession() {
     try {
       await logoutRemote();
     } finally {
-      setSession(null);
-      router.replace("/login");
-      router.refresh();
+      // Keep the current authenticated view mounted until the router swaps it.
+      // Clearing local state first would briefly render SessionGate.
+      router.replace("/login?loggedOut=1");
     }
   }, [router]);
 

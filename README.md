@@ -37,7 +37,8 @@ npm run db:seed
 npm run db:check
 ```
 
-Untuk mengganti password tanpa mengirimkannya sebagai argumen command line:
+Untuk mengganti password tanpa mengirimkannya sebagai argumen command line.
+Penggantian password otomatis mencabut seluruh sesi aktif pengguna tersebut:
 
 ```bash
 # set SILAYUR_NEW_PASSWORD di environment terlebih dahulu

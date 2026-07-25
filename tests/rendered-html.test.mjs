@@ -36,6 +36,6 @@ test("server-renders the three SILAYUR application routes", async () => {
   assert.match(dashboardHtml, /SILAYUR|Memuat sesi/i);
   assert.match(settingsHtml, /Pengaturan Operasional|Memuat sesi/i);
   assert.match(loginHtml, /Masuk ke sistem|Memeriksa sesi aman/i);
-  assert.match(loginHtml, /Checkpoint 9/i);
+  assert.match(loginHtml, /Sesi SILAYUR|Akses operasional/i);
   assert.doesNotMatch(loginHtml, /pilih pengguna aktif/i);
 });

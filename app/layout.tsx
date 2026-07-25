@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { DevRuntimeGuard } from "./components/dev-runtime-guard";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SILAYUR — Dashboard Operasional",
   description:
-    "Prototype dashboard operasional fleksibel untuk Silayur Park Semarang.",
+    "Dashboard operasional Silayur Park Semarang.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <DevRuntimeGuard />
         {children}
       </body>
     </html>

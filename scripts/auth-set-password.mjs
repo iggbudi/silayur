@@ -50,17 +50,32 @@ async function main() {
     authToken,
   });
   const passwordHash = await hashPassword(password);
-  const result = await client.execute({
-    sql: `UPDATE users
-          SET password_hash = ?, updated_at = datetime('now')
-          WHERE username = ?`,
-    args: [passwordHash, username],
-  });
-  client.close();
-  if (result.rowsAffected !== 1) {
-    throw new Error(`Pengguna tidak ditemukan: ${username}`);
+  const tx = await client.transaction("write");
+  try {
+    const result = await tx.execute({
+      sql: `UPDATE users
+            SET password_hash = ?, updated_at = datetime('now')
+            WHERE username = ?`,
+      args: [passwordHash, username],
+    });
+    if (result.rowsAffected !== 1) {
+      throw new Error(`Pengguna tidak ditemukan: ${username}`);
+    }
+    await tx.execute({
+      sql: `DELETE FROM auth_sessions
+            WHERE user_id = (SELECT id FROM users WHERE username = ?)`,
+      args: [username],
+    });
+    await tx.commit();
+  } catch (error) {
+    await tx.rollback();
+    throw error;
+  } finally {
+    client.close();
   }
-  console.log(JSON.stringify({ ok: true, username }, null, 2));
+  console.log(
+    JSON.stringify({ ok: true, username, sessionsRevoked: true }, null, 2),
+  );
 }
 
 main().catch((error) => {

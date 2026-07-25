@@ -11,8 +11,8 @@ import { cleanupTempDirectory } from "./test-utils.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const testPassword = "LocalTestPassword-2026!";
 
-function runScript(script, env) {
-  const result = spawnSync(process.execPath, [path.join(root, script)], {
+function runScript(script, env, args = []) {
+  const result = spawnSync(process.execPath, [path.join(root, script), ...args], {
     cwd: root,
     env,
     encoding: "utf8",
@@ -66,6 +66,33 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
       "SELECT COUNT(*) AS c FROM config_items",
     );
     assert.equal(Number(configCount.rows[0].c), 12);
+
+    await client.execute({
+      sql: `INSERT INTO auth_sessions
+            (token_hash, user_id, created_at, expires_at, last_seen_at)
+            VALUES (?, ?, datetime('now'), datetime('now', '+1 hour'), datetime('now'))`,
+      args: ["test-session", "admin-resepsionis"],
+    });
+    const resetPassword = "ResetPassword-2026!";
+    assert.match(
+      runScript(
+        "scripts/auth-set-password.mjs",
+        { ...env, SILAYUR_NEW_PASSWORD: resetPassword },
+        ["admin.resepsionis"],
+      ),
+      /"sessionsRevoked": true/,
+    );
+    const afterReset = await client.execute(
+      "SELECT password_hash FROM users WHERE username = 'admin.resepsionis'",
+    );
+    assert.notEqual(
+      afterReset.rows[0]?.password_hash,
+      password.rows[0]?.password_hash,
+    );
+    const sessionsAfterReset = await client.execute(
+      "SELECT COUNT(*) AS c FROM auth_sessions WHERE user_id = 'admin-resepsionis'",
+    );
+    assert.equal(Number(sessionsAfterReset.rows[0].c), 0);
 
     await client.execute(
       "UPDATE modules SET active = 0 WHERE key = 'complaints'",

@@ -1,3 +1,4 @@
+import { getRoleAccessMap } from "../../shared/access";
 import type {
   AccessLevel,
   AppConfigSnapshot,
@@ -24,23 +25,52 @@ export type RemoteConfig = AppConfigSnapshot & {
   error?: string;
 };
 
+type FetchSessionOptions = {
+  force?: boolean;
+};
+
+let cachedSession: SessionBootstrap | null = null;
+let pendingSession: Promise<SessionBootstrap> | null = null;
+
+export function peekSession(): SessionBootstrap | null {
+  return cachedSession;
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   const data = (await response.json()) as T & { error?: string };
   if (!response.ok) {
-    throw new Error(
-      data.error ?? `Permintaan gagal (${response.status})`,
-    );
+    throw new Error(data.error ?? `Permintaan gagal (${response.status})`);
   }
   return data;
 }
 
-export async function fetchSession(): Promise<SessionBootstrap> {
-  const response = await fetch("/api/auth/login", {
+export async function fetchSession(
+  options: FetchSessionOptions = {},
+): Promise<SessionBootstrap> {
+  if (!options.force && cachedSession) return cachedSession;
+  if (!options.force && pendingSession) return pendingSession;
+
+  const request = fetch("/api/auth/login", {
     method: "GET",
     cache: "no-store",
     credentials: "same-origin",
-  });
-  return parseJson<SessionBootstrap>(response);
+  })
+    .then((response) => parseJson<SessionBootstrap>(response))
+    .then((session) => {
+      cachedSession = session;
+      return session;
+    })
+    .catch((error) => {
+      cachedSession = null;
+      throw error;
+    });
+
+  pendingSession = request;
+  try {
+    return await request;
+  } finally {
+    if (pendingSession === request) pendingSession = null;
+  }
 }
 
 export async function loginRemote(
@@ -53,7 +83,9 @@ export async function loginRemote(
     credentials: "same-origin",
     body: JSON.stringify({ username, password }),
   });
-  return parseJson<SessionBootstrap>(response);
+  const session = await parseJson<SessionBootstrap>(response);
+  cachedSession = session;
+  return session;
 }
 
 export async function logoutRemote(): Promise<void> {
@@ -61,7 +93,12 @@ export async function logoutRemote(): Promise<void> {
     method: "POST",
     credentials: "same-origin",
   });
-  await parseJson<{ ok: boolean }>(response);
+  try {
+    await parseJson<{ ok: boolean }>(response);
+  } finally {
+    cachedSession = null;
+    pendingSession = null;
+  }
 }
 
 export async function fetchRemoteConfig(): Promise<RemoteConfig> {
@@ -86,5 +123,25 @@ export async function putRemoteConfig(partial: {
     credentials: "same-origin",
     body: JSON.stringify(partial),
   });
-  return parseJson<RemoteConfig>(response);
+  const config = await parseJson<RemoteConfig>(response);
+
+  if (cachedSession) {
+    const currentUser = config.users.find(
+      (user) => user.id === cachedSession?.user.id,
+    );
+    if (!currentUser?.active) {
+      cachedSession = null;
+    } else {
+      cachedSession = {
+        ...cachedSession,
+        user: currentUser,
+        role:
+          config.roles.find((role) => role.key === currentUser.role) ?? null,
+        access: getRoleAccessMap(config.permissions, currentUser.role),
+        modules: config.modules,
+      };
+    }
+  }
+
+  return config;
 }

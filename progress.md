@@ -1,17 +1,18 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **25 Juli 2026** — sinkronisasi riwayat CP0B–CP8 dan
-penyelesaian CP9 pada commit `545df0a`
+Pembaruan terakhir: **25 Juli 2026** — penyelesaian lokal CP10 untuk login
+Super Admin dan transisi sesi tanpa splash
 
 ## Status Saat Ini
 
-- Implementasi dan verifikasi lokal: **selesai**
+- Implementasi dan verifikasi lokal CP10: **selesai**
 - Branch: `main`
-- Commit implementasi terbaru: `545df0a` —
-  `feat: harden auth and persist dashboard config`
+- Commit production terbaru: `cbe872c` —
+  `fix: improve dashboard typography readability`
 - Rollout database CP9: **selesai**
+- Password Super Admin pada Turso: **sudah diperbarui dan diuji lokal**
 - Environment produksi Sites: **sudah dikonfigurasi**
-- Deployment Sites: **selesai**
+- Deployment Sites CP10: **belum dilakukan**
 - Production: `https://silayur-dashboard.cakilbiru.chatgpt.site`
 
 ## Aturan Status
@@ -113,21 +114,36 @@ penyelesaian CP9 pada commit `545df0a`
   - Dependensi diperbarui hingga `npm audit` melaporkan 0 kerentanan.
   - Selesai dan di-commit pada 25 Juli 2026 sebagai `545df0a`.
 
+## Fase 3 — Login Operasional dan Transisi Sesi
+
+- [x] **Checkpoint 10 — Login Super Admin tanpa splash**
+  - Password Super Admin `admin.resepsionis` diperbarui pada Turso remote dan
+    login lokal berhasil dengan akses penuh.
+  - Penggantian password berjalan atomik dan mencabut seluruh sesi lama.
+  - Session bootstrap disimpan sementara di client agar navigasi Dashboard ↔
+    Pengaturan tidak menampilkan splash login.
+  - Logout langsung membuka formulir login tanpa menampilkan `SessionGate`.
+  - Cache sesi diperbarui setelah perubahan modul, role, permission, atau user.
+  - Peringatan browser `ResizeObserver` yang tidak fatal tidak lagi dianggap
+    sebagai error aplikasi oleh overlay development vinext.
+  - Label prototype/checkpoint di halaman login dan metadata aplikasi dihapus.
+  - Regression test cache sesi dan reset password ditambahkan.
+  - Implementasi lokal selesai; deployment menunggu.
+
 ## Verifikasi Teknis Terakhir
 
-Dijalankan pada snapshot yang menjadi commit `545df0a`:
+Dijalankan pada worktree CP10 sebelum commit:
 
 - [x] TypeScript type-check
 - [x] Vinext production build
-- [x] 3 dari 3 behavior tests lulus
+- [x] 4 dari 4 behavior tests lulus
 - [x] Lint tanpa warning
 - [x] `npm audit` — 0 kerentanan
 - [x] Staged diff check
 - [x] Pemeriksaan credential pada file staged
 - [x] Drizzle generate — tidak ada perubahan schema tambahan
-- [x] Worktree bersih setelah commit implementasi
-- [x] Smoke test production: halaman, login, config GET/PUT, health, logout,
-  dan invalidasi sesi
+- [x] Worktree implementasi dan staged diff CP10 diperiksa sebelum commit
+- [x] Smoke test login lokal: autentikasi Super Admin dan bootstrap sesi
 
 ## Status Database dan Deployment
 
@@ -160,7 +176,9 @@ bisnis nyata, bukan atomic database transaction.
 - [x] Siapkan kredensial environment target tanpa memasukkannya ke repository.
 - [x] Jalankan migration dan inisialisasi password CP9.
 - [x] Lakukan smoke test target.
-- [x] Deploy dan verifikasi production.
+- [x] Deploy dan verifikasi production CP9.
+- [ ] Deploy dan verifikasi production CP10.
+- [ ] Mulai mengganti data simulasi dashboard dengan transaksi operasional nyata.
 
 ## Catatan Operasional
 
