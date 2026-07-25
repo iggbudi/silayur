@@ -1097,7 +1097,7 @@ button:focus-visible {
 
 .settings-side-note span {
   color: #b7adf3;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1111,7 +1111,7 @@ button:focus-visible {
 
 .settings-side-note p {
   color: #a49ccc;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.45;
   margin: 5px 0 0;
 }
@@ -1129,7 +1129,7 @@ button:focus-visible {
 .back-link {
   color: #6f6a94;
   display: inline-block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
   margin-bottom: 10px;
   text-decoration: none;
@@ -1154,7 +1154,7 @@ button:focus-visible {
 
 .settings-title-line p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin: 8px 0 0;
 }
 
@@ -1165,7 +1165,7 @@ button:focus-visible {
   border-radius: 999px;
   color: var(--success);
   display: inline-flex;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
   gap: 6px;
   padding: 5px 9px;
@@ -1206,7 +1206,7 @@ button:focus-visible {
 
 .setup-copy p {
   color: #c3bce9;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   margin: 0;
   max-width: 590px;
@@ -1238,7 +1238,7 @@ button:focus-visible {
 
 .setup-score-ring span {
   color: #cdc6f0;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 4px;
 }
 
@@ -1257,7 +1257,7 @@ button:focus-visible {
 
 .setup-score p span {
   color: #ada5d8;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 5px;
 }
 
@@ -1291,7 +1291,7 @@ button:focus-visible {
 }
 
 .settings-nav-heading span {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1299,7 +1299,7 @@ button:focus-visible {
 
 .settings-nav-heading small {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .settings-section-nav button {
@@ -1349,12 +1349,12 @@ button:focus-visible {
 }
 
 .settings-section-nav strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .settings-section-nav small {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 3px;
 }
 
@@ -1382,7 +1382,7 @@ button:focus-visible {
 
 .settings-content-header p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -1394,7 +1394,7 @@ button:focus-visible {
 
 .settings-content-actions > span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .settings-content-actions > span strong {
@@ -1408,9 +1408,9 @@ button:focus-visible {
   border-radius: 9px;
   color: #fff;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 650;
-  min-height: 35px;
+  min-height: 40px;
   padding: 0 12px;
 }
 
@@ -1434,7 +1434,7 @@ button:focus-visible {
 .quick-add-form label {
   color: #5d5878;
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 650;
   margin-bottom: 5px;
 }
@@ -1444,8 +1444,8 @@ button:focus-visible {
   border: 1px solid #e0ddf0;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 13px;
-  height: 35px;
+  font-size: 14px;
+  height: 40px;
   outline: 0;
   padding: 0 10px;
   width: 100%;
@@ -1484,7 +1484,7 @@ button:focus-visible {
 
 .user-form-heading p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   margin: 4px 0 0;
 }
 
@@ -1492,7 +1492,7 @@ button:focus-visible {
   background: var(--green-soft);
   border-radius: 999px;
   color: #4f40b8;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 5px 8px;
 }
@@ -1511,7 +1511,7 @@ button:focus-visible {
 
 .user-form-grid label > span {
   color: #6f6a87;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1521,8 +1521,8 @@ button:focus-visible {
   border: 1px solid #e0ddf0;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 12px;
-  height: 36px;
+  font-size: 14px;
+  height: 40px;
   outline: 0;
   padding: 0 10px;
   width: 100%;
@@ -1547,9 +1547,9 @@ button:focus-visible {
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  min-height: 33px;
+  min-height: 38px;
   padding: 0 12px;
 }
 
@@ -1563,7 +1563,7 @@ button:focus-visible {
   background: var(--red-soft);
   border-radius: 8px;
   color: #b33548;
-  font-size: 11px;
+  font-size: 13px;
   margin: 10px 0 0;
   padding: 8px 10px;
 }
@@ -1584,7 +1584,7 @@ button:focus-visible {
   border-radius: 9px;
   display: flex;
   gap: 6px;
-  height: 34px;
+  height: 40px;
   padding: 0 10px;
   width: min(280px, 50%);
 }
@@ -1596,14 +1596,14 @@ button:focus-visible {
 .settings-toolbar input {
   background: transparent;
   border: 0;
-  font-size: 12px;
+  font-size: 14px;
   outline: 0;
   width: 100%;
 }
 
 .saved-notice {
   color: var(--green);
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0;
   transition: opacity 160ms ease;
 }
@@ -1656,7 +1656,7 @@ button:focus-visible {
   border-radius: 11px;
   color: #4a3799;
   display: flex;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   height: 40px;
   justify-content: center;
@@ -1671,12 +1671,12 @@ button:focus-visible {
 }
 
 .user-identity strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .user-identity p {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
   margin: 3px 0 5px;
 }
 
@@ -1684,7 +1684,7 @@ button:focus-visible {
 .user-status {
   border-radius: 999px;
   display: inline-flex;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 4px 7px;
 }
@@ -1716,9 +1716,9 @@ button:focus-visible {
   border-radius: 8px;
   color: #5d5878;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  min-height: 31px;
+  min-height: 36px;
   padding: 0 10px;
 }
 
@@ -1738,7 +1738,7 @@ button:focus-visible {
 
 .user-access-preview > span {
   color: #8d88a3;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   padding-top: 5px;
   text-transform: uppercase;
@@ -1757,7 +1757,7 @@ button:focus-visible {
   border-radius: 999px;
   color: #4c4766;
   display: inline-flex;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   gap: 5px;
   padding: 4px 7px;
@@ -1765,7 +1765,7 @@ button:focus-visible {
 
 .user-access-chip small {
   color: var(--blue);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -1815,12 +1815,12 @@ button:focus-visible {
 }
 
 .config-row-copy strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .config-row-copy p {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
   margin: 4px 0 0;
 }
 
@@ -1828,7 +1828,7 @@ button:focus-visible {
   background: #eeecf7;
   border-radius: 999px;
   color: #6f6a87;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   padding: 3px 6px;
 }
@@ -1837,7 +1837,7 @@ button:focus-visible {
   background: #f2f1f9;
   border-radius: 999px;
   color: #7d7896;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   padding: 5px 8px;
 }
@@ -1873,7 +1873,7 @@ button:focus-visible {
 
 .config-empty p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin: 4px 0 0;
 }
 
@@ -1885,13 +1885,13 @@ button:focus-visible {
 }
 
 .role-master-header h3 {
-  font-size: 16px;
+  font-size: 18px;
   margin: 5px 0 4px;
 }
 
 .role-master-header p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
   margin: 0;
 }
@@ -1902,9 +1902,9 @@ button:focus-visible {
   border-radius: 9px;
   color: #fff;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  min-height: 34px;
+  min-height: 40px;
   padding: 0 12px;
 }
 
@@ -1927,7 +1927,7 @@ button:focus-visible {
 
 .role-master-form label {
   color: #6f6a87;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1936,8 +1936,8 @@ button:focus-visible {
   border: 1px solid #e0ddf0;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 12px;
-  height: 34px;
+  font-size: 14px;
+  height: 40px;
   outline: 0;
   padding: 0 9px;
   width: 100%;
@@ -1954,9 +1954,9 @@ button:focus-visible {
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  height: 34px;
+  height: 40px;
   padding: 0 10px;
 }
 
@@ -1985,7 +1985,7 @@ button:focus-visible {
   display: grid;
   gap: 10px;
   grid-template-columns: minmax(190px, 1fr) auto minmax(150px, auto);
-  min-height: 62px;
+  min-height: 68px;
   padding: 9px 11px;
 }
 
@@ -2020,21 +2020,21 @@ button:focus-visible {
 }
 
 .role-master-select strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .role-master-select small {
   background: #eeecf7;
   border-radius: 999px;
   color: #6f6a87;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 3px 5px;
 }
 
 .role-master-select p {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
   margin: 4px 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2050,7 +2050,7 @@ button:focus-visible {
 
 .role-master-meta > span {
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 4px 7px;
 }
@@ -2067,7 +2067,7 @@ button:focus-visible {
 
 .role-master-meta small {
   color: #8d88a3;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .role-master-actions {
@@ -2083,9 +2083,9 @@ button:focus-visible {
   border-radius: 7px;
   color: #5d5878;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  min-height: 27px;
+  min-height: 34px;
   padding: 0 7px;
 }
 
@@ -2127,14 +2127,14 @@ button:focus-visible {
 }
 
 .role-access-header h3 {
-  font-size: 16px;
+  font-size: 18px;
   margin: 5px 0 4px;
 }
 
 .role-access-header p,
 .selected-role-summary p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.55;
   margin: 0;
 }
@@ -2147,7 +2147,7 @@ button:focus-visible {
 
 .role-picker > span {
   color: #6f6a87;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -2157,8 +2157,8 @@ button:focus-visible {
   border: 1px solid #e0ddf0;
   border-radius: 9px;
   color: var(--ink);
-  font-size: 13px;
-  height: 36px;
+  font-size: 14px;
+  height: 40px;
   outline: 0;
   padding: 0 10px;
 }
@@ -2191,7 +2191,7 @@ button:focus-visible {
 .module-off-badge {
   border-radius: 999px;
   display: inline-flex;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 5px 8px;
   white-space: nowrap;
@@ -2221,7 +2221,7 @@ button:focus-visible {
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(180px, 1fr) auto;
-  min-height: 65px;
+  min-height: 70px;
   padding: 11px 13px;
 }
 
@@ -2237,12 +2237,12 @@ button:focus-visible {
 }
 
 .permission-copy strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .permission-copy p {
   color: #8d88a3;
-  font-size: 11px;
+  font-size: 13px;
   margin: 4px 0 0;
 }
 
@@ -2268,9 +2268,9 @@ button:focus-visible {
   border-radius: 6px;
   color: #6f6a87;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 650;
-  min-height: 29px;
+  min-height: 36px;
   padding: 0 7px;
 }
 
@@ -2321,7 +2321,7 @@ button:focus-visible {
   color: var(--green);
   display: flex;
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   height: 18px;
   justify-content: center;
@@ -2329,7 +2329,7 @@ button:focus-visible {
 }
 
 .settings-help p {
-  font-size: 11px;
+  font-size: 13px;
   margin: 0;
 }
 
