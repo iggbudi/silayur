@@ -11,8 +11,8 @@ penyelesaian CP9 pada commit `545df0a`
   `feat: harden auth and persist dashboard config`
 - Rollout database CP9: **selesai**
 - Environment produksi Sites: **sudah dikonfigurasi**
-- Deployment Sites: **belum dimulai**
-- Pembaruan dokumen progres ini: **belum di-commit**
+- Deployment Sites: **selesai**
+- Production: `https://silayur-dashboard.cakilbiru.chatgpt.site`
 
 ## Aturan Status
 
@@ -93,6 +93,8 @@ penyelesaian CP9 pada commit `545df0a`
 
 - [x] **Checkpoint 9 — Auth Server, RBAC, dan Persistence Operasional**
   - Login username/password dengan PBKDF2-SHA256 dan salt acak.
+  - Parameter PBKDF2 disesuaikan dengan batas maksimum 100.000 iterasi pada
+    runtime Workerd production.
   - Token sesi opaque dikirim melalui cookie `HttpOnly`, `SameSite=Lax`, dan
     `Secure` pada HTTPS.
   - Database hanya menyimpan hash token sesi.
@@ -124,6 +126,8 @@ Dijalankan pada snapshot yang menjadi commit `545df0a`:
 - [x] Pemeriksaan credential pada file staged
 - [x] Drizzle generate — tidak ada perubahan schema tambahan
 - [x] Worktree bersih setelah commit implementasi
+- [x] Smoke test production: halaman, login, config GET/PUT, health, logout,
+  dan invalidasi sesi
 
 ## Status Database dan Deployment
 
@@ -133,11 +137,11 @@ Dijalankan pada snapshot yang menjadi commit `545df0a`:
 - [x] Terapkan migration CP9 pada database Turso target.
 - [x] Tetapkan password awal Super Admin pada database target.
 - [x] Jalankan smoke test auth, config, persistence, dan health pada target.
-- [ ] Simpan versi dan deploy melalui Sites.
-- [ ] Verifikasi aplikasi production setelah deployment.
+- [x] Simpan versi dan deploy melalui Sites.
+- [x] Verifikasi aplikasi production setelah deployment.
 
 Schema, autentikasi, dan persistence CP9 sudah tersedia pada database Turso
-target. Deployment aplikasi CP9 melalui Sites belum dilakukan.
+target. Aplikasi CP9 sudah aktif melalui deployment Sites privat.
 
 ## Pekerjaan Produk yang Belum Dikerjakan
 
@@ -151,12 +155,12 @@ bisnis nyata, bukan atomic database transaction.
 
 ## Langkah Berikutnya
 
-- [ ] Commit pembaruan `progress.md`.
-- [ ] Push branch `main` ke remote Git.
-- [ ] Siapkan kredensial environment target tanpa memasukkannya ke repository.
+- [x] Commit pembaruan `progress.md`.
+- [x] Push branch `main` ke source repository Sites.
+- [x] Siapkan kredensial environment target tanpa memasukkannya ke repository.
 - [x] Jalankan migration dan inisialisasi password CP9.
 - [x] Lakukan smoke test target.
-- [ ] Deploy dan verifikasi production.
+- [x] Deploy dan verifikasi production.
 
 ## Catatan Operasional
 
