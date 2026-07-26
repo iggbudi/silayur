@@ -1,18 +1,18 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **25 Juli 2026** — penyelesaian lokal CP10 untuk login
-Super Admin dan transisi sesi tanpa splash
+Pembaruan terakhir: **25 Juli 2026** — implementasi CP11 master tiket masuk
+Dewasa/Anak dan rollout schema ke Turso remote
 
 ## Status Saat Ini
 
-- Implementasi dan verifikasi lokal CP10: **selesai**
+- Implementasi dan verifikasi lokal CP11: **selesai**
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`
-- Rollout database CP9: **selesai**
+- Rollout database CP11: **selesai**
 - Password Super Admin pada Turso: **sudah diperbarui dan diuji lokal**
 - Environment produksi Sites: **sudah dikonfigurasi**
-- Deployment Sites CP10: **belum dilakukan**
+- Deployment Sites CP10–CP11: **belum dilakukan**
 - Production: `https://silayur-dashboard.cakilbiru.chatgpt.site`
 
 ## Aturan Status
@@ -128,22 +128,50 @@ Super Admin dan transisi sesi tanpa splash
     sebagai error aplikasi oleh overlay development vinext.
   - Label prototype/checkpoint di halaman login dan metadata aplikasi dihapus.
   - Regression test cache sesi dan reset password ditambahkan.
+  - Sidebar Dashboard dan Pengaturan memakai navigasi penuh yang konsisten dan
+    drawer mobile yang aksesibel.
+  - Login langsung berpindah ke Dashboard tanpa hard refresh.
   - Implementasi lokal selesai; deployment menunggu.
+
+## Fase 4 — Master Data Operasional
+
+- [x] **Checkpoint 11 — Master Tiket Masuk dan Tarif Efektif**
+  - Master tiket terstruktur menggantikan penggunaan `config_items` generik di
+    UI Tiket & Tarif.
+  - Dua kategori tetap: Dewasa (`TKT-DEWASA`) dan Anak (`TKT-ANAK`).
+  - Anak berarti usia di bawah 12 tahun dan dipilih manual oleh petugas tanpa
+    validasi umur otomatis.
+  - Masa berlaku dapat diatur `same_day` atau `selected_date`; tidak ada batas
+    maksimal tanggal ke depan dan tidak ada reschedule setelah transaksi.
+  - Tarif dipisahkan menjadi weekday dan weekend; hari libur mengikuti tarif
+    weekend.
+  - Harga disimpan sebagai integer Rupiah dengan periode mulai/akhir, status,
+    validasi tanggal, dan pencegahan periode aktif yang bertumpuk.
+  - UI mendukung edit produk, aktivasi, tambah/edit tarif, periode berlaku, dan
+    riwayat tarif.
+  - Status aktif/nonaktif pada produk dan tarif diperjelas melalui badge, titik
+    status, border, aksen warna, dan kontras kartu.
+  - Konflik CSS yang membuat toggle status tampak putih sudah diperbaiki;
+    toggle aktif kembali tampil ungu dan posisi knob mengikuti status.
+  - Migration `drizzle/0002_checkpoint_11_ticket_master.sql` dan seed idempotent
+    sudah diterapkan ke Turso remote.
+  - Turso remote terverifikasi memiliki 2 produk tiket, 2 tarif awal, dan schema
+    version 3.
+  - Transaksi penjualan tiket belum dibuat pada checkpoint ini.
 
 ## Verifikasi Teknis Terakhir
 
-Dijalankan pada worktree CP10 sebelum commit:
+Dijalankan pada worktree CP11:
 
 - [x] TypeScript type-check
 - [x] Vinext production build
 - [x] 4 dari 4 behavior tests lulus
 - [x] Lint tanpa warning
 - [x] `npm audit` — 0 kerentanan
-- [x] Staged diff check
-- [x] Pemeriksaan credential pada file staged
-- [x] Drizzle generate — tidak ada perubahan schema tambahan
-- [x] Worktree implementasi dan staged diff CP10 diperiksa sebelum commit
-- [x] Smoke test login lokal: autentikasi Super Admin dan bootstrap sesi
+- [ ] Staged diff dan pemeriksaan credential sebelum commit CP11
+- [x] Drizzle generate — migration CP11 dibuat dan sinkron dengan schema
+- [x] Integration test migration, seed, auth, RBAC, dan persistence tiket
+- [x] Smoke test lokal: login Super Admin serta GET/PUT konfigurasi CP11
 
 ## Status Database dan Deployment
 
@@ -154,10 +182,14 @@ Dijalankan pada worktree CP10 sebelum commit:
 - [x] Tetapkan password awal Super Admin pada database target.
 - [x] Jalankan smoke test auth, config, persistence, dan health pada target.
 - [x] Simpan versi dan deploy melalui Sites.
-- [x] Verifikasi aplikasi production setelah deployment.
+- [x] Verifikasi aplikasi production setelah deployment CP9.
+- [x] Terapkan migration dan seed CP11 pada database Turso target.
+- [x] Verifikasi master tiket CP11 melalui API lokal terhadap Turso remote.
+- [ ] Deploy UI CP10–CP11 ke Sites.
 
-Schema, autentikasi, dan persistence CP9 sudah tersedia pada database Turso
-target. Aplikasi CP9 sudah aktif melalui deployment Sites privat.
+Schema CP11 dan master tiket awal sudah tersedia pada database Turso target.
+Aplikasi Sites masih menggunakan deployment UI sebelumnya sampai rollout
+CP10–CP11 dilakukan.
 
 ## Pekerjaan Produk yang Belum Dikerjakan
 
@@ -177,7 +209,10 @@ bisnis nyata, bukan atomic database transaction.
 - [x] Jalankan migration dan inisialisasi password CP9.
 - [x] Lakukan smoke test target.
 - [x] Deploy dan verifikasi production CP9.
-- [ ] Deploy dan verifikasi production CP10.
+- [ ] Tetapkan tarif operasional untuk tiket Anak dan aktifkan tarif Weekend
+  setelah dikonfirmasi.
+- [ ] Deploy dan verifikasi production CP10–CP11.
+- [ ] Implementasikan transaksi penjualan tiket masuk berdasarkan master CP11.
 - [ ] Mulai mengganti data simulasi dashboard dengan transaksi operasional nyata.
 
 ## Catatan Operasional
@@ -189,3 +224,25 @@ bisnis nyata, bukan atomic database transaction.
 - Jalankan perintah database dari direktori `dashboard`.
 - Sumber kebenaran konfigurasi aplikasi adalah database.
 - Sumber kebenaran autentikasi adalah sesi server-side, bukan `localStorage`.
+
+## Fondasi Arsitektur (Checkpoint 12 — Pekerjaan Arsitektur)
+
+Disusun bertahap melalui 5 fase, lihat
+[`ARCHITECTURE.md`](./ARCHITECTURE.md) dan
+[`docs/adr/0001-hybrid-layered-with-co-location.md`](./docs/adr/0001-hybrid-layered-with-co-location.md).
+
+- [x] **Fase 0 — Pondasi dokumentasi & path alias** (26 Juli 2026)
+  - `ARCHITECTURE.md` menjelaskan filosofi hybrid (layered + co-located + slice).
+  - `docs/folder-map.md` memetakan struktur folder & slice domain.
+  - `docs/adr/0001-hybrid-layered-with-co-location.md` menjelaskan keputusan
+    arsitektur & trade-off (Opsi A: pure vertical, B: pure layered, C: hybrid).
+  - `tsconfig.json` menambah path alias `@shared/*`, `@db/*`, `@app/*`,
+    `@features/*`, `@slices/*` (tanpa menghapus `@/*` yang sudah ada).
+  - Validasi: type-check hijau, lint hijau, 4/4 behavior test pass.
+  - Tidak ada perubahan kode aplikasi — hanya docs & config.
+- [ ] **Fase 1 — Co-locate tests** (rencana)
+- [ ] **Fase 2 — Public API boundary per slice** (rencana)
+- [ ] **Fase 3 — Extract CSS tokens** (rencana, risiko sedang)
+- [ ] **Fase 4 — Scaffold `app/features/`** (rencana, untuk slice baru)
+- [ ] **Fase 5 — Pilot slice (transaksi penjualan tiket)** (rencana)
+
