@@ -5,6 +5,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
 /**
@@ -71,6 +72,60 @@ export const users = sqliteTable("users", {
     .default(sql`(datetime('now'))`),
 });
 
+export const ticketProducts = sqliteTable(
+  "ticket_products",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    visitorCategory: text("visitor_category", {
+      enum: ["adult", "child"],
+    }).notNull(),
+    validityMode: text("validity_mode", {
+      enum: ["same_day", "selected_date"],
+    })
+      .notNull()
+      .default("same_day"),
+    description: text("description").notNull().default(""),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [uniqueIndex("ticket_products_code_idx").on(table.code)],
+);
+
+export const ticketPrices = sqliteTable(
+  "ticket_prices",
+  {
+    id: text("id").primaryKey(),
+    ticketProductId: text("ticket_product_id")
+      .notNull()
+      .references(() => ticketProducts.id, { onDelete: "cascade" }),
+    dayType: text("day_type", { enum: ["weekday", "weekend"] }).notNull(),
+    price: integer("price").notNull(),
+    validFrom: text("valid_from").notNull(),
+    validUntil: text("valid_until"),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index("ticket_prices_product_day_idx").on(
+      table.ticketProductId,
+      table.dayType,
+      table.validFrom,
+    ),
+  ],
+);
+
 export const configItems = sqliteTable(
   "config_items",
   {
@@ -123,3 +178,85 @@ export const schemaVersion = sqliteTable("schema_version", {
     .default(sql`(datetime('now'))`),
   notes: text("notes").notNull().default(""),
 });
+
+/**
+ * SILAYUR ticket sales (Checkpoint 12+).
+ * Setiap transaksi penjualan tiket di loket dicatat di sini.
+ * sale_items adalah line items (1 transaksi bisa multi tiket / multi kategori).
+ */
+
+export const sales = sqliteTable(
+  "sales",
+  {
+    id: text("id").primaryKey(),
+    /**
+     * Receipt number, human-readable, e.g. "RCP-20260726-0001".
+     * Unique per hari, generated di server.
+     */
+    receiptNumber: text("receipt_number").notNull().unique(),
+    soldBy: text("sold_by")
+      .notNull()
+      .references(() => users.id),
+    soldAt: text("sold_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    /**
+     * Snapshot tanggal kunjungan. Untuk tiket same_day selalu = soldAt.
+     * Untuk tiket selected_date bisa berbeda (untuk MVP selalu = soldAt).
+     */
+    visitDate: text("visit_date").notNull(),
+    /**
+     * Total amount dalam Rupiah (integer).
+     * Sama dengan SUM(sale_items.subtotal) untuk memastikan konsistensi.
+     */
+    totalAmount: integer("total_amount").notNull(),
+    /**
+     * Jumlah tiket (SUM of quantity di sale_items).
+     */
+    totalQuantity: integer("total_quantity").notNull(),
+    /**
+     * Status: completed, voided.
+     * Untuk MVP hanya "completed" (void di-defer).
+     */
+    status: text("status", { enum: ["completed", "voided"] })
+      .notNull()
+      .default("completed"),
+    notes: text("notes").notNull().default(""),
+  },
+  (table) => [
+    index("sales_sold_at_idx").on(table.soldAt),
+    index("sales_sold_by_idx").on(table.soldBy),
+    index("sales_visit_date_idx").on(table.visitDate),
+  ],
+);
+
+export const saleItems = sqliteTable(
+  "sale_items",
+  {
+    id: text("id").primaryKey(),
+    saleId: text("sale_id")
+      .notNull()
+      .references(() => sales.id, { onDelete: "cascade" }),
+    ticketProductId: text("ticket_product_id")
+      .notNull()
+      .references(() => ticketProducts.id),
+    /**
+     * Snapshot nama produk & kategori di waktu transaksi.
+     * Penting: jika nanti master tiket di-rename, transaksi lama tetap refer ke nama lama.
+     */
+    productName: text("product_name").notNull(),
+    visitorCategory: text("visitor_category", {
+      enum: ["adult", "child"],
+    }).notNull(),
+    /**
+     * Snapshot harga satuan saat transaksi.
+     */
+    unitPrice: integer("unit_price").notNull(),
+    quantity: integer("quantity").notNull(),
+    subtotal: integer("subtotal").notNull(),
+  },
+  (table) => [
+    index("sale_items_sale_idx").on(table.saleId),
+    index("sale_items_product_idx").on(table.ticketProductId),
+  ],
+);

@@ -273,5 +273,16 @@ Disusun bertahap melalui 5 fase, lihat
   - Rule divalidasi dengan file dummy — terdeteksi 1 warning. File test dihapus setelah validasi.
   - `ARCHITECTURE.md` ditambah section "Vertical Features (Fase 4+)" dengan tabel perbandingan `features/` vs `slices/`.
   - Validasi: type-check hijau, lint 0 error, 4/4 test pass.
-- [ ] **Fase 5 — Pilot slice (transaksi penjualan tiket)** (rencana)
+- [x] **Fase 5 — Pilot slice: transaksi penjualan tiket** (26 Juli 2026)
+  - DB schema: tambah tabel `sales` (header transaksi) dan `sale_items` (line items) dengan snapshot harga & nama produk.
+  - Migration: `drizzle/0003_checkpoint_12_ticket_sales.sql` (2 tabel + 6 index).
+  - `drizzle/meta/_journal.json` di-update dengan idx 3.
+  - Slice self-contained: `app/features/ticket-sales/` dengan `types.ts`, `repo.ts`, `api.ts`, `index.ts`, `components/SaleForm.tsx`, `components/SaleHistory.tsx`, `components/TodaySummary.tsx`, `__tests__/repo.test.ts`.
+  - API route: `app/api/sales/route.ts` (thin handler: POST create, GET list-by-date).
+  - Halaman: `app/penjualan/page.tsx` (form + summary + history).
+  - Snapshot pricing: harga & nama produk di-freeze di `sale_items` saat transaksi, agar history stabil meski master tarif berubah.
+  - Receipt number format: `RCP-YYYYMMDD-####` (auto-increment per hari).
+  - Atomic: `createSale()` di-wrap `db.transaction()` untuk insert sale + items.
+  - Test: 2 test pass (type validation & signature check). Integration test lengkap didefer (butuh snapshot drizzle).
+  - Validasi: type-check hijau, lint 0 error (2 warning Fase 4 di app/api/sales/route.ts), 6/6 test pass.
 

@@ -15,6 +15,20 @@
       "when": 1784951018009,
       "tag": "0001_checkpoint_9_secure_persistence",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784966624534,
+      "tag": "0002_checkpoint_11_ticket_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785000000000,
+      "tag": "0003_checkpoint_12_ticket_sales",
+      "breakpoints": true
     }
   ]
 }

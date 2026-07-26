@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run type-check && npm run build && tsx --test tests/*.test.mjs \"app/**/__tests__/*.test.mjs\" \"db/__tests__/*.test.mjs\"",
+    "test": "npm run type-check && npm run build && tsx --test tests/*.test.mjs \"app/**/__tests__/*.test.mjs\" \"app/features/**/__tests__/*.test.mjs\" \"db/__tests__/*.test.mjs\"",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "type-check": "tsc --noEmit --incremental false",
     "db:generate": "drizzle-kit generate",
