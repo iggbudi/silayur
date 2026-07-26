@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { cleanupTempDirectory } from "./test-utils.mjs";
+import { cleanupTempDirectory } from "../../../tests/test-utils.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const testPassword = "LocalTestPassword-2026!";
 
 function runScript(script, env) {
@@ -43,10 +43,10 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
 
     const [loginRoute, logoutRoute, configRoute, healthRoute] =
       await Promise.all([
-        import("../app/api/auth/login/route.ts"),
-        import("../app/api/auth/logout/route.ts"),
-        import("../app/api/config/route.ts"),
-        import("../app/api/db/health/route.ts"),
+        import("../auth/login/route.ts"),
+        import("../auth/logout/route.ts"),
+        import("../config/route.ts"),
+        import("../db/health/route.ts"),
       ]);
 
     const request = (pathname, init = {}) => {
@@ -108,8 +108,13 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
     });
     assert.equal(adminConfig.status, 200);
     const before = await adminConfig.json();
-    assert.equal(before.checkpoint, "9");
-    assert.equal(before.configItems.tickets.length, 2);
+    assert.equal(before.checkpoint, "11");
+    assert.equal(before.configItems.tickets.length, 0);
+    assert.equal(before.ticketProducts.length, 2);
+    assert.deepEqual(
+      before.ticketProducts.map((product) => product.visitorCategory).sort(),
+      ["adult", "child"],
+    );
 
     const crossOrigin = await request("/api/config", {
       method: "PUT",
@@ -158,27 +163,63 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
       "module change must roll back when another patch member fails",
     );
 
-    const nextConfigItems = structuredClone(before.configItems);
-    nextConfigItems.tickets[0].name = "Tiket reguler tersimpan";
+    const overlapping = structuredClone(before.ticketProducts);
+    const adultForOverlap = overlapping.find(
+      (product) => product.visitorCategory === "adult",
+    );
+    adultForOverlap.prices.push({
+      ...adultForOverlap.prices.find((price) => price.dayType === "weekday"),
+      id: "overlapping-weekday-price",
+      price: 18000,
+    });
+    const rejectedOverlap = await request("/api/config", {
+      method: "PUT",
+      headers: {
+        cookie: adminCookie,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ ticketProducts: overlapping }),
+    });
+    assert.equal(rejectedOverlap.status, 400);
+
+    const nextTicketProducts = structuredClone(before.ticketProducts);
+    const adult = nextTicketProducts.find(
+      (product) => product.visitorCategory === "adult",
+    );
+    adult.name = "Tiket Dewasa Tersimpan";
+    adult.prices.find((price) => price.dayType === "weekday").price = 17500;
     const persisted = await request("/api/config", {
       method: "PUT",
       headers: {
         cookie: adminCookie,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ configItems: nextConfigItems }),
+      body: JSON.stringify({ ticketProducts: nextTicketProducts }),
     });
     assert.equal(persisted.status, 200);
+    const persistedBody = await persisted.json();
     assert.equal(
-      (await persisted.json()).configItems.tickets[0].name,
-      "Tiket reguler tersimpan",
+      persistedBody.ticketProducts.find(
+        (product) => product.visitorCategory === "adult",
+      ).name,
+      "Tiket Dewasa Tersimpan",
+    );
+    assert.equal(
+      persistedBody.ticketProducts
+        .find((product) => product.visitorCategory === "adult")
+        .prices.find((price) => price.dayType === "weekday").price,
+      17500,
     );
 
     const health = await request("/api/db/health", {
       headers: { cookie: adminCookie },
     });
     assert.equal(health.status, 200);
-    assert.equal((await health.json()).counts.config_items, 12);
+    const healthBody = await health.json();
+    assert.equal(healthBody.checkpoint, "11");
+    assert.equal(healthBody.counts.config_items, 10);
+    assert.equal(healthBody.counts.ticket_products, 2);
+    assert.equal(healthBody.counts.ticket_prices, 2);
 
     const logout = await request("/api/auth/logout", {
       method: "POST",

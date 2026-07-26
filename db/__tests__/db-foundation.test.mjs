@@ -6,9 +6,9 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@libsql/client";
-import { cleanupTempDirectory } from "./test-utils.mjs";
+import { cleanupTempDirectory } from "../../tests/test-utils.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const testPassword = "LocalTestPassword-2026!";
 
 function runScript(script, env, args = []) {
@@ -47,6 +47,8 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
       "roles",
       "role_permissions",
       "users",
+      "ticket_products",
+      "ticket_prices",
       "config_items",
       "auth_sessions",
       "schema_version",
@@ -65,7 +67,21 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     const configCount = await client.execute(
       "SELECT COUNT(*) AS c FROM config_items",
     );
-    assert.equal(Number(configCount.rows[0].c), 12);
+    assert.equal(Number(configCount.rows[0].c), 10);
+
+    const ticketProducts = await client.execute(
+      "SELECT code, visitor_category, validity_mode FROM ticket_products ORDER BY visitor_category",
+    );
+    assert.equal(ticketProducts.rows.length, 2);
+    assert.deepEqual(
+      ticketProducts.rows.map((row) => String(row.visitor_category)),
+      ["adult", "child"],
+    );
+    const ticketPrices = await client.execute(
+      "SELECT day_type, price FROM ticket_prices ORDER BY day_type",
+    );
+    assert.equal(ticketPrices.rows.length, 2);
+    assert.equal(Number(ticketPrices.rows[0].price), 15000);
 
     await client.execute({
       sql: `INSERT INTO auth_sessions
@@ -114,9 +130,9 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     );
     assert.equal(preservedUser.rows[0].name, "Nama Operasional");
     const versions = await after.execute(
-      "SELECT COUNT(*) AS c FROM schema_version WHERE label = 'checkpoint-9-secure-persistence'",
+      "SELECT COUNT(*) AS c FROM schema_version WHERE label IN ('checkpoint-9-secure-persistence', 'checkpoint-11-ticket-master')",
     );
-    assert.equal(Number(versions.rows[0].c), 1);
+    assert.equal(Number(versions.rows[0].c), 2);
     after.close();
   } finally {
     cleanupTempDirectory(dir);

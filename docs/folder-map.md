@@ -117,10 +117,16 @@ dashboard/
 │  ├── auth-set-password.mjs
 │  └── sync-dev-vars.mjs
 │
-├─ 🧪 TESTS (tests/)
-│  ├── test-utils.mjs
-│  ├── rendered-html.test.mjs  ← Cross-slice test
-│  └── (lainnya akan di-co-locate di Fase 1)
+├─ 🧪 TESTS (tests/) & co-located __tests__/
+│  ├── tests/
+│  │   ├── test-utils.mjs        ← shared util (cleanupTempDirectory)
+│  │   └── rendered-html.test.mjs  ← cross-slice test
+│  ├── db/__tests__/
+│  │   └── db-foundation.test.mjs  ← co-located dengan db/
+│  ├── app/api/__tests__/
+│  │   └── config-api.test.mjs     ← co-located dengan app/api/
+│  └── app/lib/__tests__/
+│      └── session-cache.test.mjs  ← co-located dengan app/lib/
 │
 ├─ ⚙️ WORKER ENTRY (worker/)
 │  └── index.ts                ← Cloudflare Worker handler

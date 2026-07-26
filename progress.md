@@ -240,7 +240,16 @@ Disusun bertahap melalui 5 fase, lihat
     `@features/*`, `@slices/*` (tanpa menghapus `@/*` yang sudah ada).
   - Validasi: type-check hijau, lint hijau, 4/4 behavior test pass.
   - Tidak ada perubahan kode aplikasi — hanya docs & config.
-- [ ] **Fase 1 — Co-locate tests** (rencana)
+- [x] **Fase 1 — Co-locate tests** (26 Juli 2026)
+  - 3 test dipindah ke folder `__tests__/` di sebelah source-nya:
+    - `tests/db-foundation.test.mjs` → `db/__tests__/`
+    - `tests/config-api.test.mjs` → `app/api/__tests__/`
+    - `tests/session-cache.test.mjs` → `app/lib/__tests__/`
+  - `tests/rendered-html.test.mjs` tetap di `tests/` (cross-slice, butuh `dist/`).
+  - `tests/test-utils.mjs` tetap di `tests/` (shared util, dipakai semua test).
+  - Import path internal di test di-update: `root` resolution naik 1–2 level, dan relative path dynamic `import()` disederhanakan.
+  - `package.json` test script di-update untuk glob `**/__tests__/*.test.mjs`.
+  - Validasi: 4/4 test pass di lokasi baru, type-check hijau, lint hijau.
 - [ ] **Fase 2 — Public API boundary per slice** (rencana)
 - [ ] **Fase 3 — Extract CSS tokens** (rencana, risiko sedang)
 - [ ] **Fase 4 — Scaffold `app/features/`** (rencana, untuk slice baru)
