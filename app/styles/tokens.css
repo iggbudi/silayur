@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1e1b31;
+  --muted: #6f6b87;
+  --line: #e7e5f1;
+  --canvas: #f6f6fb;
+  --panel: #ffffff;
+  --forest: #332670;
+  --forest-dark: #1d1547;
+  --green: #6c5ce7;
+  --green-soft: #eeecfd;
+  --blue: #2095d8;
+  --blue-soft: #e4f3fc;
+  --orange: #f0922e;
+  --orange-soft: #fdf0dd;
+  --purple: #c94fa2;
+  --purple-soft: #fae9f3;
+  --red: #e04e68;
+  --red-soft: #fcecef;
+  --success: #1e8a5a;
+  --success-soft: #e3f5ec;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}

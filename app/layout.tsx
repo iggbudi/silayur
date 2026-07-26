@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { DevRuntimeGuard } from "./components/dev-runtime-guard";
+// Order matters: tokens (CSS variables) -> base (resets) -> globals (components).
+import "./styles/tokens.css";
+import "./styles/base.css";
 import "./globals.css";
 
 const geistSans = Geist({

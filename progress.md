@@ -258,7 +258,14 @@ Disusun bertahap melalui 5 fase, lihat
   - 8 warning terdeteksi di 4 file API route (semua import via `db/auth-repo`, `db/config-repo`, `db/ticket-repo`, `shared/access`).
   - `ARCHITECTURE.md` di-update dengan aturan boundary slice.
   - Validasi: type-check hijau, lint 0 error (8 warning), 4/4 test pass.
-- [ ] **Fase 3 — Extract CSS tokens** (rencana, risiko sedang)
+- [x] **Fase 3A — Extract CSS tokens & base** (26 Juli 2026)
+  - Extract :root CSS variables + @theme inline ke app/styles/tokens.css (574 bytes).
+  - Extract reset/base (*, html, body, button, button:focus-visible) ke app/styles/base.css (392 bytes).
+  - app/globals.css sekarang hanya berisi component classes (58 KB, turun dari 58.6 KB).
+  - app/layout.tsx di-update untuk import tokens.css + base.css sebelum globals.css.
+  - Urutan import penting: tokens (variabel) -> base (reset) -> globals (komponen).
+  - Validasi: type-check hijau, lint 0 error (8 warning Fase 2), 4/4 test pass.
+  - Component-specific CSS TETAP di globals.css untuk stabilitas visual. Pemecahan per-komponen di-defer ke iterasi berikutnya (risiko lebih tinggi).
 - [ ] **Fase 4 — Scaffold `app/features/`** (rencana, untuk slice baru)
 - [ ] **Fase 5 — Pilot slice (transaksi penjualan tiket)** (rencana)
 
