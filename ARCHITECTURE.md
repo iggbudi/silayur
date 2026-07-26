@@ -7,9 +7,27 @@
 ## TL;DR
 
 SILAYUR adalah **edge-deployed modular monolith** dengan organisasi kode
-**hybrid (layered + co-located)** dan **opsional vertical slice** untuk
-fitur baru. Kita **tidak** refactor besar-besaran; setiap fase dirancang
-agar **aman, inkremental, dan backward-compatible**.
+**hybrid (layered + co-located + vertical slice)**. Kita **tidak** refactor
+besar-besaran; setiap fase dirancang agar **aman, inkremental, dan
+backward-compatible**. Sejak CP12, kita punya **pilot slice** (`ticket-sales`)
+yang membuktikan pattern vertical slicing berjalan baik berdampingan dengan
+layered existing.
+
+## Status Implementasi
+
+Semua 5 fase roadmap arsitektur **selesai** (commit `5737833`):
+
+| Fase | Scope | Commit |
+|---|---|---|
+| 0 | Pondasi docs & path alias | `3386d3c` |
+| 1 | Co-locate tests dengan source | `1f1552b` |
+| 2 | Public API boundary per slice | `23e9a23` |
+| 3A | Extract CSS tokens & base | `e8c7c3a` |
+| 4 | Scaffold `app/features/` | `6b3cd7a` |
+| 5 | Pilot slice `ticket-sales/` | `5737833` |
+
+Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./docs/adr/0001-hybrid-layered-with-co-location.md)
+untuk keputusan arsitektur & trade-off.
 
 ## Filosofi Inti
 
@@ -120,6 +138,60 @@ Untuk fitur **baru** yang self-contained, gunakan folder
 
 Lihat [`app/features/README.md`](./app/features/README.md) untuk konvensi
 lengkap dan cara memulai fitur baru.
+
+## Pilot Slice: `ticket-sales/` (Fase 5)
+
+Slice pertama yang mengimplementasikan pattern vertical. Semua kode
+transaksi penjualan tiket (DB schema, repo, API, UI, tests) ada di
+[`app/features/ticket-sales/`](./app/features/ticket-sales/).
+
+### Struktur
+
+```
+app/features/ticket-sales/
+├── index.ts                       # Public API (re-exports)
+├── types.ts                       # Sale, SaleItem, SaleInput, PricedItem
+├── repo.ts                        # createSale, loadSaleById, list, summary
+├── api.ts                         # Client wrapper (createSale, listTodaySales)
+├── components/
+│   ├── SaleForm.tsx               # Form input tiket per produk
+│   ├── SaleHistory.tsx            # List transaksi hari ini
+│   └── TodaySummary.tsx           # Ringkasan count & revenue
+└── __tests__/
+    └── repo.test.ts               # 2 test (type & signature)
+```
+
+### Key Design Decisions
+
+- **Atomic transaction** — `createSale()` di-wrap `db.transaction()` untuk
+  insert header `sales` + line items `sale_items` secara all-or-nothing.
+- **Snapshot pricing** — `unitPrice`, `subtotal`, dan `productName` di-freeze
+  di `sale_items` saat transaksi. Jika master tarif atau nama produk
+  berubah di kemudian hari, transaksi lama tetap refer ke nilai historis.
+- **Effective tariff** — query otomatis cari harga sesuai `dayType`
+  (weekday/weekend) dan periode `validFrom`/`validUntil` di `ticket_prices`.
+- **Receipt number** — format `RCP-YYYYMMDD-####` (auto-increment per hari).
+- **Day type detection** — weekend = Sabtu/Minggu, weekday = Senin-Jumat.
+
+### DB Schema
+
+- Tabel `sales`: `id`, `receipt_number` (UNIQUE), `sold_by`, `sold_at`,
+  `visit_date`, `total_amount`, `total_quantity`, `status`, `notes`.
+- Tabel `sale_items`: `id`, `sale_id` (FK cascade), `ticket_product_id`
+  (FK), `product_name`, `visitor_category`, `unit_price`, `quantity`,
+  `subtotal`.
+- 6 index untuk query performance (`sold_at`, `sold_by`, `visit_date`,
+  `sale_id`, `product_id`, `receipt_number` UNIQUE).
+- Migration: [`drizzle/0003_checkpoint_12_ticket_sales.sql`](./drizzle/0003_checkpoint_12_ticket_sales.sql).
+
+### Wire-up
+
+- **API route**: [`app/api/sales/route.ts`](./app/api/sales/route.ts) —
+  thin handler `POST` (create) & `GET` (list by date), import logic dari
+  `features/ticket-sales/repo`.
+- **Halaman**: [`app/penjualan/page.tsx`](./app/penjualan/page.tsx) —
+  RBAC: butuh `access.visitors` (view/manage).
+- **Nav**: BELUM ditambahkan ke `sidebar-navigation.tsx` (todo next phase).
 
 ## Mengikuti Roadmap
 

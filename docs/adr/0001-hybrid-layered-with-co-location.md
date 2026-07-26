@@ -1,9 +1,10 @@
 # ADR 0001: Hybrid Layered + Co-located Architecture
 
-- **Status**: Accepted
+- **Status**: Accepted & Implemented
 - **Date**: 26 Juli 2026
 - **Context**: Checkpoint 12 — refactor fondasi organisasi kode
 - **Deciders**: Owner SILAYUR
+- **Implemented**: 26 Juli 2026 (commit `5737833` — akhir Fase 5)
 
 ## Context
 
@@ -108,6 +109,33 @@ fitur existing. Tidak ada "big-bang refactor".
 Setiap fase di-commit terpisah dengan pesan jelas. Untuk rollback:
 - Fase 0: revert commit `chore(arch): foundation` (hapus `docs/`, `ARCHITECTURE.md`, revert `tsconfig.json`)
 - Fase 1-5: `git revert <commit-hash>` per fase
+
+## Hasil Implementasi (26 Juli 2026)
+
+ADR ini diimplementasikan dalam 6 commit bertahap:
+
+| Fase | Commit | Scope |
+|---|---|---|
+| 0 | `3386d3c` | Pondasi: `ARCHITECTURE.md`, `docs/folder-map.md`, ADR, path alias |
+| 1 | `1f1552b` | Co-locate tests (3 test dipindah ke `__tests__/` sebelah source) |
+| 2 | `23e9a23` | Public API boundary (6 slice di `app/slices/` + ESLint warning) |
+| 3A | `e8c7c3a` | Extract CSS tokens & base ke `app/styles/` |
+| 4 | `6b3cd7a` | Scaffold `app/features/` + ESLint boundary rule |
+| 5 | `5737833` | Pilot slice `ticket-sales/` (15 file, 1089 baris) |
+
+**Total**: 47 file, +2835 baris, 26/26 test pass.
+
+**Validasi final**:
+- `npm run type-check` hijau
+- `npm run lint` 0 error (8 warning dari Fase 2 + 2 warning dari Fase 4 — sesuai desain)
+- 4 test existing + 2 test baru ticket-sales = 6/6 pass
+
+**Lessons learned**:
+1. **Pendekatan inkremental berhasil** — tidak ada breaking change
+2. **Public API per slice efektif** — boundary jelas, ESLint membantu
+3. **Co-locate test meningkatkan DX** — test mudah ditemukan
+4. **Vertical slice untuk fitur baru** — file existing tidak tersentuh
+5. **Drizzle snapshot masih manual** — integration test penuh butuh snapshot generation
 
 ## References
 

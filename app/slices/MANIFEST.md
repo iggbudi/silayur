@@ -109,3 +109,14 @@
 - `app/lib/config-api.ts` — `fetchSession`, `loginRemote`, dll.
 
 **Catatan**: `sidebar-navigation.tsx` adalah anggota **dua slice** (`rbac` untuk permission logic, `platform` untuk komponen UI). Ini acceptable karena komponennya memang cross-cutting.
+
+---
+
+## Lihat Juga: Vertical Features
+
+Pattern **vertical slice** untuk fitur BARU yang self-contained
+didefinisikan di [`../features/README.md`](../features/README.md).
+
+**Pilot slice**: `app/features/ticket-sales/` — transaksi penjualan tiket
+dari DB schema sampai UI. Lihat [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md)
+section "Pilot Slice: `ticket-sales/` (Fase 5)" untuk detail.

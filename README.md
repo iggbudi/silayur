@@ -1,8 +1,8 @@
 # SILAYUR Dashboard
 
 Dashboard operasional Silayur Park berbasis React/vinext, Turso/libSQL, dan
-Drizzle ORM. Checkpoint 9 memusatkan konfigurasi di database dan menggunakan
-sesi autentikasi server-side.
+Drizzle ORM. Checkpoint 11 menggunakan sesi autentikasi server-side dan master
+tiket masuk terstruktur dengan tarif efektif.
 
 ## Persyaratan
 
@@ -49,15 +49,20 @@ npm run auth:set-password -- admin.resepsionis
 
 - `app/` — halaman, komponen, hooks, dan route API.
 - `shared/` — kontrak domain, RBAC, serta primitive password/session.
-- `db/schema.ts` — schema Drizzle.
+- `db/schema.ts` — schema Drizzle, termasuk produk tiket dan tarif.
 - `db/config-repo.ts` — transaksi konfigurasi.
 - `db/auth-repo.ts` — password login dan sesi cookie.
 - `db/seed-data.json` — satu-satunya sumber default/seed.
 - `drizzle/` — migration SQL.
 - `worker/` — entry point Cloudflare Worker untuk vinext.
 
-Data persisten mencakup modul, role, permission, pengguna, tiket/tarif, jam
-operasional, fasilitas/wahana, dan sumber pendapatan.
+Data persisten mencakup modul, role, permission, pengguna, master tiket masuk,
+tarif efektif, jam operasional, fasilitas/wahana, dan sumber pendapatan.
+
+Master tiket awal terdiri dari kategori Dewasa dan Anak. Tarif disimpan sebagai
+integer Rupiah untuk weekday atau weekend dengan periode berlaku. Hari libur
+mengikuti tarif weekend; kategori Anak (usia di bawah 12 tahun) dipilih manual
+oleh petugas.
 
 ## Model keamanan
 
@@ -78,3 +83,12 @@ menimpa konfigurasi operasional yang sudah berubah.
 Metadata Sites berada di `.openai/hosting.json`. Deployment sengaja tidak
 dijalankan selama verifikasi lokal; lakukan migration dan konfigurasi password
 database target sebelum menerbitkan versi baru.
+
+## Dokumentasi
+
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — filosofi & struktur organisasi kode.
+- [`docs/folder-map.md`](./docs/folder-map.md) — visual map folder & slice.
+- [`docs/adr/0001-hybrid-layered-with-co-location.md`](./docs/adr/0001-hybrid-layered-with-co-location.md) — keputusan arsitektur (ADR).
+- [`app/slices/MANIFEST.md`](./app/slices/MANIFEST.md) — manifest 6 slice domain.
+- [`app/features/README.md`](./app/features/README.md) — konvensi vertical slice untuk fitur baru.
+- [`progress.md`](./progress.md) — status implementasi per checkpoint & fase arsitektur.

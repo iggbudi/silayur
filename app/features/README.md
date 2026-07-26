@@ -101,6 +101,46 @@ features/ticket-sales/
 12. **Tambah nav** di `app/components/sidebar-navigation.tsx`
 13. **Commit** dengan pesan `feat(<scope>): ...`
 
+## Pilot Implementation: `ticket-sales/`
+
+Slice pertama yang mengimplementasikan pattern ini adalah
+[`ticket-sales/`](./ticket-sales/) — transaksi penjualan tiket.
+
+**Struktur final**:
+
+```
+ticket-sales/
+├── index.ts            # Public API
+├── types.ts            # Sale, SaleItem, SaleInput, PricedItem
+├── repo.ts             # createSale, loadSaleById, listSalesByDate, todaySummary
+├── api.ts              # createSale, listTodaySales (client wrapper)
+├── components/
+│   ├── SaleForm.tsx
+│   ├── SaleHistory.tsx
+│   └── TodaySummary.tsx
+└── __tests__/
+    └── repo.test.ts
+```
+
+**Hasil**: 1 fitur lengkap (DB → API → UI → test) dalam **15 file**, **0 baris
+disentuh di lokasi existing** (`app/components/`, `db/`, `app/api/`,
+`shared/`).
+
+**Wire-up** (file external, minimum touch):
+- `app/api/sales/route.ts` — thin handler (33 baris) import dari slice
+- `app/penjualan/page.tsx` — halaman (134 baris) pakai public API
+- `db/schema.ts` — tambah 2 tabel (+75 baris)
+- `drizzle/0003_*.sql` — migration baru
+
+**Key takeaways** untuk slice baru:
+1. **Mulai dari `types.ts`** — definisikan kontrak data dulu
+2. **`repo.ts` adalah jantung** — semua business logic & DB access
+3. **`index.ts` boundary** — hanya ini yang di-import dari luar
+4. **Halaman hanya tipis** — UI rendering, logic ada di slice
+
+Lihat [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md) section
+"Pilot Slice" untuk detail teknis.
+
 ## Prinsip Desain
 
 - **Self-contained** — semua kode 1 fitur di 1 folder
