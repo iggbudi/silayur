@@ -97,5 +97,33 @@ export default tseslint.config(
       ],
     },
   },
+
+  // --------------------------------------------------------------------------
+  // Feature boundary enforcement (Fase 4)
+  // --------------------------------------------------------------------------
+  // File di LUAR app/features/<nama>/ TIDAK BOLEH import langsung ke internal
+  // file di dalam feature (e.g. features/ticket-sales/repo.ts).
+  // Harus import via "@/features/<nama>" atau relative ke index.ts.
+  //
+  // File DI DALAM app/features/<nama>/ boleh import internal feature manapun
+  // (slice internal cohesion).
+  //
+  // Saat ini hanya warning. Naikkan ke error setelah slicing established.
+  // --------------------------------------------------------------------------
+  {
+    files: ["app/**/*.{ts,tsx}"],
+    ignores: ["app/features/**/*"],
+    rules: {
+      "no-restricted-syntax": [
+        "warn",
+        {
+          selector:
+            "ImportDeclaration[source.value=/features\\/(ticket-sales|visitor-checkin|cashier-report|complaint-handler)\\/(repo|server|api|types|validation|constants|components)(\\/|$|\\.)/]",
+          message:
+            "Import via feature public API: '@/features/<nama>'. Lihat app/features/README.md.",
+        },
+      ],
+    },
+  },
 );
 

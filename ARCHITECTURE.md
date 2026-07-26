@@ -105,6 +105,22 @@ untuk visual):
 Lihat [`app/slices/MANIFEST.md`](./app/slices/MANIFEST.md) untuk struktur
 internal setiap slice.
 
+## Vertical Features (Fase 4+)
+
+Untuk fitur **baru** yang self-contained, gunakan folder
+[`app/features/<nama>/`](./app/features/). Bedanya dengan `app/slices/`:
+
+| Aspek | `app/slices/<nama>/` | `app/features/<nama>/` |
+|---|---|---|
+| **Kapan** | Domain existing (auth, settings, dll.) | Fitur baru, terisolasi |
+| **Struktur** | Re-export dari lokasi existing | Self-contained, semua di 1 folder |
+| **Anggota** | File tersebar di `app/`, `db/`, `shared/` | Semua kode 1 fitur di 1 folder |
+| **Index.ts** | Wajib (public API) | Wajib (public API) |
+| **ESLint** | Warning untuk `app/api/**` deep-import | Warning untuk semua `app/**` kecuali `app/features/**` |
+
+Lihat [`app/features/README.md`](./app/features/README.md) untuk konvensi
+lengkap dan cara memulai fitur baru.
+
 ## Mengikuti Roadmap
 
 Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./adr/0001-hybrid-layered-with-co-location.md)

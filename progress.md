@@ -266,6 +266,12 @@ Disusun bertahap melalui 5 fase, lihat
   - Urutan import penting: tokens (variabel) -> base (reset) -> globals (komponen).
   - Validasi: type-check hijau, lint 0 error (8 warning Fase 2), 4/4 test pass.
   - Component-specific CSS TETAP di globals.css untuk stabilitas visual. Pemecahan per-komponen di-defer ke iterasi berikutnya (risiko lebih tinggi).
-- [ ] **Fase 4 — Scaffold `app/features/`** (rencana, untuk slice baru)
+- [x] **Fase 4 — Scaffold `app/features/`** (26 Juli 2026)
+  - Folder `app/features/` dibuat dengan `.gitkeep` agar tracked.
+  - `app/features/README.md`: konvensi struktur, kapan pakai `features/` vs `slices/`, aturan impor, contoh `ticket-sales/`.
+  - ESLint rule `no-restricted-syntax` ditambah untuk `app/**` (kecuali `app/features/**`): warning bila import langsung ke internal file feature (e.g. `features/ticket-sales/repo`).
+  - Rule divalidasi dengan file dummy — terdeteksi 1 warning. File test dihapus setelah validasi.
+  - `ARCHITECTURE.md` ditambah section "Vertical Features (Fase 4+)" dengan tabel perbandingan `features/` vs `slices/`.
+  - Validasi: type-check hijau, lint 0 error, 4/4 test pass.
 - [ ] **Fase 5 — Pilot slice (transaksi penjualan tiket)** (rencana)
 
