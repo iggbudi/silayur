@@ -250,7 +250,14 @@ Disusun bertahap melalui 5 fase, lihat
   - Import path internal di test di-update: `root` resolution naik 1–2 level, dan relative path dynamic `import()` disederhanakan.
   - `package.json` test script di-update untuk glob `**/__tests__/*.test.mjs`.
   - Validasi: 4/4 test pass di lokasi baru, type-check hijau, lint hijau.
-- [ ] **Fase 2 — Public API boundary per slice** (rencana)
+- [x] **Fase 2 — Public API boundary per slice** (26 Juli 2026)
+  - 6 slice dibuat di `app/slices/`: `auth`, `rbac`, `settings`, `ticket-master`, `dashboard`, `platform`.
+  - Tiap slice punya `index.ts` sebagai public API (re-exports) + `MANIFEST.md` gabungan.
+  - Tidak ada file yang dipindahkan dari lokasi aslinya. Hanya re-export via `index.ts`.
+  - ESLint rule `no-restricted-syntax` ditambahkan untuk `app/api/**`: warning (bukan error) bila import langsung ke internal slice. Excludes file infrastruktur (`db/get-db`, `db/http`, `db/schema`, dll).
+  - 8 warning terdeteksi di 4 file API route (semua import via `db/auth-repo`, `db/config-repo`, `db/ticket-repo`, `shared/access`).
+  - `ARCHITECTURE.md` di-update dengan aturan boundary slice.
+  - Validasi: type-check hijau, lint 0 error (8 warning), 4/4 test pass.
 - [ ] **Fase 3 — Extract CSS tokens** (rencana, risiko sedang)
 - [ ] **Fase 4 — Scaffold `app/features/`** (rencana, untuk slice baru)
 - [ ] **Fase 5 — Pilot slice (transaksi penjualan tiket)** (rencana)

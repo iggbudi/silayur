@@ -98,6 +98,12 @@ untuk visual):
 - **Boleh**: `import { x } from "@/db/auth-repo"` (langsung ke file)
 - **Disarankan**: `import { x } from "@/slices/auth"` (via public API — lihat Fase 2)
 - **Dilarang**: deep import ke internal folder (`@/slices/auth/internal/...`)
+- **Slice boundary**: file di `app/api/` akan diberi warning (Fase 2) bila
+  import langsung dari internal slice (`db/auth-repo`, `shared/password.mjs`, dll).
+  Naikkan ke error setelah migrasi selesai.
+
+Lihat [`app/slices/MANIFEST.md`](./app/slices/MANIFEST.md) untuk struktur
+internal setiap slice.
 
 ## Mengikuti Roadmap
 
