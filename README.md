@@ -86,7 +86,9 @@ database target sebelum menerbitkan versi baru.
 
 ## Dokumentasi
 
+- [`AGENTS.md`](./AGENTS.md) — pedoman kerja agent: workflow sprint, aturan kode & keamanan.
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — filosofi & struktur organisasi kode.
+- [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md) — rencana perbaikan hasil audit & statusnya.
 - [`docs/folder-map.md`](./docs/folder-map.md) — visual map folder & slice.
 - [`docs/adr/0001-hybrid-layered-with-co-location.md`](./docs/adr/0001-hybrid-layered-with-co-location.md) — keputusan arsitektur (ADR).
 - [`app/slices/MANIFEST.md`](./app/slices/MANIFEST.md) — manifest 6 slice domain.
