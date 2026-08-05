@@ -15,10 +15,12 @@ import {
   type PermissionModuleKey,
   type RoleDefinition,
   type RolePermissionState,
+  type TicketProduct,
   type UserMutation,
 } from "../shared/config";
 import { hashPassword } from "../shared/password.mjs";
 import type { AppDb } from "./get-db";
+import { loadTicketProducts, saveTicketProducts } from "./ticket-repo";
 import {
   authSessions,
   configItems,
@@ -34,17 +36,25 @@ export type ConfigPatch = {
   permissions?: RolePermissionState;
   users?: UserMutation[];
   configItems?: ConfigItemsState;
+  ticketProducts?: TicketProduct[];
 };
 
 export async function loadConfigSnapshot(db: AppDb): Promise<AppConfigSnapshot> {
-  const [moduleRows, roleRows, permissionRows, userRows, configRows] =
-    await Promise.all([
-      db.select().from(modules),
-      db.select().from(roles),
-      db.select().from(rolePermissions),
-      db.select().from(users),
-      db.select().from(configItems),
-    ]);
+  const [
+    moduleRows,
+    roleRows,
+    permissionRows,
+    userRows,
+    configRows,
+    ticketProductList,
+  ] = await Promise.all([
+    db.select().from(modules),
+    db.select().from(roles),
+    db.select().from(rolePermissions),
+    db.select().from(users),
+    db.select().from(configItems),
+    loadTicketProducts(db),
+  ]);
 
   const moduleState = MODULE_KEYS.reduce<ModuleState>(
     (acc, key) => {
@@ -118,9 +128,10 @@ export async function loadConfigSnapshot(db: AppDb): Promise<AppConfigSnapshot> 
     roles: roleList,
     permissions: permissionState,
     users: userList,
+    ticketProducts: ticketProductList,
     configItems: configItemState,
     source: "turso",
-    checkpoint: "9",
+    checkpoint: "11",
   };
 }
 
@@ -379,6 +390,9 @@ export async function saveConfigPatch(
     if (patch.roles) await saveRoles(tx, patch.roles);
     if (patch.permissions) await savePermissions(tx, patch.permissions);
     if (patch.users) await saveUsers(tx, patch.users);
+    if (patch.ticketProducts) {
+      await saveTicketProducts(tx, patch.ticketProducts);
+    }
     if (patch.configItems) await saveConfigItems(tx, patch.configItems);
     return loadConfigSnapshot(tx);
   });
@@ -404,9 +418,10 @@ export async function findActiveUserById(
   };
 }
 
-export async function getSettingsAccess(
+export async function getModuleAccess(
   db: AppDb,
   userId: string,
+  moduleKey: PermissionModuleKey,
 ): Promise<AccessLevel> {
   const user = await findActiveUserById(db, userId);
   if (!user) return "none";
@@ -418,7 +433,7 @@ export async function getSettingsAccess(
     .where(
       and(
         eq(rolePermissions.roleKey, user.role),
-        eq(rolePermissions.moduleKey, "settings"),
+        eq(rolePermissions.moduleKey, moduleKey),
       ),
     )
     .limit(1);
@@ -426,28 +441,74 @@ export async function getSettingsAccess(
   return isAccessLevel(access) ? access : "none";
 }
 
+export async function assertCanAccessModule(
+  db: AppDb,
+  userId: string,
+  moduleKey: PermissionModuleKey,
+  required: "view" | "manage",
+  label: string,
+): Promise<AppUser> {
+  const user = await findActiveUserById(db, userId);
+  if (!user) throw new Error("Pengguna tidak ditemukan atau nonaktif.");
+  const access = await getModuleAccess(db, userId, moduleKey);
+  const denied =
+    required === "manage" ? access !== "manage" : access === "none";
+  if (denied) {
+    const verb = required === "manage" ? "mengelola" : "melihat";
+    throw new Error(`Anda tidak memiliki izin ${verb} ${label}.`);
+  }
+  return user;
+}
+
+export async function getSettingsAccess(
+  db: AppDb,
+  userId: string,
+): Promise<AccessLevel> {
+  return getModuleAccess(db, userId, "settings");
+}
+
 export async function assertCanViewSettings(
   db: AppDb,
   userId: string,
 ): Promise<AppUser> {
-  const user = await findActiveUserById(db, userId);
-  if (!user) throw new Error("Pengguna tidak ditemukan atau nonaktif.");
-  const access = await getSettingsAccess(db, userId);
-  if (access === "none") {
-    throw new Error("Anda tidak memiliki izin melihat pengaturan.");
-  }
-  return user;
+  return assertCanAccessModule(db, userId, "settings", "view", "pengaturan");
 }
 
 export async function assertCanManageSettings(
   db: AppDb,
   userId: string,
 ): Promise<AppUser> {
-  const user = await findActiveUserById(db, userId);
-  if (!user) throw new Error("Pengguna tidak ditemukan atau nonaktif.");
-  const access = await getSettingsAccess(db, userId);
-  if (access !== "manage") {
-    throw new Error("Anda tidak memiliki izin mengelola pengaturan.");
-  }
-  return user;
+  return assertCanAccessModule(
+    db,
+    userId,
+    "settings",
+    "manage",
+    "pengaturan",
+  );
+}
+
+export async function assertCanViewVisitors(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(
+    db,
+    userId,
+    "visitors",
+    "view",
+    "penjualan tiket",
+  );
+}
+
+export async function assertCanManageVisitors(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(
+    db,
+    userId,
+    "visitors",
+    "manage",
+    "penjualan tiket",
+  );
 }

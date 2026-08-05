@@ -261,8 +261,8 @@ opsional `app/lib/access.ts` + pemakainya.
 
 | Sprint | Item | Commit | Verifikasi | Docs | Selesai |
 |--------|------|--------|------------|------|---------|
-| 1 | 1. RBAC sales | — | — | — | ⏳ |
-| 1 | 2. Track migration 0002 | — | — | — | ⏳ |
+| 1 | 1. RBAC sales | `fix(sales)` | type-check ✅ lint ✅ 5/5 test ✅ | progress.md ✅ | ✅ |
+| 1 | 2. Track migration 0002 | `chore(db)` | — | progress.md ✅ | ✅ |
 | 2 | 3. Timezone WIB | — | — | — | ⏳ |
 | 2 | 4. Receipt counter | — | — | — | ⏳ |
 | 2 | 5. Preview harga | — | — | — | ⏳ |

@@ -4,6 +4,7 @@
  */
 
 import { requireRequestUser, AuthenticationError } from "../../../db/auth-repo";
+import { assertCanViewVisitors } from "../../../db/config-repo";
 import { getRequestDb } from "../../../db/get-db";
 import {
   assertSameOrigin,
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     assertSameOrigin(request);
     const db = getRequestDb();
     const actor = await requireRequestUser(db, request);
+    await assertCanViewVisitors(db, actor.id);
     const input = await readJsonBody<SaleInput>(request);
     const sale = await createSale(db, input, actor.id);
     return jsonOk(sale, { headers: { "cache-control": "no-store" } });
@@ -51,7 +53,8 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const db = getRequestDb();
-    await requireRequestUser(db, request);
+    const actor = await requireRequestUser(db, request);
+    await assertCanViewVisitors(db, actor.id);
     const url = new URL(request.url);
     const date = url.searchParams.get("date") ?? undefined;
     const sales = await listSalesByDate(

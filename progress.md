@@ -284,5 +284,73 @@ Disusun bertahap melalui 5 fase, lihat
   - Receipt number format: `RCP-YYYYMMDD-####` (auto-increment per hari).
   - Atomic: `createSale()` di-wrap `db.transaction()` untuk insert sale + items.
   - Test: 2 test pass (type validation & signature check). Integration test lengkap didefer (butuh snapshot drizzle).
+- [x] **Fase 5 — Pilot slice: transaksi penjualan tiket** (26 Juli 2026)
+  - DB schema: tambah tabel `sales` (header transaksi) dan `sale_items` (line items) dengan snapshot harga & nama produk.
+  - Migration: `drizzle/0003_checkpoint_12_ticket_sales.sql` (2 tabel + 6 index).
+  - `drizzle/meta/_journal.json` di-update dengan idx 3.
+  - Slice self-contained: `app/features/ticket-sales/` dengan `types.ts`, `repo.ts`, `api.ts`, `index.ts`, `components/SaleForm.tsx`, `components/SaleHistory.tsx`, `components/TodaySummary.tsx`, `__tests__/repo.test.ts`.
+  - API route: `app/api/sales/route.ts` (thin handler: POST create, GET list-by-date).
+  - Halaman: `app/penjualan/page.tsx` (form + summary + history).
+  - Snapshot pricing: harga & nama produk di-freeze di `sale_items` saat transaksi, agar history stabil meski master tarif berubah.
+  - Receipt number format: `RCP-YYYYMMDD-####` (auto-increment per hari).
+  - Atomic: `createSale()` di-wrap `db.transaction()` untuk insert sale + items.
+  - Test: 2 test pass (type validation & signature check). Integration test lengkap didefer (butuh snapshot drizzle).
+- [x] **Fase A — Quick wins pilot `ticket-sales/`** (29 Juli 2026)
+  - **Nav item "Penjualan"** ditambah di `app/components/sidebar-navigation.tsx`. Tipe `ActiveSidebarItem` diperluas dengan `"penjualan"`. Item nav menggunakan permission `visitors` (reuse) dengan `href="/penjualan"` dan `activeKey="penjualan"`. Item "Pengunjung" dihapus (duplikat dengan Penjualan). `app/penjualan/page.tsx` mengirim `active="penjualan"`.
+  - **Incremental summary update**: `onCreated` callback di `app/penjualan/page.tsx` sekarang meng-update `summary.count` dan `summary.revenue` secara lokal jika `sale.status === "completed"` dan `sale.soldAt.slice(0,10)` cocok dengan `summary.date`. Tidak ada refetch → tetap responsif. Hanya Sale yang sudah dipakai, tidak ada perubahan public API slice.
+  - **MANIFEST.md** slice: `app/features/ticket-sales/MANIFEST.md` baru — berisi tanggung jawab, asumsi bisnis (weekend=Sat/Sun, hari libur=tarif weekend), format receipt `RCP-YYYYMMDD-####`, snapshot pricing rationale, edge cases (item kosong, qty invalid, produk non-aktif, tarif belum dikonfigurasi, midnight rollover, status voided), aturan RBAC (`access.visitors` ≥ view), anggota slice, wire-up eksternal, status implementasi (termasuk yang masih TODO: voided, integration test, auto-increment receipt harian, kalender hari libur).
+  - Validasi: type-check hijau, ESLint 0 error pada file yang disentuh, 2/2 test `ticket-sales` pass.
+  - Risiko rendah: tidak ada perubahan schema DB, tidak ada perubahan public API, tidak ada breaking change.
+- [x] **Fase B — Deployment readiness (read-only, no remote mutation)** (29 Juli 2026)
+  - **Investigasi state DB lokal** via `scripts/db-check-local-fase-b.mjs` (satu-shot, read-only, di-ignore). Temuan: `.data/silayur.db` hanya CP7; `.data/silayur-checkpoint9.db` CP7+CP9. **DB lokal BELUM pernah dimigrate ke CP11/CP12**. Schema CP12 di remote perlu diverifikasi owner via `turso db shell`.
+  - **3 runbook dibuat** untuk owner, semua read-only, no mutation:
+    - `docs/DEPLOY-CHECKLIST.md` — 6 langkah deployment, 5 bagian pre-deploy checklist, post-deploy smoke test 7 step, rollback plan (kode + DB + per-fase), troubleshooting 4 symptom.
+    - `docs/TARIFF-ACTIVATION.md` — 7 langkah aktivasi tarif via UI `/pengaturan`, referensi harga seed default + pertanyaan konfirmasi owner, verifikasi via db-check + Turso shell + test transaksi + cek snapshot pricing, rollback/koreksi 3 skenario.
+    - `docs/ENV-AUDIT.md` — inventaris 5 file konfigurasi, status secrets (TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, dll), analisis Worker entry point, verifikasi env Sites checklist 6 item, 4 risiko (token rotation, secret manager, dll).
+  - **Temuan penting**:
+    - `.env` saat ini aktif menunjuk ke Turso remote (bukan file lokal) — semua `npm run db:*` akan menyentuh remote. **Rekomendasi**: comment `TURSO_DATABASE_URL` ke `file:./.data/silayur.db` saat develop lokal.
+    - Schema CP11 (master tiket) sudah ter-apply ke Turso target. Schema CP12 (sales + sale_items) **status belum pasti** — perlu verifikasi owner.
+    - Seed default sudah include 2 produk (Dewasa `TKT-DEWASA`, Anak `TKT-ANAK`) + 1 tarif aktif (Dewasa weekday Rp 15.000) + 1 tarif non-aktif (Dewasa weekend Rp 20.000). **Tarif Anak BELUM ada** — perlu input manual owner.
+    - Harga final operasional **perlu konfirmasi owner** sebelum aktivasi.
+  - **Tidak ada perubahan kode aplikasi** di Fase B — hanya dokumentasi & script investigasi. Semua perubahan kode yang dibutuhkan owner (deployment, aktivasi tarif, set password) **tidak dijalankan** sesuai prinsip `.serena/memories/task_completion.md`.
+  - **Risiko**: rendah (dokumentasi + investigasi). **Nilai**: tinggi — owner punya 3 dokumen operasional lengkap untuk eksekusi deploy tanpa trial-and-error.
+
+  - Validasi: type-check hijau, lint 0 error (2 warning Fase 4 di app/api/sales/route.ts), 6/6 test pass.
+- [x] **Fase A — Quick wins pilot `ticket-sales/`** (29 Juli 2026)
+  - **Nav item "Penjualan"** ditambah di `app/components/sidebar-navigation.tsx`. Tipe `ActiveSidebarItem` diperluas dengan `"penjualan"`. Item nav menggunakan permission `visitors` (reuse) dengan `href="/penjualan"` dan `activeKey="penjualan"`. Item "Pengunjung" dihapus (duplikat dengan Penjualan). `app/penjualan/page.tsx` mengirim `active="penjualan"`.
+  - **Incremental summary update**: `onCreated` callback di `app/penjualan/page.tsx` sekarang meng-update `summary.count` dan `summary.revenue` secara lokal jika `sale.status === "completed"` dan `sale.soldAt.slice(0,10)` cocok dengan `summary.date`. Tidak ada refetch → tetap responsif. Hanya Sale yang sudah dipakai, tidak ada perubahan public API slice.
+  - **MANIFEST.md** slice: `app/features/ticket-sales/MANIFEST.md` baru — berisi tanggung jawab, asumsi bisnis (weekend=Sat/Sun, hari libur=tarif weekend), format receipt `RCP-YYYYMMDD-####`, snapshot pricing rationale, edge cases (item kosong, qty invalid, produk non-aktif, tarif belum dikonfigurasi, midnight rollover, status voided), aturan RBAC (`access.visitors` ≥ view), anggota slice, wire-up eksternal, status implementasi (termasuk yang masih TODO: voided, integration test, auto-increment receipt harian, kalender hari libur).
+  - Validasi: type-check hijau, ESLint 0 error pada file yang disentuh, 2/2 test `ticket-sales` pass.
+  - Risiko rendah: tidak ada perubahan schema DB, tidak ada perubahan public API, tidak ada breaking change.
   - Validasi: type-check hijau, lint 0 error (2 warning Fase 4 di app/api/sales/route.ts), 6/6 test pass.
 
+
+## Sprint Perbaikan (29 Juli 2026) — hasil audit codebase
+
+Workflow: kerjakan → test lokal → update docs → commit (lihat `AGENTS.md`).
+Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
+
+- [x] **P0 #1 — RBAC di Sales API** (commit `fix(sales)`)
+  - Sebelumnya `app/api/sales/route.ts` hanya memanggil `requireRequestUser()`
+    (autentikasi) tanpa cek akses modul `visitors` — semua user yang sudah
+    login bisa membuat/membaca transaksi penjualan berapa pun role-nya.
+  - `db/config-repo.ts` mendapat helper generik `getModuleAccess()` dan
+    `assertCanAccessModule()`; fungsi settings lama (`getSettingsAccess`,
+    `assertCanViewSettings`, `assertCanManageSettings`) direfaktor sebagai
+    wrapper tipis dengan pesan error identik; tambah `assertCanViewVisitors`
+    dan `assertCanManageVisitors`.
+  - Route sales: GET dan POST kini memanggil `assertCanViewVisitors()`
+    (konsisten dengan gating halaman `/penjualan` yang memakai
+    `canView(access.visitors)`). Keputusan terbuka: apakah POST sebaiknya
+    butuh `manage` — lihat PLAN-PERBAIKAN.
+  - Test baru `app/api/__tests__/sales-rbac.test.mjs`: anonim 401 (GET/POST),
+    viewer (`visitors: none`) 403 (GET/POST), petugas tiket
+    (`visitors: manage`) 200, validasi receipt/total/snapshot, persistensi.
+  - Validasi: type-check hijau, lint 0 error (2 warning Fase 4 pre-existing),
+    5/5 test pass.
+
+- [x] **P0 #2 — Track migration CP11 di git** (commit `chore(db)`)
+  - `drizzle/0002_checkpoint_11_ticket_master.sql` +
+    `drizzle/meta/0002_snapshot.json` di-commit tanpa mengubah isinya (sebelum
+    ini untracked padahal sudah di-rollout ke Turso remote; repo clone baru
+    akan kehilangan migration tersebut).
