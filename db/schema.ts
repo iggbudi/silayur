@@ -260,3 +260,14 @@ export const saleItems = sqliteTable(
     index("sale_items_product_idx").on(table.ticketProductId),
   ],
 );
+
+/**
+ * Counter nomor receipt per hari (YYYY-MM-DD lokal WIB).
+ * Dipakai untuk menghasilkan nomor receipt RCP-YYYYMMDD-#### secara
+ * atomik (upsert inkremental) agar bebas race saat banyak loket transaksi
+ * bersamaan — menggantikan pendekatan count(*)+1 yang rawan duplikat.
+ */
+export const receiptCounters = sqliteTable("receipt_counters", {
+  counterDate: text("counter_date").primaryKey(),
+  seq: integer("seq").notNull(),
+});

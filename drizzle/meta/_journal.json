@@ -29,6 +29,13 @@
       "when": 1785000000000,
       "tag": "0003_checkpoint_12_ticket_sales",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785917921016,
+      "tag": "0004_checkpoint_13_receipt_counters",
+      "breakpoints": true
     }
   ]
 }

@@ -6,24 +6,14 @@
  */
 
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
-import { saleItems, sales, users, ticketProducts, ticketPrices } from "../../../db/schema";
+import { dayTypeFor, todayIsoDate } from "../../../shared/date";
+import { receiptCounters, saleItems, sales, users, ticketProducts, ticketPrices } from "../../../db/schema";
 import type { AppDb } from "../../../db/get-db";
 import type { TicketDayType, TicketProduct } from "../../../shared/config";
 import type { PricedItem, Sale, SaleInput, SaleInputItem } from "./types";
 
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
-}
-
-function isWeekend(dateIso: string): boolean {
-  const d = new Date(`${dateIso}T00:00:00.000Z`);
-  if (Number.isNaN(d.getTime())) return false;
-  const day = d.getUTCDay();
-  return day === 0 || day === 6;
-}
-
-function dayTypeFor(dateIso: string): TicketDayType {
-  return isWeekend(dateIso) ? "weekend" : "weekday";
 }
 
 function findEffectivePrice(
@@ -109,21 +99,28 @@ export async function priceSale(
 }
 
 function todayReceiptPrefix(): string {
-  return new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  return todayIsoDate().replaceAll("-", "");
 }
 
 function makeReceiptNumber(seq: number): string {
   return `RCP-${todayReceiptPrefix()}-${String(seq).padStart(4, "0")}`;
 }
 
+/**
+ * Ambil nomor urut receipt berikutnya untuk hari ini secara atomik.
+ * Upsert inkremental ke tabel receipt_counters: baris pertama = 1,
+ * baris berikutnya = seq lama + 1 — aman untuk transaksi konkuren.
+ */
 async function nextReceiptSequence(db: AppDb): Promise<number> {
-  const todayPrefix = todayReceiptPrefix();
   const rows = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(sales)
-    .where(sql`${sales.receiptNumber} LIKE ${`RCP-${todayPrefix}-%`}`);
-  const count = Number(rows[0]?.count ?? 0);
-  return count + 1;
+    .insert(receiptCounters)
+    .values({ counterDate: todayIsoDate(), seq: 1 })
+    .onConflictDoUpdate({
+      target: receiptCounters.counterDate,
+      set: { seq: sql`${receiptCounters.seq} + 1` },
+    })
+    .returning({ seq: receiptCounters.seq });
+  return Number(rows[0]?.seq ?? 1);
 }
 
 export async function createSale(
@@ -135,7 +132,7 @@ export async function createSale(
   if (!actorUserId) {
     throw new Error("User tidak valid.");
   }
-  const visit = visitDate ?? new Date().toISOString().slice(0, 10);
+  const visit = visitDate ?? todayIsoDate();
   const { priced, totalAmount, totalQuantity } = await priceSale(
     db,
     input.items,
@@ -281,7 +278,7 @@ export async function todaySummary(
   db: AppDb,
   dateIso?: string,
 ): Promise<{ date: string; count: number; revenue: number }> {
-  const date = dateIso ?? new Date().toISOString().slice(0, 10);
+  const date = dateIso ?? todayIsoDate();
   const rows = await db
     .select({
       count: sql<number>`count(*)`,

@@ -263,6 +263,24 @@ opsional `app/lib/access.ts` + pemakainya.
 |--------|------|--------|------------|------|---------|
 | 1 | 1. RBAC sales | `fix(sales)` | type-check ✅ lint ✅ 5/5 test ✅ | progress.md ✅ | ✅ |
 | 1 | 2. Track migration 0002 | `chore(db)` | — | progress.md ✅ | ✅ |
+| 2 | 3. Timezone WIB | (lihat Sprint 2) | type-check ✅ lint ✅ 13/13 test ✅ | progress.md + MANIFEST ✅ | ✅ |
+| 2 | 4. Receipt counter | (lihat Sprint 2) | 13/13 test ✅ + db:generate no-op ✅ | progress.md + MANIFEST ✅ | ✅ |
+| 2 | 5. Preview harga | (lihat Sprint 2) | 13/13 test ✅ | progress.md + MANIFEST ✅ | ✅ |
+| 3 | 6. Test ticket-sales | sebagian (glob runner) | glob .test.ts aktif ✅ | progress.md ✅ | 🕐 sebagian |
+| 3 | 7. Label checkpoint | — | — | — | ⏳ |
+
+## Catatan Pelaksanaan Sprint 2
+
+- Item 3, 4, dan 5 saling bergantung melalui `shared/date.ts` (helper
+  tanggal dipakai receipt, filter harian, dan preview harga) — dikerjakan
+  dan di-commit dalam satu unit Sprint 2.
+- Defect pre-existing ditemukan & diperbaiki: `drizzle/meta/0003_snapshot.json`
+  tidak pernah dibuat saat CP12; rantai snapshot 0002→0003→0004 disusun
+  ulang dan `drizzle-kit generate` kembali no-op.
+- Item 6 dikerjakan sebagian lebih awal (glob runner `*.test.ts` + test
+  logic `shared/date` dan receipt) agar test Sprint 2 bisa dijalankan;
+  sisa item 6 (coverage lebih dalam, mis. rollback & filter status) tetap
+  dijadwalkan di Sprint 3.
 | 2 | 3. Timezone WIB | — | — | — | ⏳ |
 | 2 | 4. Receipt counter | — | — | — | ⏳ |
 | 2 | 5. Preview harga | — | — | — | ⏳ |

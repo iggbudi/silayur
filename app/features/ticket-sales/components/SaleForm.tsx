@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import type { TicketProduct } from "../../../../shared/config";
+import { effectivePriceFor, todayIsoDate } from "../../../../shared/date";
 import type { Sale, SaleInput, SaleInputItem } from "../types";
 import { createSale } from "../api";
 
@@ -24,10 +25,11 @@ export function SaleForm({
   const [error, setError] = useState("");
 
   const activeProducts = products.filter((p) => p.active);
+  const previewDate = todayIsoDate();
 
   const totalAmount = activeProducts.reduce((sum, p) => {
     const qty = items[p.id] ?? 0;
-    return sum + (p.prices.find((price) => price.active)?.price ?? 0) * qty;
+    return sum + (effectivePriceFor(p, previewDate)?.price ?? 0) * qty;
   }, 0);
   const totalQuantity = Object.values(items).reduce((a, b) => a + b, 0);
 
@@ -62,7 +64,7 @@ export function SaleForm({
       <div className="sale-form-grid">
         {activeProducts.map((product) => {
           const qty = items[product.id] ?? 0;
-          const activePrice = product.prices.find((price) => price.active);
+          const activePrice = effectivePriceFor(product, previewDate);
           return (
             <div key={product.id} className="sale-form-row">
               <div className="sale-form-product">

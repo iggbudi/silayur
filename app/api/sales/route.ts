@@ -6,6 +6,7 @@
 import { requireRequestUser, AuthenticationError } from "../../../db/auth-repo";
 import { assertCanViewVisitors } from "../../../db/config-repo";
 import { getRequestDb } from "../../../db/get-db";
+import { todayIsoDate } from "../../../shared/date";
 import {
   assertSameOrigin,
   jsonError,
@@ -57,10 +58,7 @@ export async function GET(request: Request) {
     await assertCanViewVisitors(db, actor.id);
     const url = new URL(request.url);
     const date = url.searchParams.get("date") ?? undefined;
-    const sales = await listSalesByDate(
-      db,
-      date ?? new Date().toISOString().slice(0, 10),
-    );
+    const sales = await listSalesByDate(db, date ?? todayIsoDate());
     const summary = await todaySummary(db, date);
     return jsonOk(
       { ...summary, sales },

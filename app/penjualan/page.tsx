@@ -7,6 +7,7 @@ import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
+import { todayIsoDate } from "../../shared/date";
 import type { TicketProduct } from "../../shared/config";
 import {
   SaleForm,
@@ -22,7 +23,7 @@ export default function PenjualanPage() {
   const [products, setProducts] = useState<TicketProduct[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [summary, setSummary] = useState<{ date: string; count: number; revenue: number }>({
-    date: new Date().toISOString().slice(0, 10),
+    date: todayIsoDate(),
     count: 0,
     revenue: 0,
   });
@@ -91,7 +92,7 @@ export default function PenjualanPage() {
         <SidebarNavigation
           access={access}
           modules={session.modules}
-          active="dashboard"
+          active="penjualan"
           onNavigate={closeMobileMenu}
         />
         <div className="sidebar-footer">
@@ -122,7 +123,26 @@ export default function PenjualanPage() {
         {loading ? (
           <p>Memuat master tiket…</p>
         ) : (
-          <SaleForm products={products} onCreated={(sale) => setSales((prev) => [sale, ...prev])} />
+          <SaleForm
+            products={products}
+            onCreated={(sale) => {
+              setSales((prev) => [sale, ...prev]);
+              // Update summary secara inkremental jika transaksi completed
+              // dan terjadi pada tanggal summary yang sedang ditampilkan.
+              if (sale.status === "completed") {
+                const saleLocalDate = sale.soldAt.slice(0, 10);
+                setSummary((prev) =>
+                  prev.date === saleLocalDate
+                    ? {
+                        ...prev,
+                        count: prev.count + 1,
+                        revenue: prev.revenue + sale.totalAmount,
+                      }
+                    : prev,
+                );
+              }
+            }}
+          />
         )}
 
         <section className="panel">

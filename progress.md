@@ -354,3 +354,41 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
     `drizzle/meta/0002_snapshot.json` di-commit tanpa mengubah isinya (sebelum
     ini untracked padahal sudah di-rollout ke Turso remote; repo clone baru
     akan kehilangan migration tersebut).
+
+- [x] **P1 #3 — Timezone Asia/Jakarta untuk "hari ini"**
+  - Helper baru `shared/date.ts`: `todayIsoDate()` (kalender WIB via
+    `Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" })`),
+    `isWeekend`/`dayTypeFor` (dipindah dari slice ticket-sales agar single
+    source), dan `effectivePriceFor()` (tarif efektif per day type & periode).
+  - Kolom waktu (`sold_at`, `created_at`) tetap ISO UTC; hanya pengelompokan
+    kalender yang memakai WIB: prefix receipt, default `visit_date`, filter
+    "hari ini" di GET sales, default tanggal summary halaman penjualan, dan
+    default `valid_from` tarif baru.
+  - Test: `shared/__tests__/date.test.ts` (format, weekend, tarif efektif,
+    periode, prioritas validFrom).
+
+- [x] **P1 #4 — Receipt sequence bebas race condition**
+  - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
+    upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1
+    RETURNING seq`) — menggantikan `count(*)+1` yang rawan duplikat saat
+    banyak loket transaksi bersamaan.
+  - Migration `drizzle/0004_checkpoint_13_receipt_counters.sql`.
+  - **Perbaikan rantai snapshot**: `drizzle/meta/0003_snapshot.json`
+    ternyata tidak pernah dibuat saat CP12 (defect pre-existing) — akibatnya
+    `drizzle-kit generate` men-generate ulang tabel `sales`/`sale_items`.
+    Snapshot 0003 disusun ulang dari state 0004 minus `receipt_counters`
+    dan rantai `prevId` diperbaiki (0002 → 0003 → 0004). Validasi:
+    `drizzle-kit generate` → "No schema changes".
+  - Test integrasi `createSale` di `__tests__/repo.test.ts`: nomor receipt
+    increment (0001, 0002), format `RCP-YYYYMMDD-####`, konsistensi
+    total/subtotal, counter tersimpan per tanggal.
+
+- [x] **P1 #5 — Preview harga client konsisten dengan server**
+  - `SaleForm` kini memakai `effectivePriceFor(product, todayIsoDate())`
+    (helper bersama dari item 3) alih-alih tarif aktif pertama dalam array —
+    preview di akhir pekan tidak lagi menampilkan harga weekday.
+
+- **Runner test diperlebar** (sebagian item P2 #6, dikerjakan lebih awal
+  agar test baru ikut dijalankan): glob `npm test` di `package.json` kini
+  menjangkau `app/**/__tests__/*.test.ts` dan `shared/__tests__/*.test.ts`.
+  Total test naik dari 5 menjadi **13/13 pass**.
