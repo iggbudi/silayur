@@ -8,12 +8,13 @@ import type {
   PermissionModuleKey,
   RoleDefinition,
   RolePermissionState,
+  TicketProduct,
   UserMutation,
 } from "../../shared/config";
 
 export type SessionBootstrap = {
   ok: boolean;
-  checkpoint: "9";
+  checkpoint: "11";
   user: AppUser;
   role: RoleDefinition | null;
   access: Record<PermissionModuleKey, AccessLevel>;
@@ -116,6 +117,7 @@ export async function putRemoteConfig(partial: {
   permissions?: RolePermissionState;
   users?: UserMutation[];
   configItems?: ConfigItemsState;
+  ticketProducts?: TicketProduct[];
 }): Promise<RemoteConfig> {
   const response = await fetch("/api/config", {
     method: "PUT",

@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       error instanceof Error && error.message.includes("lintas origin")
         ? 403
         : 503;
-    return jsonError(error, status, { checkpoint: "9" });
+    return jsonError(error, status, { checkpoint: "11" });
   }
 }
 
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     return jsonOk(
       {
         ok: true,
-        checkpoint: "9",
+        checkpoint: "11",
         user,
         role:
           config.roles.find((role) => role.key === user.role) ?? null,
@@ -86,6 +86,6 @@ export async function GET(request: Request) {
   } catch (error) {
     const status =
       error instanceof AuthenticationError ? error.status : 503;
-    return jsonError(error, status, { checkpoint: "9" });
+    return jsonError(error, status, { checkpoint: "11" });
   }
 }
