@@ -392,3 +392,31 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   agar test baru ikut dijalankan): glob `npm test` di `package.json` kini
   menjangkau `app/**/__tests__/*.test.ts` dan `shared/__tests__/*.test.ts`.
   Total test naik dari 5 menjadi **13/13 pass**.
+
+- [x] **P2 #6 — Perkuat test `ticket-sales` + runner**
+  - Glob `npm test` sudah menjangkau `*.test.ts` (dikerjakan di Sprint 2).
+  - Test baru `app/features/ticket-sales/__tests__/repo.test.ts`:
+    - `priceSale`: item kosong, qty invalid (0/-1), produk tidak dikenal,
+      produk non-aktif, tarif belum dikonfigurasi, tarif efektif weekday vs
+      weekend (Rp 15.000 / Rp 20.000), agregasi total & quantity.
+    - `createSale` atomik: kegagalan (satu item tidak dikenal) tidak
+      menyisakan baris sales baru dan **counter receipt tidak maju**.
+    - `listSalesByDate` / `todaySummary`: filter hari WIB, urutan terbaru
+      dulu, summary mengecualikan status `voided` sementara list tetap
+      menampilkan, hari lain kosong.
+  - **Perbaikan boundary waktu** yang ditemukan saat menulis test:
+    `listSalesByDate` dan `todaySummary` sebelumnya memfilter `sold_at`
+    antara `T00:00:00.000Z`–`T23:59:59.999Z` (interpretasi UTC dari tanggal
+    WIB) — transaksi 00:00–06:59 WIB akan hilang dari "hari ini". Kini
+    memakai `localDayUtcRange()` (hari WIB = [17:00Z sebelumnya, 17:00Z)).
+  - Test `shared/__tests__/date.test.ts` + `localDayUtcRange` (boundary
+    01:00 WIB termasuk hari kalender yang sama).
+  - Total test: **17/17 pass** (naik dari 13).
+
+- [x] **P2 #7 — Konsistensi label checkpoint**
+  - `app/api/auth/login/route.ts` dan tipe `SessionBootstrap`
+    (`app/lib/config-api.ts`) disamakan dari `checkpoint: "9"` menjadi
+    `"11"` — konsisten dengan config snapshot, config route, dan health.
+  - Merge `app/lib/access.ts` (re-export 1 baris) sengaja **tidak**
+    dilakukan — adapter tipis yang tidak mengganggu; di-defer agar diff
+    minim (keputusan di PLAN-PERBAIKAN #7).

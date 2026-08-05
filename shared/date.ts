@@ -46,6 +46,22 @@ export function dayTypeFor(dateIso: string): TicketDayType {
 }
 
 /**
+ * Rentang waktu UTC untuk satu hari kalender WIB (ISO; ujung bawah
+ * inklusif, ujung atas eksklusif). Hari WIB dimulai 7 jam lebih awal dari
+ * UTC, jadi tanggal D dimulai pukul 17:00 UTC hari sebelumnya.
+ * Dipakai untuk filter "hari ini" pada kolom waktu ISO UTC (`sold_at`).
+ */
+export function localDayUtcRange(dateIso: string): {
+  startIso: string;
+  endIso: string;
+} {
+  const start = new Date(`${dateIso}T00:00:00.000Z`);
+  start.setUTCHours(start.getUTCHours() - 7);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  return { startIso: start.toISOString(), endIso: end.toISOString() };
+}
+
+/**
  * Tarif efektif untuk produk pada tanggal tertentu: tarif aktif dengan
  * dayType yang sesuai dan periode `validFrom`/`validUntil` mencakup tanggal.
  * Bila beberapa periode berlaku, ambil yang mulai paling akhir.

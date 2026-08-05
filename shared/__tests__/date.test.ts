@@ -4,6 +4,7 @@ import {
   dayTypeFor,
   effectivePriceFor,
   isWeekend,
+  localDayUtcRange,
   todayIsoDate,
 } from "../date";
 import type { TicketProduct } from "../config";
@@ -39,6 +40,21 @@ test("isWeekend and dayTypeFor classify Saturday/Sunday as weekend", () => {
   assert.equal(dayTypeFor(WEEKEND), "weekend");
   assert.equal(dayTypeFor(WEEKDAY), "weekday");
   assert.equal(isWeekend("not-a-date"), false);
+});
+
+test("localDayUtcRange maps a WIB calendar day to 24h UTC bounds", () => {
+  const { startIso, endIso } = localDayUtcRange("2026-07-27");
+  assert.equal(startIso, "2026-07-26T17:00:00.000Z");
+  assert.equal(endIso, "2026-07-27T17:00:00.000Z");
+
+  const startMs = new Date(startIso).getTime();
+  assert.equal(new Date(endIso).getTime() - startMs, 24 * 60 * 60 * 1000);
+  // 01:00 WIB (18:00 UTC hari sebelumnya) termasuk hari kalender WIB yang sama.
+  const earlyMorningWib = "2026-07-26T18:00:00.000Z";
+  assert.ok(
+    earlyMorningWib >= startIso && earlyMorningWib < endIso,
+    "01:00 WIB 27 Juli harus termasuk rentang 27 Juli",
+  );
 });
 
 test("effectivePriceFor picks the active tariff for the day type", () => {

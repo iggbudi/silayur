@@ -266,8 +266,17 @@ opsional `app/lib/access.ts` + pemakainya.
 | 2 | 3. Timezone WIB | (lihat Sprint 2) | type-check ✅ lint ✅ 13/13 test ✅ | progress.md + MANIFEST ✅ | ✅ |
 | 2 | 4. Receipt counter | (lihat Sprint 2) | 13/13 test ✅ + db:generate no-op ✅ | progress.md + MANIFEST ✅ | ✅ |
 | 2 | 5. Preview harga | (lihat Sprint 2) | 13/13 test ✅ | progress.md + MANIFEST ✅ | ✅ |
-| 3 | 6. Test ticket-sales | sebagian (glob runner) | glob .test.ts aktif ✅ | progress.md ✅ | 🕐 sebagian |
-| 3 | 7. Label checkpoint | — | — | — | ⏳ |
+| 3 | 6. Test ticket-sales | `test(sales)` | 17/17 test ✅ + boundary WIB fix | progress.md ✅ | ✅ |
+| 3 | 7. Label checkpoint | `chore(auth)` | type-check ✅ 17/17 test ✅ | progress.md ✅ | ✅ |
+
+## Catatan Pelaksanaan Sprint 3
+
+- Saat menulis test filter hari, ditemukan bug boundary: `listSalesByDate` /
+  `todaySummary` memfilter `sold_at` dengan rentang UTC dari tanggal WIB
+  (transaksi 00:00–06:59 WIB hilang dari "hari ini"). Diperbaiki dengan
+  `localDayUtcRange()` di `shared/date.ts`.
+- Item 7: merge `app/lib/access.ts` sengaja di-defer (re-export tipis,
+  tidak mengganggu); label checkpoint disamakan ke "11".
 
 ## Catatan Pelaksanaan Sprint 2
 

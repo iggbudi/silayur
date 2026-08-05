@@ -5,8 +5,12 @@
  * Snapshot: harga & nama produk di-snapshot di sale_items agar history stabil.
  */
 
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
-import { dayTypeFor, todayIsoDate } from "../../../shared/date";
+import { and, desc, eq, gte, lte, lt, sql } from "drizzle-orm";
+import {
+  dayTypeFor,
+  localDayUtcRange,
+  todayIsoDate,
+} from "../../../shared/date";
 import { receiptCounters, saleItems, sales, users, ticketProducts, ticketPrices } from "../../../db/schema";
 import type { AppDb } from "../../../db/get-db";
 import type { TicketDayType, TicketProduct } from "../../../shared/config";
@@ -222,16 +226,12 @@ export async function listSalesByDate(
   db: AppDb,
   dateIso: string,
 ): Promise<Sale[]> {
+  const { startIso, endIso } = localDayUtcRange(dateIso);
   const rows = await db
     .select({ sale: sales, soldByName: users.name })
     .from(sales)
     .innerJoin(users, eq(users.id, sales.soldBy))
-    .where(
-      and(
-        gte(sales.soldAt, `${dateIso}T00:00:00.000Z`),
-        lte(sales.soldAt, `${dateIso}T23:59:59.999Z`),
-      ),
-    )
+    .where(and(gte(sales.soldAt, startIso), lt(sales.soldAt, endIso)))
     .orderBy(desc(sales.soldAt));
 
   if (rows.length === 0) return [];
@@ -279,6 +279,7 @@ export async function todaySummary(
   dateIso?: string,
 ): Promise<{ date: string; count: number; revenue: number }> {
   const date = dateIso ?? todayIsoDate();
+  const { startIso, endIso } = localDayUtcRange(date);
   const rows = await db
     .select({
       count: sql<number>`count(*)`,
@@ -288,8 +289,8 @@ export async function todaySummary(
     .where(
       and(
         eq(sales.status, "completed"),
-        gte(sales.soldAt, `${date}T00:00:00.000Z`),
-        lte(sales.soldAt, `${date}T23:59:59.999Z`),
+        gte(sales.soldAt, startIso),
+        lt(sales.soldAt, endIso),
       ),
     );
   return {
