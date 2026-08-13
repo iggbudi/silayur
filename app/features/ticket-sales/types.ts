@@ -35,6 +35,14 @@ export type Sale = {
   items: SaleItem[];
 };
 
+/** Ringkasan harian penjualan tiket (untuk KPI dashboard & ringkasan loket). */
+export type DaySummary = {
+  date: string;
+  count: number;
+  visitors: number;
+  revenue: number;
+};
+
 export type SaleInputItem = {
   ticketProductId: string;
   quantity: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { canManage, canView } from "./lib/access";
 import { putRemoteConfig } from "./lib/config-api";
 import { useSession } from "./hooks/use-session";
@@ -10,6 +10,7 @@ import { SidebarNavigation } from "./components/sidebar-navigation";
 import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
+import { listTodaySales } from "./features/ticket-sales";
 import {
   DEFAULT_MODULE_CONFIG,
   type ModuleKey,
@@ -38,6 +39,14 @@ const NO_ACCESS = {
   reports: "none",
   settings: "none",
 } as const;
+
+const currency = new Intl.NumberFormat("id-ID", {
+  style: "currency",
+  currency: "IDR",
+  maximumFractionDigits: 0,
+});
+
+const numberFormat = new Intl.NumberFormat("id-ID");
 
 const facilityRows = [
   { name: "Kolam Renang", status: "Baik", tone: "good" },
@@ -73,6 +82,10 @@ export default function DashboardPage() {
     toggle: toggleMobileMenu,
   } = useMobileSidebar();
   const [saveError, setSaveError] = useState("");
+  const [summary, setSummary] = useState<{
+    visitors: number;
+    revenue: number;
+  } | null>(null);
 
   const currentUser = session?.user ?? null;
   const access = session?.access ?? NO_ACCESS;
@@ -85,12 +98,30 @@ export default function DashboardPage() {
 
   const activeCount = Object.values(modules).filter(Boolean).length;
 
+  const showVisitors = modules.visitors && canView(access.visitors);
+  const showFinance = modules.finance && canView(access.finance);
+
+  useEffect(() => {
+    if (!authReady || !session || !showVisitors) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const list = await listTodaySales();
+        if (cancelled) return;
+        setSummary({ visitors: list.visitors, revenue: list.revenue });
+      } catch {
+        if (!cancelled) setSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, session, showVisitors]);
+
   const metrics = useMemo(() => {
     if (!canViewDashboard) return [];
 
     const items = [];
-    const showVisitors = modules.visitors && canView(access.visitors);
-    const showFinance = modules.finance && canView(access.finance);
     const showOperations = modules.operations && canView(access.operations);
     const showFacilities = modules.facilities && canView(access.facilities);
     const showComplaints = modules.complaints && canView(access.complaints);
@@ -100,9 +131,9 @@ export default function DashboardPage() {
         <MetricCard
           key="visitors"
           eyebrow="Pengunjung hari ini"
-          value="245"
+          value={summary ? numberFormat.format(summary.visitors) : "—"}
           suffix="orang"
-          note="↑ 23,7% dari kemarin"
+          note="Tiket masuk terjual hari ini"
           icon="◎"
           tone="green"
         />,
@@ -114,8 +145,8 @@ export default function DashboardPage() {
         <MetricCard
           key="finance"
           eyebrow="Pendapatan hari ini"
-          value="Rp7,85 jt"
-          note="↑ 26% dari kemarin"
+          value={summary ? currency.format(summary.revenue) : "—"}
+          note="Pendapatan tiket masuk hari ini"
           icon="Rp"
           tone="blue"
         />,
@@ -189,7 +220,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [access, canViewDashboard, modules]);
+  }, [access, canViewDashboard, modules, summary, showVisitors, showFinance]);
 
   async function persistModules(next: ModuleState) {
     setSaveError("");
@@ -289,7 +320,7 @@ export default function DashboardPage() {
                 <h1>Dashboard Operasional</h1>
                 <span className="live-pill">
                   <i />
-                  Data simulasi
+                  Penjualan live
                 </span>
               </div>
               <p>Ringkasan kondisi Silayur Park hari ini</p>

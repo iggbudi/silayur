@@ -90,7 +90,9 @@
 - `app/page.tsx` — root dashboard
 - `app/components/dashboard-widgets.tsx` — `MetricCard`
 
-**Catatan**: Data operasional masih simulasi statis. Nantinya diisi oleh slice lain dan dibaca via API.
+**Catatan**: KPI Pengunjung & Pendapatan sudah membaca ringkasan penjualan nyata
+via `GET /api/sales` (slice `ticket-sales`). Panel operasional, fasilitas, dan
+komplain masih simulasi statis.
 
 ---
 

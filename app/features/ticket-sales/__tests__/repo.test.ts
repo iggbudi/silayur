@@ -209,6 +209,7 @@ test("listSalesByDate and todaySummary filter by WIB day and status", async () =
     const summary = await todaySummary(db);
     assert.equal(summary.date, todayIsoDate());
     assert.equal(summary.count, 2);
+    assert.equal(summary.visitors, 3);
     assert.equal(summary.revenue, first.totalAmount + second.totalAmount);
 
     const listed = await listSalesByDate(db, todayIsoDate());
@@ -222,6 +223,7 @@ test("listSalesByDate and todaySummary filter by WIB day and status", async () =
       .where(eq(sales.id, second.id));
     const afterVoid = await todaySummary(db);
     assert.equal(afterVoid.count, 1);
+    assert.equal(afterVoid.visitors, first.totalQuantity);
     assert.equal(afterVoid.revenue, first.totalAmount);
     const listedAfterVoid = await listSalesByDate(db, todayIsoDate());
     assert.equal(listedAfterVoid.length, 2);

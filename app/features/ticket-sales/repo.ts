@@ -14,7 +14,13 @@ import {
 import { receiptCounters, saleItems, sales, users, ticketProducts, ticketPrices } from "../../../db/schema";
 import type { AppDb } from "../../../db/get-db";
 import type { TicketDayType, TicketProduct } from "../../../shared/config";
-import type { PricedItem, Sale, SaleInput, SaleInputItem } from "./types";
+import type {
+  DaySummary,
+  PricedItem,
+  Sale,
+  SaleInput,
+  SaleInputItem,
+} from "./types";
 
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -277,12 +283,13 @@ export async function listSalesByDate(
 export async function todaySummary(
   db: AppDb,
   dateIso?: string,
-): Promise<{ date: string; count: number; revenue: number }> {
+): Promise<DaySummary> {
   const date = dateIso ?? todayIsoDate();
   const { startIso, endIso } = localDayUtcRange(date);
   const rows = await db
     .select({
       count: sql<number>`count(*)`,
+      visitors: sql<number>`coalesce(sum(${sales.totalQuantity}), 0)`,
       revenue: sql<number>`coalesce(sum(${sales.totalAmount}), 0)`,
     })
     .from(sales)
@@ -296,6 +303,7 @@ export async function todaySummary(
   return {
     date,
     count: Number(rows[0]?.count ?? 0),
+    visitors: Number(rows[0]?.visitors ?? 0),
     revenue: Number(rows[0]?.revenue ?? 0),
   };
 }

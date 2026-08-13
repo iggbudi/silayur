@@ -82,7 +82,7 @@ Pengecekan dilakukan server-side di `app/api/sales/route.ts` via
 |---|---|
 | `index.ts` | Public API — re-exports (wajib satu-satunya pintu impor dari luar) |
 | `types.ts` | `Sale`, `SaleItem`, `SaleInput`, `SaleInputItem`, `PricedItem`, `SaleStatus` |
-| `repo.ts` | `priceSale`, `createSale`, `loadSaleById`, `listSalesByDate`, `todaySummary` |
+| `repo.ts` | `priceSale`, `createSale`, `loadSaleById`, `listSalesByDate`, `todaySummary` (count, visitors, revenue) |
 | `api.ts` | Client wrapper: `createSale`, `listTodaySales` |
 | `components/SaleForm.tsx` | Form input tiket per produk |
 | `components/SaleHistory.tsx` | List transaksi hari ini |
@@ -104,7 +104,7 @@ Pengecekan dilakukan server-side di `app/api/sales/route.ts` via
 - ✅ DB schema & migration
 - ✅ `createSale` (atomic via `db.transaction()`)
 - ✅ Snapshot pricing di `sale_items`
-- ✅ `todaySummary` (count & revenue, exclude voided)
+- ✅ `todaySummary` (count, visitors & revenue, exclude voided)
 - ✅ `listSalesByDate`
 - ✅ Halaman `/penjualan` dengan form + history
 - ✅ Nav item di sidebar (lihat perubahan CP12+)

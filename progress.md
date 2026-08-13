@@ -1,7 +1,6 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **25 Juli 2026** — implementasi CP11 master tiket masuk
-Dewasa/Anak dan rollout schema ke Turso remote
+Pembaruan terakhir: **13 Agustus 2026** — KPI dashboard "Pengunjung" dan "Pendapatan" hari ini membaca data penjualan tiket nyata (sebelumnya simulasi)
 
 ## Status Saat Ini
 
@@ -194,7 +193,7 @@ CP10–CP11 dilakukan.
 ## Pekerjaan Produk yang Belum Dikerjakan
 
 - [ ] Transaksi bisnis operasional, seperti penjualan tiket aktual.
-- [ ] Dashboard dengan data transaksi nyata.
+- [~] Dashboard dengan data transaksi nyata — KPI Pengunjung & Pendapatan sudah real dari `sales`; panel operasional/fasilitas/komplain masih simulasi.
 - [ ] Pelaporan dan rekonsiliasi berbasis transaksi aktual.
 
 Transaksi database untuk menyimpan konfigurasi CP9 sudah selesai. Istilah
@@ -213,7 +212,8 @@ bisnis nyata, bukan atomic database transaction.
   setelah dikonfirmasi.
 - [ ] Deploy dan verifikasi production CP10–CP11.
 - [ ] Implementasikan transaksi penjualan tiket masuk berdasarkan master CP11.
-- [ ] Mulai mengganti data simulasi dashboard dengan transaksi operasional nyata.
+- [x] Mulai mengganti data simulasi dashboard dengan transaksi operasional nyata
+  (KPI Pengunjung & Pendapatan via `GET /api/sales`).
 
 ## Catatan Operasional
 

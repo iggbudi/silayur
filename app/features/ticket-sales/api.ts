@@ -3,14 +3,11 @@
  * Wrapper tipis di atas fetch() — tidak ada logika di sini.
  */
 
-import type { Sale, SaleInput } from "./types";
+import type { DaySummary, Sale, SaleInput } from "./types";
 
 export type CreateSaleResponse = Sale;
 
-export type ListSalesResponse = {
-  date: string;
-  count: number;
-  revenue: number;
+export type ListSalesResponse = DaySummary & {
   sales: Sale[];
 };
 

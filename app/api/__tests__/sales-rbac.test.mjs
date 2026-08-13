@@ -150,6 +150,7 @@ test("sales API enforces authentication and visitors RBAC", async () => {
     assert.equal(officerGet.status, 200, await officerGet.clone().text());
     const empty = await officerGet.json();
     assert.equal(empty.count, 0);
+    assert.equal(empty.visitors, 0);
     assert.ok(Array.isArray(empty.sales));
 
     const emptyItems = await request("/api/sales", {
@@ -196,6 +197,7 @@ test("sales API enforces authentication and visitors RBAC", async () => {
     assert.equal(afterSale.status, 200);
     const listed = await afterSale.json();
     assert.equal(listed.count, 1);
+    assert.equal(listed.visitors, 1);
     assert.equal(listed.sales.length, 1);
     assert.equal(listed.sales[0].receiptNumber, sale.receiptNumber);
     assert.equal(listed.sales[0].totalAmount, sale.totalAmount);
