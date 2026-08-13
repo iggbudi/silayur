@@ -37,8 +37,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await loginRemote(username, password);
+      // The authenticated response already primes the client session cache.
+      // Refreshing immediately after replace can race vinext navigation and
+      // leave the browser on /login until a manual reload.
       router.replace("/");
-      router.refresh();
     } catch (caught) {
       setError(
         caught instanceof Error

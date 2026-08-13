@@ -201,23 +201,47 @@
       "active": true
     }
   ],
+  "ticketProducts": [
+    {
+      "id": "ticket-adult",
+      "code": "TKT-DEWASA",
+      "name": "Tiket Masuk Dewasa",
+      "visitorCategory": "adult",
+      "validityMode": "same_day",
+      "description": "Pengunjung usia 12 tahun ke atas.",
+      "active": true
+    },
+    {
+      "id": "ticket-child",
+      "code": "TKT-ANAK",
+      "name": "Tiket Masuk Anak",
+      "visitorCategory": "child",
+      "validityMode": "same_day",
+      "description": "Pengunjung di bawah usia 12 tahun; validasi oleh petugas.",
+      "active": true
+    }
+  ],
+  "ticketPrices": [
+    {
+      "id": "price-adult-weekday-2026",
+      "ticketProductId": "ticket-adult",
+      "dayType": "weekday",
+      "price": 15000,
+      "validFrom": "2026-07-25",
+      "validUntil": null,
+      "active": true
+    },
+    {
+      "id": "price-adult-weekend-2026",
+      "ticketProductId": "ticket-adult",
+      "dayType": "weekend",
+      "price": 20000,
+      "validFrom": "2026-07-25",
+      "validUntil": null,
+      "active": false
+    }
+  ],
   "configItems": [
-    {
-      "id": "ticket-general",
-      "section": "tickets",
-      "name": "Tiket masuk umum",
-      "detail": "Rp15.000",
-      "active": true,
-      "sortOrder": 10
-    },
-    {
-      "id": "ticket-weekend",
-      "section": "tickets",
-      "name": "Tiket akhir pekan",
-      "detail": "Rp20.000",
-      "active": false,
-      "sortOrder": 20
-    },
     {
       "id": "hours-regular",
       "section": "hours",

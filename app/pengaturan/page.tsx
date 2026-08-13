@@ -5,10 +5,13 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { canManage, canView } from "../lib/access";
 import { fetchRemoteConfig, putRemoteConfig } from "../lib/config-api";
 import { useSession } from "../hooks/use-session";
+import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
 import { Brand } from "../components/brand";
+import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SessionGate } from "../components/session-gate";
 import { Toggle } from "../components/toggle";
 import { SettingsUserForm } from "../components/settings-user-form";
+import { TicketSettings } from "../components/ticket-settings";
 import {
   DEFAULT_MODULE_CONFIG,
   type ModuleState,
@@ -31,6 +34,7 @@ import {
 } from "../lib/settings-items";
 import type {
   ConfigItemsState,
+  TicketProduct,
   UserMutation,
 } from "../../shared/config";
 
@@ -54,9 +58,9 @@ const sections: Array<{
     key: "tickets",
     label: "Tiket & tarif",
     eyebrow: "Kunjungan",
-    description: "Atur jenis tiket, paket, dan tarif yang berlaku.",
+    description: "Atur tiket Dewasa dan Anak beserta tarif yang berlaku.",
     icon: "◇",
-    addLabel: "Tambah tiket",
+    addLabel: "",
   },
   {
     key: "hours",
@@ -155,6 +159,11 @@ function getInitials(name: string): string {
 
 export default function SettingsPage() {
   const { session, ready: authReady, logout } = useSession();
+  const {
+    open: mobileMenuOpen,
+    close: closeMobileMenu,
+    toggle: toggleMobileMenu,
+  } = useMobileSidebar();
   const currentUser = session?.user ?? null;
   const [activeSection, setActiveSection] = useState<SectionKey>("modules");
   const [items, setItems] = useState(initialItems);
@@ -166,6 +175,7 @@ export default function SettingsPage() {
   const [moduleConfig, setModuleConfig] = useState<ModuleState>(
     DEFAULT_MODULE_CONFIG,
   );
+  const [ticketProducts, setTicketProducts] = useState<TicketProduct[]>([]);
   const [selectedRole, setSelectedRole] = useState<RoleKey>("manager");
   const [roles, setRoles] = useState<RoleDefinition[]>(
     DEFAULT_ROLE_DEFINITIONS,
@@ -186,7 +196,7 @@ export default function SettingsPage() {
   const [userRole, setUserRole] = useState<RoleKey>("viewer");
   const [userFormError, setUserFormError] = useState("");
   const [dbStatus, setDbStatus] = useState<string>(
-    "Turso: memeriksa… (Checkpoint 9)",
+    "Turso: memeriksa… (Checkpoint 11)",
   );
   const [persistError, setPersistError] = useState("");
 
@@ -195,7 +205,9 @@ export default function SettingsPage() {
   const activeTotal =
     activeSection === "users"
       ? users.filter((user) => user.active).length
-      : currentItems.filter((item) => item.active).length;
+      : activeSection === "tickets"
+        ? ticketProducts.filter((product) => product.active).length
+        : currentItems.filter((item) => item.active).length;
   const selectedRoleDefinition = roles.find(
     (role) => role.key === selectedRole,
   ) ?? roles[0];
@@ -216,6 +228,7 @@ export default function SettingsPage() {
         const config = await fetchRemoteConfig();
         if (cancelled) return;
         setModuleConfig(config.modules);
+        setTicketProducts(config.ticketProducts);
         setRoles(config.roles);
         setRolePermissions(config.permissions);
         setUsers(config.users);
@@ -232,7 +245,7 @@ export default function SettingsPage() {
           revenue: config.configItems.revenue,
         }));
         setDbStatus(
-          `Turso OK · ${config.users.length} user · ${config.roles.length} role (CP9)`,
+          `Turso OK · ${config.users.length} user · ${config.roles.length} role · ${config.ticketProducts.length} tiket (CP11)`,
         );
       } catch (error) {
         if (cancelled) return;
@@ -256,6 +269,7 @@ export default function SettingsPage() {
     permissions?: typeof rolePermissions;
     users?: UserMutation[];
     configItems?: ConfigItemsState;
+    ticketProducts?: TicketProduct[];
   }) {
     setPersistError("");
     try {
@@ -274,6 +288,7 @@ export default function SettingsPage() {
       if (partial.roles) setRoles(saved.roles);
       if (partial.permissions) setRolePermissions(saved.permissions);
       if (partial.users) setUsers(saved.users);
+      if (partial.ticketProducts) setTicketProducts(saved.ticketProducts);
       if (partial.configItems) {
         setItems((current) => ({
           ...current,
@@ -284,7 +299,7 @@ export default function SettingsPage() {
         }));
       }
       setDbStatus(
-        `Turso OK · ${saved.users.length} user · ${saved.roles.length} role (CP9)`,
+        `Turso OK · ${saved.users.length} user · ${saved.roles.length} role · ${saved.ticketProducts.length} tiket (CP11)`,
       );
       setSavedNotice(true);
       return saved;
@@ -708,7 +723,7 @@ export default function SettingsPage() {
     }).catch(() => setItems(previous));
   }
 
-  if (!authReady || !currentUser) {
+  if (!authReady || !session || !currentUser) {
     return <SessionGate />;
   }
 
@@ -734,23 +749,26 @@ export default function SettingsPage() {
 
   return (
     <main className="app-shell settings-shell">
-      <aside className="sidebar settings-sidebar">
+      <aside
+        className={`sidebar settings-sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}
+        id="settings-sidebar"
+      >
         <Brand />
+        <button
+          className="sidebar-close-button"
+          type="button"
+          aria-label="Tutup menu"
+          onClick={closeMobileMenu}
+        >
+          ×
+        </button>
 
-        <nav aria-label="Navigasi utama">
-          <Link className="nav-link" href="/">
-            <span className="nav-icon" aria-hidden="true">
-              ⌂
-            </span>
-            <span>Dashboard</span>
-          </Link>
-          <a className="nav-link nav-active" href="/pengaturan">
-            <span className="nav-icon" aria-hidden="true">
-              ⚙
-            </span>
-            <span>Pengaturan</span>
-          </a>
-        </nav>
+        <SidebarNavigation
+          access={session.access}
+          modules={moduleConfig}
+          active="settings"
+          onNavigate={closeMobileMenu}
+        />
 
         <div className="settings-side-note">
           <span>Persistence aktif</span>
@@ -775,6 +793,16 @@ export default function SettingsPage() {
 
       <section className="workspace settings-workspace">
         <header className="settings-header">
+          <button
+            className="menu-button"
+            type="button"
+            aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+            aria-controls="settings-sidebar"
+            aria-expanded={mobileMenuOpen}
+            onClick={toggleMobileMenu}
+          >
+            ☰
+          </button>
           <div>
             <Link href="/" className="back-link">
               ← Kembali ke dashboard
@@ -815,7 +843,7 @@ export default function SettingsPage() {
 
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 9</span>
+            <span className="section-kicker">Checkpoint 11</span>
             <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
@@ -829,7 +857,7 @@ export default function SettingsPage() {
             </div>
             <p>
               <strong>Siap diverifikasi</strong>
-              <span>Belum tersimpan ke database</span>
+              <span>Tersimpan di Turso</span>
             </p>
           </div>
         </section>
@@ -947,6 +975,7 @@ export default function SettingsPage() {
               </form>
             ) : null}
 
+            {activeSection !== "tickets" ? (
             <div className="settings-toolbar">
               <label>
                 <span aria-hidden="true">⌕</span>
@@ -959,14 +988,27 @@ export default function SettingsPage() {
               <span className={savedNotice ? "saved-notice saved-notice-show" : "saved-notice"}>
                 ✓{" "}
                 {activeSection === "modules" || activeSection === "users"
-                  ? "Tersimpan di perangkat"
-                  : "Perubahan lokal diterapkan"}
+                  ? "Tersimpan di Turso"
+                  : "Perubahan diterapkan"}
               </span>
             </div>
+            ) : null}
+
+            {activeSection === "tickets" ? (
+              <TicketSettings
+                products={ticketProducts}
+                canManage={canManageSettings}
+                onSave={async (nextProducts) => {
+                  await persistConfig({ ticketProducts: nextProducts });
+                }}
+              />
+            ) : null}
 
             <div
               className={`config-list ${
-                activeSection === "users" ? "config-list-hidden" : ""
+                activeSection === "users" || activeSection === "tickets"
+                  ? "config-list-hidden"
+                  : ""
               }`}
             >
               {filteredItems.map((item) => {
@@ -1381,6 +1423,11 @@ export default function SettingsPage() {
                     <strong>Pengguna, Master Role, hak akses, dan password tersimpan aman.</strong>{" "}
                     Route dilindungi sesi server dengan cookie HttpOnly.
                   </>
+                ) : activeSection === "tickets" ? (
+                  <>
+                    <strong>Produk tiket dan tarif tersimpan terstruktur.</strong>{" "}
+                    Periode aktif yang bertumpuk akan ditolak oleh server.
+                  </>
                 ) : (
                   <>
                     <strong>Bagian ini sudah persisten.</strong> Tambah dan aktivasi
@@ -1392,6 +1439,15 @@ export default function SettingsPage() {
           </section>
         </section>
       </section>
+
+      {mobileMenuOpen ? (
+        <button
+          className="sidebar-backdrop"
+          type="button"
+          aria-label="Tutup menu"
+          onClick={closeMobileMenu}
+        />
+      ) : null}
     </main>
   );
 }

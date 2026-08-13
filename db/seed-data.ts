@@ -7,6 +7,8 @@ import type {
   PermissionModuleKey,
   RoleDefinition,
   RolePermissionState,
+  TicketPrice,
+  TicketProduct,
 } from "../shared/config";
 
 export const SEED_MODULES = seedData.modules as Array<{
@@ -22,6 +24,15 @@ export const SEED_ROLE_PERMISSIONS =
   seedData.permissions as RolePermissionState;
 
 export const SEED_USERS = seedData.users as AppUser[];
+
+export const SEED_TICKET_PRODUCTS = seedData.ticketProducts.map((product) => ({
+  ...product,
+  prices: seedData.ticketPrices.filter(
+    (price) => price.ticketProductId === product.id,
+  ),
+})) as TicketProduct[];
+
+export const SEED_TICKET_PRICES = seedData.ticketPrices as TicketPrice[];
 
 export const SEED_CONFIG_ITEMS = seedData.configItems as ConfigItem[];
 

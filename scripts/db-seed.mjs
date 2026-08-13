@@ -119,6 +119,42 @@ async function main() {
       });
     }
 
+    for (const product of seedData.ticketProducts) {
+      await tx.execute({
+        sql: `INSERT INTO ticket_products
+              (id, code, name, visitor_category, validity_mode, description, active, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+              ON CONFLICT(id) DO NOTHING`,
+        args: [
+          product.id,
+          product.code,
+          product.name,
+          product.visitorCategory,
+          product.validityMode,
+          product.description,
+          product.active ? 1 : 0,
+        ],
+      });
+    }
+
+    for (const price of seedData.ticketPrices) {
+      await tx.execute({
+        sql: `INSERT INTO ticket_prices
+              (id, ticket_product_id, day_type, price, valid_from, valid_until, active, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+              ON CONFLICT(id) DO NOTHING`,
+        args: [
+          price.id,
+          price.ticketProductId,
+          price.dayType,
+          price.price,
+          price.validFrom,
+          price.validUntil,
+          price.active ? 1 : 0,
+        ],
+      });
+    }
+
     for (const item of seedData.configItems) {
       await tx.execute({
         sql: `INSERT INTO config_items
@@ -136,18 +172,25 @@ async function main() {
       });
     }
 
-    await tx.execute({
-      sql: `INSERT INTO schema_version (label, applied_at, notes)
-            SELECT ?, datetime('now'), ?
-            WHERE NOT EXISTS (
-              SELECT 1 FROM schema_version WHERE label = ?
-            )`,
-      args: [
-        "checkpoint-9-secure-persistence",
-        "Secure sessions and persisted operational configuration.",
-        "checkpoint-9-secure-persistence",
-      ],
-    });
+    for (const version of [
+      {
+        label: "checkpoint-9-secure-persistence",
+        notes: "Secure sessions and persisted operational configuration.",
+      },
+      {
+        label: "checkpoint-11-ticket-master",
+        notes: "Structured admission ticket products and effective tariffs.",
+      },
+    ]) {
+      await tx.execute({
+        sql: `INSERT INTO schema_version (label, applied_at, notes)
+              SELECT ?, datetime('now'), ?
+              WHERE NOT EXISTS (
+                SELECT 1 FROM schema_version WHERE label = ?
+              )`,
+        args: [version.label, version.notes, version.label],
+      });
+    }
     await tx.commit();
   } catch (error) {
     await tx.rollback();
@@ -160,6 +203,8 @@ async function main() {
     "roles",
     "role_permissions",
     "users",
+    "ticket_products",
+    "ticket_prices",
     "config_items",
     "auth_sessions",
   ]) {

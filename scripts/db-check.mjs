@@ -59,6 +59,8 @@ async function main() {
     "roles",
     "role_permissions",
     "users",
+    "ticket_products",
+    "ticket_prices",
     "config_items",
     "auth_sessions",
     "schema_version",

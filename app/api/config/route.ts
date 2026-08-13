@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {
-    return jsonError(error, statusFor(error), { checkpoint: "9" });
+    return jsonError(error, statusFor(error), { checkpoint: "11" });
   }
 }
 
@@ -62,6 +62,6 @@ export async function PUT(request: Request) {
     const config = await saveConfigPatch(db, patch);
     return jsonOk({ ok: true, ...config });
   } catch (error) {
-    return jsonError(error, statusFor(error), { checkpoint: "9" });
+    return jsonError(error, statusFor(error), { checkpoint: "11" });
   }
 }

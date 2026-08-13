@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { canManage, canView } from "./lib/access";
 import { putRemoteConfig } from "./lib/config-api";
 import { useSession } from "./hooks/use-session";
+import { useMobileSidebar } from "./hooks/use-mobile-sidebar";
 import { Brand } from "./components/brand";
+import { SidebarNavigation } from "./components/sidebar-navigation";
 import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
@@ -14,7 +15,6 @@ import {
   type ModuleKey,
   type ModuleState,
 } from "./lib/module-config";
-import type { PermissionModuleKey } from "./lib/role-permissions";
 
 const moduleOptions: Array<{
   key: ModuleKey;
@@ -38,20 +38,6 @@ const NO_ACCESS = {
   reports: "none",
   settings: "none",
 } as const;
-
-const navigation: Array<{
-  label: string;
-  icon: string;
-  key: ModuleKey | null;
-  permission: PermissionModuleKey;
-}> = [
-  { label: "Dashboard", icon: "⌂", key: null, permission: "dashboard" },
-  { label: "Operasional", icon: "✓", key: "operations", permission: "operations" },
-  { label: "Pengunjung", icon: "◎", key: "visitors", permission: "visitors" },
-  { label: "Keuangan", icon: "Rp", key: "finance", permission: "finance" },
-  { label: "Komplain", icon: "!", key: "complaints", permission: "complaints" },
-  { label: "Laporan", icon: "↗", key: null, permission: "reports" },
-];
 
 const facilityRows = [
   { name: "Kolam Renang", status: "Baik", tone: "good" },
@@ -81,7 +67,11 @@ export default function DashboardPage() {
     null,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const {
+    open: mobileMenuOpen,
+    close: closeMobileMenu,
+    toggle: toggleMobileMenu,
+  } = useMobileSidebar();
   const [saveError, setSaveError] = useState("");
 
   const currentUser = session?.user ?? null;
@@ -91,7 +81,6 @@ export default function DashboardPage() {
 
   const canViewDashboard = canView(access.dashboard);
   const canManageSettings = canManage(access.settings);
-  const canViewSettings = canView(access.settings);
   const roleLabel = session?.role?.label ?? currentUser?.role ?? "—";
 
   const activeCount = Object.values(modules).filter(Boolean).length;
@@ -240,51 +229,26 @@ export default function DashboardPage() {
 
   return (
     <main className="app-shell">
-      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
+      <aside
+        className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}
+        id="dashboard-sidebar"
+      >
         <Brand />
+        <button
+          className="sidebar-close-button"
+          type="button"
+          aria-label="Tutup menu"
+          onClick={closeMobileMenu}
+        >
+          ×
+        </button>
 
-        <nav aria-label="Navigasi utama">
-          {navigation.map((item) => {
-            const moduleEnabled = item.key === null || modules[item.key];
-            const permissionOk = canView(access[item.permission]);
-            const enabled = moduleEnabled && permissionOk;
-            const lockedByPermission = moduleEnabled && !permissionOk;
-
-            return (
-              <button
-                className={`${item.label === "Dashboard" ? "nav-active" : ""} ${
-                  !enabled ? "nav-disabled" : ""
-                } ${lockedByPermission ? "nav-locked" : ""}`}
-                type="button"
-                key={item.label}
-                disabled={!enabled}
-              >
-                <span className="nav-icon" aria-hidden="true">
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-                {!moduleEnabled ? <small>nonaktif</small> : null}
-                {lockedByPermission ? <small>terkunci</small> : null}
-              </button>
-            );
-          })}
-          {canViewSettings ? (
-            <Link className="nav-link" href="/pengaturan">
-              <span className="nav-icon" aria-hidden="true">
-                ⚙
-              </span>
-              <span>Pengaturan</span>
-            </Link>
-          ) : (
-            <button className="nav-disabled nav-locked" type="button" disabled>
-              <span className="nav-icon" aria-hidden="true">
-                ⚙
-              </span>
-              <span>Pengaturan</span>
-              <small>terkunci</small>
-            </button>
-          )}
-        </nav>
+        <SidebarNavigation
+          access={access}
+          modules={modules}
+          active="dashboard"
+          onNavigate={closeMobileMenu}
+        />
 
         <div className="sidebar-card">
           <span className="sidebar-card-icon">☀</span>
@@ -313,8 +277,10 @@ export default function DashboardPage() {
             <button
               className="menu-button"
               type="button"
-              aria-label="Buka menu"
-              onClick={() => setMobileMenuOpen((value) => !value)}
+              aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
+              aria-controls="dashboard-sidebar"
+              aria-expanded={mobileMenuOpen}
+              onClick={toggleMobileMenu}
             >
               ☰
             </button>
@@ -601,7 +567,7 @@ export default function DashboardPage() {
           className="sidebar-backdrop"
           type="button"
           aria-label="Tutup menu"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         />
       ) : null}
     </main>

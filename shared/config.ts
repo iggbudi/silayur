@@ -63,14 +63,40 @@ export type ConfigItem = {
 
 export type ConfigItemsState = Record<ConfigSectionKey, ConfigItem[]>;
 
+export type TicketVisitorCategory = "adult" | "child";
+export type TicketValidityMode = "same_day" | "selected_date";
+export type TicketDayType = "weekday" | "weekend";
+
+export type TicketPrice = {
+  id: string;
+  ticketProductId: string;
+  dayType: TicketDayType;
+  price: number;
+  validFrom: string;
+  validUntil: string | null;
+  active: boolean;
+};
+
+export type TicketProduct = {
+  id: string;
+  code: string;
+  name: string;
+  visitorCategory: TicketVisitorCategory;
+  validityMode: TicketValidityMode;
+  description: string;
+  active: boolean;
+  prices: TicketPrice[];
+};
+
 export type AppConfigSnapshot = {
   modules: ModuleState;
   roles: RoleDefinition[];
   permissions: RolePermissionState;
   users: AppUser[];
+  ticketProducts: TicketProduct[];
   configItems: ConfigItemsState;
   source: "turso";
-  checkpoint: "9";
+  checkpoint: "11";
 };
 
 export const MODULE_KEYS: ModuleKey[] = [

@@ -12,6 +12,8 @@ import {
   rolePermissions,
   roles,
   schemaVersion,
+  ticketPrices,
+  ticketProducts,
   users,
 } from "../../../../db/schema";
 import { jsonError, jsonOk } from "../../../../db/http";
@@ -25,6 +27,8 @@ async function tableCount(
     | typeof roles
     | typeof rolePermissions
     | typeof users
+    | typeof ticketProducts
+    | typeof ticketPrices
     | typeof configItems
     | typeof authSessions
     | typeof schemaVersion,
@@ -46,6 +50,8 @@ export async function GET(request: Request): Promise<Response> {
       tableCount(db, roles),
       tableCount(db, rolePermissions),
       tableCount(db, users),
+      tableCount(db, ticketProducts),
+      tableCount(db, ticketPrices),
       tableCount(db, configItems),
       tableCount(db, authSessions),
       tableCount(db, schemaVersion),
@@ -56,6 +62,8 @@ export async function GET(request: Request): Promise<Response> {
         "roles",
         "role_permissions",
         "users",
+        "ticket_products",
+        "ticket_prices",
         "config_items",
         "auth_sessions",
         "schema_version",
@@ -64,7 +72,7 @@ export async function GET(request: Request): Promise<Response> {
 
     return jsonOk({
       ok: true,
-      checkpoint: "9",
+      checkpoint: "11",
       configured: true,
       driver: "turso-libsql",
       counts,
@@ -76,6 +84,6 @@ export async function GET(request: Request): Promise<Response> {
         : error instanceof Error && error.message.includes("izin")
           ? 403
           : 503;
-    return jsonError(error, status, { checkpoint: "9" });
+    return jsonError(error, status, { checkpoint: "11" });
   }
 }
