@@ -18,7 +18,7 @@ async function check(file) {
       );
       console.log("=== __drizzle_migrations ===");
       for (const row of r.rows) console.log(" ", JSON.stringify(row));
-    } catch (e) {
+    } catch {
       console.log("__drizzle_migrations: <missing>");
     }
   } finally {

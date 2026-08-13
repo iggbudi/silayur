@@ -58,7 +58,7 @@ test("finance: revenue entries and todayRevenueSummary", async () => {
       import(`../../../../db/get-db?rev=${Date.now()}`),
       import(`../../../../db/schema?rev=${Date.now()}`),
     ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     // Deterministik: aktifkan tarif weekend agar sale bisa dibuat.
     await db
@@ -130,7 +130,7 @@ test("finance: expenses approval and cash session reconciliation", async () => {
       import(`../../../../db/get-db?cash=${Date.now()}`),
       import(`../../../../db/schema?cash=${Date.now()}`),
     ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     await db
       .update(ticketPrices)

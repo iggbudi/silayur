@@ -32,7 +32,7 @@ function statusFor(error: unknown): number {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanManageFinance(db, actor.id);
     const body = await readJsonBody<{ id: string }>(request);

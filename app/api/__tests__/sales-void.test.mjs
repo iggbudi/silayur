@@ -64,7 +64,7 @@ test("void flow: officer requests, manager approves with password", async () => 
       import("../../../db/get-db"),
       import("../../../db/schema"),
     ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     // Deterministik: aktifkan tarif weekend agar sale bisa dibuat kapan pun.
     await db

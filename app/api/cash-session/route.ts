@@ -18,7 +18,7 @@ function statusFor(error: unknown): number {
 
 export async function GET(request: Request) {
   try {
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanViewFinance(db, actor.id);
     const session = await activeCashSession(db);

@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     await revokeRequestSession(db, request);
     return jsonOk(
       { ok: true },

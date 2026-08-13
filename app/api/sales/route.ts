@@ -40,7 +40,7 @@ function statusFor(error: unknown): number {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanViewVisitors(db, actor.id);
     const input = await readJsonBody<SaleInput>(request);
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanViewVisitors(db, actor.id);
     const url = new URL(request.url);

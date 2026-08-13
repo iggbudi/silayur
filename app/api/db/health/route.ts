@@ -4,7 +4,7 @@ import {
   requireRequestUser,
 } from "../../../../db/auth-repo";
 import { assertCanManageSettings } from "../../../../db/config-repo";
-import { getRequestDb } from "../../../../db/get-db";
+import { getRequestDb, type AppDb } from "../../../../db/get-db";
 import {
   authSessions,
   configItems,
@@ -21,7 +21,7 @@ import { jsonError, jsonOk } from "../../../../db/http";
 export const dynamic = "force-dynamic";
 
 async function tableCount(
-  db: ReturnType<typeof getRequestDb>,
+  db: AppDb,
   table:
     | typeof modules
     | typeof roles
@@ -41,7 +41,7 @@ async function tableCount(
 
 export async function GET(request: Request): Promise<Response> {
   try {
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanManageSettings(db, actor.id);
 

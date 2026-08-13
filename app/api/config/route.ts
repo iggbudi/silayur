@@ -39,7 +39,7 @@ function statusFor(error: unknown): number {
 
 export async function GET(request: Request) {
   try {
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanViewSettings(db, actor.id);
     const config = await loadConfigSnapshot(db);
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanManageSettings(db, actor.id);
     const patch = await readJsonBody<ConfigPatch>(request);

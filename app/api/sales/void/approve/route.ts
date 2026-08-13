@@ -38,7 +38,7 @@ function statusFor(error: unknown): number {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     if (!canApproveVoid(actor.role)) {
       throw new Error("Anda tidak memiliki izin untuk menyetujui pembatalan.");

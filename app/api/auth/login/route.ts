@@ -25,7 +25,7 @@ type LoginBody = {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const body = await readJsonBody<LoginBody>(request);
     const user = await authenticateWithPassword(
       db,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const db = getRequestDb();
+    const db = await getRequestDb();
     const user = await requireRequestUser(db, request);
     const config = await loadConfigSnapshot(db);
     return jsonOk(

@@ -372,6 +372,66 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1
+---
+
+## Sprint Asesmen Fitur + Data Demo (13 Agustus 2026)
+
+- **Tujuan**: memungkinkan pengujian fitur yang sudah ada dengan data contoh
+  yang terlihat (penjualan, keuangan, shift kas) dan penilaian fitur/UI-UX per role.
+- **`scripts/db-seed-demo.mjs`** + **`db/demo-data.json`** (baru):
+  - Menambahkan data demo (14 penjualan + 20 item tiket, 3 pemasukan non-tiket,
+    4 pengeluaran, 2 rekap kas) dengan pola idempotent `ON CONFLICT DO NOTHING`.
+  - **Guard anti-remote**: menolak menulis ke Turso remote
+    (`libsql://` / `https://`) kecuali di-force `SILAYUR_DEMO_ALLOW_REMOTE=1`.
+  - Menyelaraskan `receipt_counters` agar nomor receit transaksi baru tidak
+    bentrok dengan nomor demo.
+  - Nama file `db/demo-data.json` mengikuti single-source-of-truth seed.
+- **`package.json`** → tambah script `db:seed-demo`.
+- **`docs/ASESMEN-FITUR-UI-UX.md`** (baru) → penilaian fitur, layout UI, dan
+  UX per role, termasuk gap RBAC & data tarif.
+- **`docs/RUNBOOK-DEMO.md`** (baru) → cara menjalankan demo dengan DB lokal
+  secara aman (tanpa menyentuh remote) + akun login demo.
+- **Validasi lokal**: migrate + seed + seed-demo sukses pada DB file lokal
+  `.data/demo-silayur.db`; idempotensi & guard remote terverifikasi;
+  `npm run type-check` hijau.
+- **Catatan**: DB remote (`libsql://silayur-nayantaka...`) **tidak disentuh**.
+
+### Sesi seed demo lengkap (13 Agustus 2026)
+
+- **`scripts/db-seed-demo-extras.mjs`** (baru) — melengkapi data demo supaya
+  fitur benar-benar bisa diuji end-to-end:
+  - Tarif **Anak** weekday Rp 10.000 & weekend Rp 12.000 (aktif).
+  - **Aktivasi tarif Weekend Dewasa** Rp 20.000 (seed dasar menonaktifkannya).
+  - User untuk role yang belum punya akun demo: `budi.keuangan`
+    (finance_officer), `ratna.supervisor` (supervisor), `agus.lapangan`
+    (field_officer), `dewi.cs` (customer_service) — password `silayur-demo`.
+  - Guard anti-remote & idempotent sama seperti `db-seed-demo`.
+- **`package.json`** → tambah script `db:seed-demo-extras`.
+- **Bug bundling native libsql diperbaiki** (`db/get-db.ts`):
+  - `getRequestDb()` diubah menjadi `async` dan memuat `@libsql/client` Node
+    lewat `createRequire` pada mode `file:`. Sebelumnya Rolldown mengalikan
+    `@libsql/client` ke versi web (conditional export `workerd`) dan native
+    addon (`@libsql/win32-x64-msvc`) tidak bisa di-`require` di bundle —
+    akibatnya `dist/standalone` selalu 503 saat memakai DB file lokal.
+  - Semua route API + test di-update ke `await getRequestDb()`.
+  - Validasi: `npm run type-check`, `npm run lint` (0 error, 13 warning
+    pre-existing), `npm test` 22/22 pass, build sukses.
+- **Smoke test end-to-end** pada `dist/standalone` dengan
+  `.data/demo-fresh.db`:
+  - Login `manajer.operasional` / `admin.resepsionis` / `siti.tiket` /
+    `budi.keuangan` 200; RBAC per role benar.
+  - GET `/api/sales` (4 transaksi hari ini, 15 pengunjung, Rp 190.000),
+    `/api/finance/summary` (total Rp 615.000), `/api/expenses`,
+    `/api/revenue`, `/api/cash-session`, `/api/db/health` semua 200.
+  - POST `/api/sales` (dewasa + anak) → `RCP-20260813-0006`; void flow
+    `completed → void_pending → voided` (approval manager + verifikasi
+    password) berhasil.
+  - Semua halaman `/`, `/penjualan`, `/keuangan`, `/pengaturan` 200.
+- **`docs/RUNBOOK-DEMO.md`** di-update: langkah extras, tabel 8 akun demo,
+  catatan teknis dev-server (workerd tidak mendukung `file:`) dan cara
+  menjalankan standalone.
+- **Catatan**: `.env` / `.dev.vars` sementara diarahkan ke DB demo untuk
+  sesi ini dan **di-restore** setelah selesai; DB remote tidak disentuh.
     RETURNING seq`) — menggantikan `count(*)+1` yang rawan duplikat saat
     banyak loket transaksi bersamaan.
   - Migration `drizzle/0004_checkpoint_13_receipt_counters.sql`.

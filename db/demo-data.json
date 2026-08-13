@@ -1,0 +1,277 @@
+{
+  "_comment": "Data demo untuk menguji fitur yang sudah ada (ticket-sales + finance). Idempotent: hanya ditambahkan bila belum ada (ON CONFLICT DO NOTHING). dayOffset = 0 untuk 'hari ini' (WIB), -1 kemarin, dst. Harga & total di-snapshot eksplisit sesuai pola snapshot pricing sale_items.",
+  "sales": [
+    {
+      "id": "demo-sale-d2-01",
+      "dayOffset": -2,
+      "seq": 1,
+      "timeWib": "09:20",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Rombongan keluarga",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-d2-02",
+      "dayOffset": -2,
+      "seq": 2,
+      "timeWib": "09:55",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 3 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 1 }
+      ]
+    },
+    {
+      "id": "demo-sale-d2-03",
+      "dayOffset": -2,
+      "seq": 3,
+      "timeWib": "10:40",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 4 }
+      ]
+    },
+    {
+      "id": "demo-sale-d2-04",
+      "dayOffset": -2,
+      "seq": 4,
+      "timeWib": "13:05",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Rombongan anak-anak",
+      "items": [
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 5 }
+      ]
+    },
+    {
+      "id": "demo-sale-d1-01",
+      "dayOffset": -1,
+      "seq": 1,
+      "timeWib": "08:45",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-d1-02",
+      "dayOffset": -1,
+      "seq": 2,
+      "timeWib": "09:30",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 1 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-d1-03",
+      "dayOffset": -1,
+      "seq": 3,
+      "timeWib": "10:10",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 3 }
+      ]
+    },
+    {
+      "id": "demo-sale-d1-04",
+      "dayOffset": -1,
+      "seq": 4,
+      "timeWib": "11:00",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Wisatawan",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 3 }
+      ]
+    },
+    {
+      "id": "demo-sale-d1-05",
+      "dayOffset": -1,
+      "seq": 5,
+      "timeWib": "14:20",
+      "soldBy": "siti-tiket",
+      "status": "void_pending",
+      "voidReason": "Kesalahan jumlah tiket oleh petugas.",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 4 }
+      ]
+    },
+    {
+      "id": "demo-sale-today-01",
+      "dayOffset": 0,
+      "seq": 1,
+      "timeWib": "08:30",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 3 }
+      ]
+    },
+    {
+      "id": "demo-sale-today-02",
+      "dayOffset": 0,
+      "seq": 2,
+      "timeWib": "09:00",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-today-03",
+      "dayOffset": 0,
+      "seq": 3,
+      "timeWib": "10:15",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 1 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 1 }
+      ]
+    },
+    {
+      "id": "demo-sale-today-04",
+      "dayOffset": 0,
+      "seq": 4,
+      "timeWib": "11:30",
+      "soldBy": "siti-tiket",
+      "status": "voided",
+      "voidReason": "Transaksi ganda — input keliru.",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 5 }
+      ]
+    },
+    {
+      "id": "demo-sale-today-05",
+      "dayOffset": 0,
+      "seq": 5,
+      "timeWib": "13:00",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 4 }
+      ]
+    }
+  ],
+  "revenues": [
+    {
+      "id": "demo-rev-today-01",
+      "dayOffset": 0,
+      "timeWib": "09:40",
+      "sourceKey": "revenue-parking",
+      "sourceName": "Parkir",
+      "amount": 250000,
+      "note": "Setoran parkir motor & mobil pagi",
+      "recordedBy": "siti-tiket"
+    },
+    {
+      "id": "demo-rev-today-02",
+      "dayOffset": 0,
+      "timeWib": "12:20",
+      "sourceKey": "revenue-parking",
+      "sourceName": "Parkir",
+      "amount": 175000,
+      "note": "Setoran parkir siang",
+      "recordedBy": "siti-tiket"
+    },
+    {
+      "id": "demo-rev-yesterday-01",
+      "dayOffset": -1,
+      "timeWib": "16:00",
+      "sourceKey": "revenue-parking",
+      "sourceName": "Parkir",
+      "amount": 300000,
+      "note": "Rekap setoran parkir",
+      "recordedBy": "siti-tiket"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "demo-exp-today-01",
+      "dayOffset": 0,
+      "timeWib": "10:00",
+      "description": "Beli air galon operasional",
+      "amount": 60000,
+      "note": "Isi ulang area loket & fasilitas",
+      "recordedBy": "manajer-operasional",
+      "status": "pending"
+    },
+    {
+      "id": "demo-exp-today-02",
+      "dayOffset": 0,
+      "timeWib": "11:10",
+      "description": "Perbaikan lampu toilet utama",
+      "amount": 150000,
+      "note": "Penggantian ballast & kap lampu",
+      "recordedBy": "manajer-operasional",
+      "status": "pending"
+    },
+    {
+      "id": "demo-exp-yesterday-01",
+      "dayOffset": -1,
+      "timeWib": "09:00",
+      "description": "Isi ulang ATK loket",
+      "amount": 85000,
+      "note": "Kertas struk, ballpoint, rembol",
+      "recordedBy": "manajer-operasional",
+      "status": "approved",
+      "approvedBy": "manajer-operasional"
+    },
+    {
+      "id": "demo-exp-yesterday-02",
+      "dayOffset": -1,
+      "timeWib": "14:30",
+      "description": "Roda gerobak tenant",
+      "amount": 250000,
+      "note": "Menunggu konfirmasi harga",
+      "recordedBy": "manajer-operasional",
+      "status": "pending"
+    }
+  ],
+  "cashSessions": [
+    {
+      "id": "demo-cash-yesterday",
+      "dayOffset": -1,
+      "openedWib": "08:00",
+      "closedWib": "16:30",
+      "openedBy": "manajer-operasional",
+      "closedBy": "manajer-operasional",
+      "declaredCash": 500000,
+      "systemCash": 486500,
+      "difference": 13500,
+      "status": "closed"
+    },
+    {
+      "id": "demo-cash-today",
+      "dayOffset": 0,
+      "openedWib": "08:05",
+      "openedBy": "manajer-operasional",
+      "status": "open"
+    }
+  ]
+}

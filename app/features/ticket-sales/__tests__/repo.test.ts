@@ -67,7 +67,7 @@ test("priceSale validates items and applies effective tariffs", async () => {
         import(`../../../../db/get-db?price=${Date.now()}`),
         import(`../../../../db/schema?price=${Date.now()}`),
       ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     await assert.rejects(
       priceSale(db, [], "2026-07-27"),
@@ -140,7 +140,7 @@ test("createSale is atomic: failure leaves no rows and receipt does not advance"
         import(`../../../../db/get-db?atomic=${Date.now()}`),
         import(`../../../../db/schema?atomic=${Date.now()}`),
       ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     const ok = await createSale(
       db,
@@ -193,7 +193,7 @@ test("listSalesByDate and todaySummary filter by WIB day and status", async () =
         import(`../../../../db/get-db?summary=${Date.now()}`),
         import(`../../../../db/schema?summary=${Date.now()}`),
       ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     const first = await createSale(
       db,
@@ -249,7 +249,7 @@ test("createSale assigns incrementing, atomic receipt numbers", async () => {
         import(`../../../../db/get-db?receipt=${Date.now()}`),
         import(`../../../../db/schema?receipt=${Date.now()}`),
       ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     // Deterministik di hari apa pun: aktifkan tarif weekend juga.
     await db
@@ -330,7 +330,7 @@ test("requestVoid and approveVoid transition status with audit fields", async ()
       import(`../../../../db/get-db?void=${Date.now()}`),
       import(`../../../../db/schema?void=${Date.now()}`),
     ]);
-    const db = getRequestDb();
+    const db = await getRequestDb();
 
     // Deterministik di hari apa pun: aktifkan tarif weekend juga.
     await db
