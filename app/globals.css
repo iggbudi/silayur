@@ -3368,3 +3368,57 @@
   line-height: 1.4;
   margin: 10px 0 0;
 }
+
+.sale-status {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+
+.sale-status-void_pending {
+  background: var(--orange-soft);
+  color: #8a5a0d;
+}
+
+.sale-status-voided {
+  background: rgba(224, 71, 87, 0.14);
+  color: #e04757;
+}
+
+.sale-row-voided strong:first-child {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.sale-void-reason {
+  display: block;
+  opacity: 0.75;
+}
+
+.sale-history-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.sale-action-button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: #dcd8f2;
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+}
+
+.sale-action-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.sale-action-approve {
+  border-color: rgba(66, 200, 120, 0.4);
+  color: #8fe3b0;
+}

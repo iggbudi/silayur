@@ -71,3 +71,14 @@ export function navPermissionForLabel(
       return null;
   }
 }
+
+/** Role yang boleh menyetujui pembatalan (void) transaksi penjualan. */
+export const VOID_APPROVER_ROLES: readonly RoleKey[] = [
+  "super_admin",
+  "manager",
+  "supervisor",
+];
+
+export function canApproveVoid(role: RoleKey): boolean {
+  return VOID_APPROVER_ROLES.includes(role);
+}

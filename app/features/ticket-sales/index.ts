@@ -15,6 +15,8 @@
 export {
   createSale,
   listTodaySales,
+  requestVoid,
+  approveVoid,
   type CreateSaleResponse,
   type ListSalesResponse,
 } from "./api";

@@ -8,7 +8,7 @@
 
 import type { TicketProduct, TicketVisitorCategory } from "../../../shared/config";
 
-export type SaleStatus = "completed" | "voided";
+export type SaleStatus = "completed" | "void_pending" | "voided";
 
 export type SaleItem = {
   id: string;
@@ -32,6 +32,11 @@ export type Sale = {
   totalQuantity: number;
   status: SaleStatus;
   notes: string;
+  voidReason: string;
+  voidRequestedAt: string | null;
+  voidRequestedBy: string | null;
+  voidedAt: string | null;
+  voidedBy: string | null;
   items: SaleItem[];
 };
 

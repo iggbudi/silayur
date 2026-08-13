@@ -1,10 +1,11 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **13 Agustus 2026** — KPI dashboard "Pengunjung" dan "Pendapatan" hari ini membaca data penjualan tiket nyata (sebelumnya simulasi)
+Pembaruan terakhir: **13 Agustus 2026** — KPI Pengunjung/Pendapatan real + fitur void transaksi (permintaan & persetujuan manajer/supervisor)
 
 ## Status Saat Ini
 
 - Implementasi dan verifikasi lokal CP11: **selesai**
+- Fitur void transaksi (permintaan + persetujuan manajer/supervisor): **selesai**
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`

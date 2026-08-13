@@ -8,12 +8,15 @@ import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
 import { todayIsoDate } from "../../shared/date";
+import { canApproveVoid } from "../../shared/access";
 import type { TicketProduct } from "../../shared/config";
 import {
   SaleForm,
   SaleHistory,
   TodaySummary,
+  approveVoid,
   listTodaySales,
+  requestVoid,
   type Sale,
 } from "../features/ticket-sales";
 
@@ -64,6 +67,7 @@ export default function PenjualanPage() {
   }
   const access = session.access;
   const canViewVisitors = access.visitors === "view" || access.visitors === "manage";
+  const canApprove = canApproveVoid(session.user.role);
 
   if (!canViewVisitors) {
     return (
@@ -75,6 +79,49 @@ export default function PenjualanPage() {
         </div>
       </main>
     );
+  }
+
+  async function refreshSales() {
+    const list = await listTodaySales();
+    setSales(list.sales);
+    setSummary({ date: list.date, count: list.count, revenue: list.revenue });
+    setError("");
+  }
+
+  async function handleRequestVoid(saleId: string) {
+    const reason = window.prompt("Alasan pembatalan (wajib, minimal 3 karakter):");
+    if (!reason || reason.trim().length < 3) {
+      setError("Alasan pembatalan wajib diisi (minimal 3 karakter).");
+      return;
+    }
+    try {
+      if (canApprove) {
+        const password = window.prompt("Konfirmasi password Anda untuk membatalkan:");
+        if (!password) return;
+        await requestVoid(saleId, reason.trim());
+        await approveVoid(saleId, password);
+      } else {
+        await requestVoid(saleId, reason.trim());
+      }
+      await refreshSales();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Gagal membatalkan transaksi.",
+      );
+    }
+  }
+
+  async function handleApprove(saleId: string) {
+    const password = window.prompt("Konfirmasi password Anda untuk menyetujui pembatalan:");
+    if (!password) return;
+    try {
+      await approveVoid(saleId, password);
+      await refreshSales();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Gagal menyetujui pembatalan.",
+      );
+    }
   }
 
   return (
@@ -152,24 +199,24 @@ export default function PenjualanPage() {
               type="button"
               onClick={() => {
                 setLoading(true);
-                void (async () => {
-                  try {
-                    const list = await listTodaySales();
-                    setSales(list.sales);
-                    setSummary({ date: list.date, count: list.count, revenue: list.revenue });
-                    setError("");
-                  } catch (caught) {
-                    setError(caught instanceof Error ? caught.message : "Gagal refresh.");
-                  } finally {
-                    setLoading(false);
-                  }
-                })();
+                void refreshSales()
+                  .catch((caught) =>
+                    setError(
+                      caught instanceof Error ? caught.message : "Gagal refresh.",
+                    ),
+                  )
+                  .finally(() => setLoading(false));
               }}
             >
               ↻ Refresh
             </button>
           </div>
-          <SaleHistory sales={sales} />
+          <SaleHistory
+            sales={sales}
+            canApprove={canApprove}
+            onRequestVoid={(saleId) => void handleRequestVoid(saleId)}
+            onApprove={(saleId) => void handleApprove(saleId)}
+          />
         </section>
       </section>
     </main>

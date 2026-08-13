@@ -215,13 +215,24 @@ export const sales = sqliteTable(
      */
     totalQuantity: integer("total_quantity").notNull(),
     /**
-     * Status: completed, voided.
-     * Untuk MVP hanya "completed" (void di-defer).
+     * Status: completed, void_pending (menunggu persetujuan), voided.
      */
-    status: text("status", { enum: ["completed", "voided"] })
+    status: text("status", {
+      enum: ["completed", "void_pending", "voided"],
+    })
       .notNull()
       .default("completed"),
     notes: text("notes").notNull().default(""),
+    /** Alasan pembatalan (wajib diisi saat permintaan void). */
+    voidReason: text("void_reason").notNull().default(""),
+    /** Waktu permintaan pembatalan (ISO UTC). NULL = belum diminta. */
+    voidRequestedAt: text("void_requested_at"),
+    /** Pemohon pembatalan. NULL = belum diminta. */
+    voidRequestedBy: text("void_requested_by").references(() => users.id),
+    /** Waktu persetujuan pembatalan (ISO UTC). NULL = belum disetujui. */
+    voidedAt: text("voided_at"),
+    /** Penyetuju pembatalan. NULL = belum disetujui. */
+    voidedBy: text("voided_by").references(() => users.id),
   },
   (table) => [
     index("sales_sold_at_idx").on(table.soldAt),

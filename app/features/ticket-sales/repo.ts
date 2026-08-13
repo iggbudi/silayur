@@ -5,7 +5,7 @@
  * Snapshot: harga & nama produk di-snapshot di sale_items agar history stabil.
  */
 
-import { and, desc, eq, gte, lte, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte, lt, ne, sql } from "drizzle-orm";
 import {
   dayTypeFor,
   localDayUtcRange,
@@ -215,6 +215,11 @@ export async function loadSaleById(
     totalQuantity: row.sale.totalQuantity,
     status: row.sale.status,
     notes: row.sale.notes,
+    voidReason: row.sale.voidReason,
+    voidRequestedAt: row.sale.voidRequestedAt,
+    voidRequestedBy: row.sale.voidRequestedBy,
+    voidedAt: row.sale.voidedAt,
+    voidedBy: row.sale.voidedBy,
     items: items.map((i) => ({
       id: i.id,
       saleId: i.saleId,
@@ -267,6 +272,11 @@ export async function listSalesByDate(
     totalQuantity: r.sale.totalQuantity,
     status: r.sale.status,
     notes: r.sale.notes,
+    voidReason: r.sale.voidReason,
+    voidRequestedAt: r.sale.voidRequestedAt,
+    voidRequestedBy: r.sale.voidRequestedBy,
+    voidedAt: r.sale.voidedAt,
+    voidedBy: r.sale.voidedBy,
     items: (itemsBySale.get(r.sale.id) ?? []).map((i) => ({
       id: i.id,
       saleId: i.saleId,
@@ -295,7 +305,7 @@ export async function todaySummary(
     .from(sales)
     .where(
       and(
-        eq(sales.status, "completed"),
+        ne(sales.status, "voided"),
         gte(sales.soldAt, startIso),
         lt(sales.soldAt, endIso),
       ),
@@ -306,5 +316,61 @@ export async function todaySummary(
     visitors: Number(rows[0]?.visitors ?? 0),
     revenue: Number(rows[0]?.revenue ?? 0),
   };
+}
+
+/**
+ * Ajukan pembatalan transaksi (belum efektif — menunggu persetujuan).
+ * Wajib menyertakan alasan. Hanya transaksi `completed` yang bisa diajukan.
+ */
+export async function requestVoid(
+  db: AppDb,
+  saleId: string,
+  actorId: string,
+  reason: string,
+): Promise<Sale> {
+  const trimmed = reason.trim();
+  if (trimmed.length < 3) {
+    throw new Error("Alasan pembatalan wajib diisi (minimal 3 karakter).");
+  }
+  const sale = await loadSaleById(db, saleId);
+  if (sale.status !== "completed") {
+    throw new Error("Hanya transaksi selesai yang dapat dibatalkan.");
+  }
+  const now = new Date().toISOString();
+  await db
+    .update(sales)
+    .set({
+      status: "void_pending",
+      voidReason: trimmed,
+      voidRequestedAt: now,
+      voidRequestedBy: actorId,
+    })
+    .where(eq(sales.id, saleId));
+  return loadSaleById(db, saleId);
+}
+
+/**
+ * Setujui pembatalan yang menunggu persetujuan → status menjadi `voided`.
+ * Verifikasi password penyetuju dilakukan di route (bukan di sini).
+ */
+export async function approveVoid(
+  db: AppDb,
+  saleId: string,
+  approverId: string,
+): Promise<Sale> {
+  const sale = await loadSaleById(db, saleId);
+  if (sale.status !== "void_pending") {
+    throw new Error("Transaksi tidak dalam status menunggu persetujuan.");
+  }
+  const now = new Date().toISOString();
+  await db
+    .update(sales)
+    .set({
+      status: "voided",
+      voidedAt: now,
+      voidedBy: approverId,
+    })
+    .where(eq(sales.id, saleId));
+  return loadSaleById(db, saleId);
 }
 

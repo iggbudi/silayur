@@ -312,3 +312,89 @@ test("createSale assigns incrementing, atomic receipt numbers", async () => {
     cleanupTempDirectory(dir);
   }
 });
+
+test("requestVoid and approveVoid transition status with audit fields", async () => {
+  const { dir, env } = testDb();
+  try {
+    runScript("scripts/db-migrate.mjs", env);
+    runScript("scripts/db-seed.mjs", env);
+    process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
+    delete process.env.TURSO_AUTH_TOKEN;
+
+    const [
+      { createSale, requestVoid, approveVoid, todaySummary },
+      { getRequestDb },
+      { ticketPrices },
+    ] = await Promise.all([
+      import(`../repo.ts?void=${Date.now()}`),
+      import(`../../../../db/get-db?void=${Date.now()}`),
+      import(`../../../../db/schema?void=${Date.now()}`),
+    ]);
+    const db = getRequestDb();
+
+    // Deterministik di hari apa pun: aktifkan tarif weekend juga.
+    await db
+      .update(ticketPrices)
+      .set({ active: true })
+      .where(eq(ticketPrices.id, "price-adult-weekend-2026"));
+
+    const sale = await createSale(
+      db,
+      { items: [{ ticketProductId: "ticket-adult", quantity: 2 }] },
+      "admin-resepsionis",
+    );
+
+    // Alasan kosong / pendek ditolak.
+    await assert.rejects(
+      requestVoid(db, sale.id, "siti-tiket", "   "),
+      /wajib diisi/,
+    );
+    await assert.rejects(
+      requestVoid(db, sale.id, "siti-tiket", "ab"),
+      /wajib diisi/,
+    );
+
+    // Permintaan void → void_pending, tercatat pemohon & alasan.
+    const pending = await requestVoid(
+      db,
+      sale.id,
+      "siti-tiket",
+      "Salah input jumlah",
+    );
+    assert.equal(pending.status, "void_pending");
+    assert.equal(pending.voidReason, "Salah input jumlah");
+    assert.equal(pending.voidRequestedBy, "siti-tiket");
+    assert.ok(pending.voidRequestedAt);
+    assert.equal(pending.voidedAt, null);
+
+    // Summary: void_pending tetap dihitung.
+    const duringPending = await todaySummary(db);
+    assert.equal(duringPending.count, 1);
+    assert.equal(duringPending.visitors, 2);
+
+    // Permintaan ulang pada transaksi pending ditolak.
+    await assert.rejects(
+      requestVoid(db, sale.id, "siti-tiket", "Ulangi"),
+      /Hanya transaksi selesai/,
+    );
+
+    // Approve → voided, tercatat penyetuju.
+    const voided = await approveVoid(db, sale.id, "manajer-operasional");
+    assert.equal(voided.status, "voided");
+    assert.equal(voided.voidedBy, "manajer-operasional");
+    assert.ok(voided.voidedAt);
+
+    // Approve pada status non-pending ditolak.
+    await assert.rejects(
+      approveVoid(db, sale.id, "manajer-operasional"),
+      /menunggu persetujuan/,
+    );
+
+    // Summary: voided dikecualikan.
+    const afterVoid = await todaySummary(db);
+    assert.equal(afterVoid.count, 0);
+    assert.equal(afterVoid.visitors, 0);
+  } finally {
+    cleanupTempDirectory(dir);
+  }
+});

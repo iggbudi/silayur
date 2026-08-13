@@ -37,3 +37,29 @@ export async function listTodaySales(): Promise<ListSalesResponse> {
   });
   return parseJson<ListSalesResponse>(response);
 }
+
+export async function requestVoid(
+  saleId: string,
+  reason: string,
+): Promise<Sale> {
+  const response = await fetch("/api/sales/void", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ saleId, reason }),
+  });
+  return parseJson<Sale>(response);
+}
+
+export async function approveVoid(
+  saleId: string,
+  password: string,
+): Promise<Sale> {
+  const response = await fetch("/api/sales/void/approve", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ saleId, password }),
+  });
+  return parseJson<Sale>(response);
+}

@@ -63,7 +63,7 @@ override `dayType` untuk tanggal tertentu.
 | Produk non-aktif | `priceSale()` throw `"Produk tiket nonaktif: <name>"` (400) |
 | Tarif belum dikonfigurasi untuk day type | `priceSale()` throw `"Tarif <dayType> untuk <name> belum dikonfigurasi."` (400) |
 | Transaksi di luar hari ini (midnight rollover) | `todaySummary()` filter `soldAt` per hari UTC; sale baru tidak ikut summary jika tanggal berbeda |
-| Status `voided` | Disimpan di kolom `status` tapi **tidak dihitung** di `todaySummary` |
+| Status `voided` | Disimpan di kolom `status`; **tidak dihitung** di `todaySummary` (lihat alur void di bawah) |
 
 ## RBAC
 
@@ -76,18 +76,29 @@ memerlukan **`access.visitors` minimal `view`**.
 Pengecekan dilakukan server-side di `app/api/sales/route.ts` via
 `requireRequestUser` + cek `canView(access.visitors)`.
 
+### Pembatalan (void) — dua langkah dengan persetujuan
+
+- **Permintaan** `POST /api/sales/void` — butuh `visitors: view`. Petugas mengisi
+  **alasan wajib**; transaksi menjadi `void_pending`.
+- **Persetujuan** `POST /api/sales/void/approve` — butuh role penyetuju
+  (`super_admin` / `manager` / `supervisor`) dan **verifikasi password** via
+  `authenticateWithPassword`. Transaksi menjadi `voided`.
+- Otoritas persetujuan memakai daftar role (`VOID_APPROVER_ROLES` di
+  `shared/access.ts`), bukan level `visitors: manage`, karena di seed
+  `ticket_officer` = `visitors: manage` (petugas tidak boleh menyetujui sendiri).
+
 ## Anggota Slice
 
 | File | Tanggung Jawab |
 |---|---|
 | `index.ts` | Public API — re-exports (wajib satu-satunya pintu impor dari luar) |
 | `types.ts` | `Sale`, `SaleItem`, `SaleInput`, `SaleInputItem`, `PricedItem`, `SaleStatus` |
-| `repo.ts` | `priceSale`, `createSale`, `loadSaleById`, `listSalesByDate`, `todaySummary` (count, visitors, revenue) |
-| `api.ts` | Client wrapper: `createSale`, `listTodaySales` |
+| `repo.ts` | `priceSale`, `createSale`, `loadSaleById`, `listSalesByDate`, `todaySummary` (count, visitors, revenue), `requestVoid`, `approveVoid` |
+| `api.ts` | Client wrapper: `createSale`, `listTodaySales`, `requestVoid`, `approveVoid` |
 | `components/SaleForm.tsx` | Form input tiket per produk |
 | `components/SaleHistory.tsx` | List transaksi hari ini |
 | `components/TodaySummary.tsx` | Ringkasan count & revenue |
-| `__tests__/repo.test.ts` | Type & signature check (2 test) |
+| `__tests__/repo.test.ts` | Logic test: pricing, atomicity, receipt, summary, void |
 
 ## Wire-up (file di luar slice)
 
@@ -96,6 +107,8 @@ Pengecekan dilakukan server-side di `app/api/sales/route.ts` via
 | `db/schema.ts` | Tambah tabel `sales` & `sale_items` (+6 index) |
 | `drizzle/0003_checkpoint_12_ticket_sales.sql` | Migration: 2 tabel, 6 index |
 | `app/api/sales/route.ts` | Thin handler: `POST` create, `GET` list-by-date (import dari slice) |
+| `app/api/sales/void/route.ts` | Thin handler: `POST` request void |
+| `app/api/sales/void/approve/route.ts` | Thin handler: `POST` approve void (role + password) |
 | `app/penjualan/page.tsx` | Halaman: form + summary + history |
 | `app/components/sidebar-navigation.tsx` | Nav item "Penjualan" (permission `visitors`) |
 
@@ -115,14 +128,15 @@ Pengecekan dilakukan server-side di `app/api/sales/route.ts` via
     (`shared/date.ts`), bukan UTC — receipt prefix & filter harian benar
 - ✅ Preview harga di form memakai tarif efektif per day type
     (`effectivePriceFor`) — konsisten dengan server
-- ⏳ Status `voided` — kolom sudah ada, **fitur void belum diimplementasi**
+- ✅ Void transaksi: `requestVoid` → `void_pending`, `approveVoid` → `voided`
+    (persetujuan manajer/supervisor dengan verifikasi password)
 - ⏳ Integration test penuh — butuh Drizzle snapshot untuk `0003_*`
 - ⏳ Kalender hari libur override
 
 ## Test
 
 ```bash
-npm test                          # 13/13 pass (termasuk logic test pricing & receipt)
+npm test                          # 19/19 pass (termasuk logic test pricing, receipt, void)
 ```
 
 Test mencakup: validasi type & signature, logika tarif efektif per day type
