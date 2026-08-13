@@ -282,3 +282,89 @@ export const receiptCounters = sqliteTable("receipt_counters", {
   counterDate: text("counter_date").primaryKey(),
   seq: integer("seq").notNull(),
 });
+
+/**
+ * Pemasukan non-tiket (parkir, tenant, outbound, dll).
+ * Pendapatan tiket dicatat terpisah di tabel `sales`; tabel ini untuk
+ * sumber pendapatan lain yang dikelola modul keuangan.
+ */
+export const revenueEntries = sqliteTable(
+  "revenue_entries",
+  {
+    id: text("id").primaryKey(),
+    /** Key sumber pendapatan (ref config_items section `revenue`). */
+    sourceKey: text("source_key").notNull(),
+    /** Snapshot nama sumber saat dicatat (mis. "Parkir"). */
+    sourceName: text("source_name").notNull(),
+    amount: integer("amount").notNull(),
+    note: text("note").notNull().default(""),
+    /** Tanggal kalender WIB (YYYY-MM-DD) untuk pengelompokan harian. */
+    entryDate: text("entry_date").notNull(),
+    recordedBy: text("recorded_by")
+      .notNull()
+      .references(() => users.id),
+    recordedAt: text("recorded_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index("revenue_entries_date_idx").on(table.entryDate),
+    index("revenue_entries_by_idx").on(table.recordedBy),
+  ],
+);
+
+/**
+ * Pengeluaran operasional sederhana dengan persetujuan.
+ * status: pending → approved (oleh finance: manage).
+ */
+export const expenses = sqliteTable(
+  "expenses",
+  {
+    id: text("id").primaryKey(),
+    description: text("description").notNull(),
+    amount: integer("amount").notNull(),
+    note: text("note").notNull().default(""),
+    entryDate: text("entry_date").notNull(),
+    recordedBy: text("recorded_by")
+      .notNull()
+      .references(() => users.id),
+    recordedAt: text("recorded_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    status: text("status", {
+      enum: ["pending", "approved", "voided"],
+    })
+      .notNull()
+      .default("pending"),
+    approvedBy: text("approved_by").references(() => users.id),
+    approvedAt: text("approved_at"),
+  },
+  (table) => [
+    index("expenses_date_idx").on(table.entryDate),
+    index("expenses_status_idx").on(table.status),
+  ],
+);
+
+/**
+ * Rekap kas shift (buka/tutup). Satu shift aktif pada satu waktu (MVP).
+ * systemCash dihitung server-side saat tutup; difference = declared - system.
+ */
+export const cashSessions = sqliteTable(
+  "cash_sessions",
+  {
+    id: text("id").primaryKey(),
+    openedBy: text("opened_by")
+      .notNull()
+      .references(() => users.id),
+    openedAt: text("opened_at").notNull(),
+    closedBy: text("closed_by").references(() => users.id),
+    closedAt: text("closed_at"),
+    declaredCash: integer("declared_cash"),
+    systemCash: integer("system_cash"),
+    difference: integer("difference"),
+    status: text("status", { enum: ["open", "closed"] })
+      .notNull()
+      .default("open"),
+  },
+  (table) => [index("cash_sessions_status_idx").on(table.status)],
+);

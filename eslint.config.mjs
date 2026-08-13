@@ -118,7 +118,7 @@ export default tseslint.config(
         "warn",
         {
           selector:
-            "ImportDeclaration[source.value=/features\\/(ticket-sales|visitor-checkin|cashier-report|complaint-handler)\\/(repo|server|api|types|validation|constants|components)(\\/|$|\\.)/]",
+            "ImportDeclaration[source.value=/features\\/(ticket-sales|finance|visitor-checkin|cashier-report|complaint-handler)\\/(repo|server|api|types|validation|constants|components)(\\/|$|\\.)/]",
           message:
             "Import via feature public API: '@/features/<nama>'. Lihat app/features/README.md.",
         },

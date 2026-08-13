@@ -11,6 +11,7 @@ import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
 import { listTodaySales } from "./features/ticket-sales";
+import { financeSummary } from "./features/finance";
 import {
   DEFAULT_MODULE_CONFIG,
   type ModuleKey,
@@ -86,6 +87,7 @@ export default function DashboardPage() {
     visitors: number;
     revenue: number;
   } | null>(null);
+  const [finance, setFinance] = useState<{ totalRevenue: number } | null>(null);
 
   const currentUser = session?.user ?? null;
   const access = session?.access ?? NO_ACCESS;
@@ -118,6 +120,23 @@ export default function DashboardPage() {
     };
   }, [authReady, session, showVisitors]);
 
+  useEffect(() => {
+    if (!authReady || !session || !showFinance) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const summary = await financeSummary();
+        if (cancelled) return;
+        setFinance({ totalRevenue: summary.totalRevenue });
+      } catch {
+        if (!cancelled) setFinance(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, session, showFinance]);
+
   const metrics = useMemo(() => {
     if (!canViewDashboard) return [];
 
@@ -145,8 +164,8 @@ export default function DashboardPage() {
         <MetricCard
           key="finance"
           eyebrow="Pendapatan hari ini"
-          value={summary ? currency.format(summary.revenue) : "—"}
-          note="Pendapatan tiket masuk hari ini"
+          value={finance ? currency.format(finance.totalRevenue) : "—"}
+          note="Total pendapatan hari ini (tiket + non-tiket)"
           icon="Rp"
           tone="blue"
         />,
@@ -220,7 +239,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [access, canViewDashboard, modules, summary, showVisitors, showFinance]);
+  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance]);
 
   async function persistModules(next: ModuleState) {
     setSaveError("");

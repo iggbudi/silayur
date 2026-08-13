@@ -1,11 +1,12 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **13 Agustus 2026** — KPI Pengunjung/Pendapatan real + fitur void transaksi (permintaan & persetujuan manajer/supervisor)
+Pembaruan terakhir: **13 Agustus 2026** — modul keuangan (pemasukan non-tiket, pengeluaran, rekap kas shift) + KPI pendapatan total + void transaksi
 
 ## Status Saat Ini
 
 - Implementasi dan verifikasi lokal CP11: **selesai**
 - Fitur void transaksi (permintaan + persetujuan manajer/supervisor): **selesai**
+- Modul keuangan — pemasukan non-tiket, pengeluaran + persetujuan, rekap kas shift: **selesai**
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`

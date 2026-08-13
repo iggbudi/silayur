@@ -43,6 +43,13 @@
       "when": 1786593073367,
       "tag": "0005_checkpoint_14_sale_void",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786595992691,
+      "tag": "0006_checkpoint_15_finance",
+      "breakpoints": true
     }
   ]
 }

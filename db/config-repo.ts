@@ -512,3 +512,17 @@ export async function assertCanManageVisitors(
     "penjualan tiket",
   );
 }
+
+export async function assertCanViewFinance(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "finance", "view", "keuangan");
+}
+
+export async function assertCanManageFinance(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "finance", "manage", "keuangan");
+}

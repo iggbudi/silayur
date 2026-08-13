@@ -10,7 +10,7 @@ import type {
 } from "../../shared/config";
 
 type SidebarAccess = Record<PermissionModuleKey, AccessLevel>;
-type ActiveSidebarItem = "dashboard" | "settings" | "penjualan";
+type ActiveSidebarItem = "dashboard" | "settings" | "penjualan" | "keuangan";
 
 type NavigationItem = {
   label: string;
@@ -49,6 +49,8 @@ const navigation: NavigationItem[] = [
     icon: "Rp",
     key: "finance",
     permission: "finance",
+    href: "/keuangan",
+    activeKey: "keuangan",
   },
   {
     label: "Komplain",
