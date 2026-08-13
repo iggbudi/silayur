@@ -64,6 +64,12 @@ async function main() {
     "config_items",
     "auth_sessions",
     "schema_version",
+    "sales",
+    "sale_items",
+    "receipt_counters",
+    "revenue_entries",
+    "expenses",
+    "cash_sessions",
   ];
   const counts = {};
   for (const table of tables) {
