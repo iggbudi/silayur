@@ -48,3 +48,7 @@ next-env.d.ts
 
 # Cloudflare/Wrangler local secrets
 .dev.vars
+
+# local agent tooling state
+.commandcode/
+.serena/
