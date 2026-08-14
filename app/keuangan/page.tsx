@@ -45,6 +45,9 @@ export default function KeuanganPage() {
   const [shift, setShift] = useState<CashSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
+  const [declaredCash, setDeclaredCash] = useState("");
   const [revSource, setRevSource] = useState("");
   const [revAmount, setRevAmount] = useState("");
   const [revNote, setRevNote] = useState("");
@@ -122,6 +125,7 @@ export default function KeuanganPage() {
       });
       setRevAmount("");
       setRevNote("");
+      setNotice("Pemasukan berhasil dicatat.");
       await loadData();
     } catch (caught) {
       setError(
@@ -141,6 +145,7 @@ export default function KeuanganPage() {
       setExpDesc("");
       setExpAmount("");
       setExpNote("");
+      setNotice("Pengeluaran berhasil dicatat (menunggu persetujuan).");
       await loadData();
     } catch (caught) {
       setError(
@@ -153,6 +158,7 @@ export default function KeuanganPage() {
     setError("");
     try {
       await approveExpense(id);
+      setNotice("Pengeluaran disetujui.");
       await loadData();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Gagal menyetujui.");
@@ -163,23 +169,35 @@ export default function KeuanganPage() {
     setError("");
     try {
       await openCashSession();
+      setNotice("Sesi kas dimulai.");
       await loadData();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Gagal membuka shift.");
+      setError(caught instanceof Error ? caught.message : "Gagal memulai sesi kas.");
     }
   }
 
   async function handleCloseShift() {
-    const declared = window.prompt("Jumlah setoran kas (Rupiah):");
-    if (declared === null) return;
     setError("");
+    setNotice("");
+    const declared = Number(declaredCash);
+    if (!Number.isFinite(declared) || declared < 0) {
+      setError("Masukkan jumlah setoran kas yang valid.");
+      return;
+    }
     try {
-      await closeCashSession(Number(declared));
+      await closeCashSession(declared);
+      setCloseModalOpen(false);
+      setDeclaredCash("");
+      setNotice("Kas harian disetor. Selisih kas tercatat.");
       await loadData();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Gagal menutup shift.");
+      setError(caught instanceof Error ? caught.message : "Gagal setor kas.");
     }
   }
+
+  const shiftStatusLabel = shift
+    ? `Sesi kas berjalan sejak ${new Date(shift.openedAt).toLocaleTimeString("id-ID")}`
+    : "Belum ada sesi kas untuk hari ini";
 
   return (
     <main className="app-shell">
@@ -208,173 +226,312 @@ export default function KeuanganPage() {
         </div>
       </aside>
 
-      <section className="workspace">
+      <section className="workspace finance-workspace">
         <header className="topbar">
           <div className="title-line">
             <h1>Keuangan</h1>
-            <span className="section-kicker">Pemasukan, pengeluaran & kas</span>
+            <span className="section-kicker">Pemasukan, pengeluaran &amp; kas</span>
           </div>
         </header>
 
+        {notice ? (
+          <p className="finance-notice" role="status">
+            {notice}
+          </p>
+        ) : null}
         {error ? (
           <p className="sale-form-error" role="alert">
             {error}
           </p>
         ) : null}
 
-        {summary ? (
-          <div className="today-summary">
-            <div>
-              <span>Total pendapatan</span>
-              <strong>{currency.format(summary.totalRevenue)}</strong>
+        {/* 1. Status kas harian — aksi utama */}
+        <section className={`panel shift-panel shift-${shift ? "open" : "closed"}`}>
+          <div className="shift-panel-body">
+            <div className="shift-status-icon" aria-hidden="true">
+              {shift ? "●" : "○"}
             </div>
             <div>
-              <span>Tiket</span>
-              <strong>{currency.format(summary.ticketRevenue)}</strong>
-            </div>
-            <div>
-              <span>Non-tiket</span>
-              <strong>{currency.format(summary.otherRevenue)}</strong>
+              <div className="shift-label">Kas harian</div>
+              <div className="shift-status-text">{shiftStatusLabel}</div>
+              <div className="shift-hint">
+                {shift
+                  ? "Catat pemasukan &amp; pengeluaran selama sesi berjalan, lalu setor saat selesai."
+                  : "Mulai sesi untuk mencatat uang masuk dan keluar. Saat selesai, sistem menghitung selisih kas secara otomatis."}
+              </div>
             </div>
           </div>
-        ) : null}
-
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Shift kas</h2>
-          </div>
-          {shift ? (
-            <div>
-              <p>
-                Shift aktif dibuka pada{" "}
-                {new Date(shift.openedAt).toLocaleTimeString("id-ID")}.
-              </p>
-              {canManageFinance ? (
-                <button type="button" onClick={handleCloseShift}>
-                  Tutup shift
+          {canManageFinance ? (
+            <div className="shift-actions">
+              {shift ? (
+                <button
+                  type="button"
+                  className="finance-btn finance-btn-primary"
+                  onClick={() => setCloseModalOpen(true)}
+                >
+                  Setor kas
                 </button>
-              ) : null}
-            </div>
-          ) : (
-            <div>
-              <p>Belum ada shift kas aktif.</p>
-              {canManageFinance ? (
-                <button type="button" onClick={handleOpenShift}>
-                  Buka shift
+              ) : (
+                <button
+                  type="button"
+                  className="finance-btn finance-btn-primary"
+                  onClick={handleOpenShift}
+                >
+                  Mulai sesi kas
                 </button>
-              ) : null}
+              )}
             </div>
-          )}
+          ) : null}
         </section>
 
+        {/* 2. Ringkasan pendapatan hari ini */}
+        {summary ? (
+          <section className="finance-summary" aria-label="Ringkasan pendapatan hari ini">
+            <div className="finance-summary-main">
+              <span>Total pendapatan hari ini</span>
+              <strong>{currency.format(summary.totalRevenue)}</strong>
+            </div>
+            <div className="finance-summary-breakdown">
+              <div>
+                <span>Dari tiket</span>
+                <strong>{currency.format(summary.ticketRevenue)}</strong>
+              </div>
+              <div>
+                <span>Di luar tiket</span>
+                <strong>{currency.format(summary.otherRevenue)}</strong>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {/* 3. Pemasukan non-tiket */}
         <section className="panel">
           <div className="panel-heading">
             <h2>Pemasukan non-tiket</h2>
           </div>
           {canManageFinance ? (
-            <div className="finance-form">
-              <select
-                value={revSource}
-                onChange={(e) => setRevSource(e.target.value)}
-              >
-                <option value="">Pilih sumber…</option>
-                {sources.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                inputMode="numeric"
-                placeholder="Nominal (Rp)"
-                value={revAmount}
-                onChange={(e) => setRevAmount(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Catatan"
-                value={revNote}
-                onChange={(e) => setRevNote(e.target.value)}
-              />
-              <button type="button" onClick={handleAddRevenue}>
-                Catat
+            <form
+              className="finance-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleAddRevenue();
+              }}
+            >
+              <label>
+                <span>Sumber</span>
+                <select
+                  value={revSource}
+                  onChange={(e) => setRevSource(e.target.value)}
+                  required
+                >
+                  <option value="">Pilih sumber…</option>
+                  {sources.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Nominal (Rp)</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="0"
+                  value={revAmount}
+                  onChange={(e) => setRevAmount(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>Catatan (opsional)</span>
+                <input
+                  type="text"
+                  placeholder="Mis. sewa lapak A"
+                  value={revNote}
+                  onChange={(e) => setRevNote(e.target.value)}
+                />
+              </label>
+              <button type="submit" className="finance-btn finance-btn-primary">
+                Catat pemasukan
               </button>
-            </div>
+            </form>
           ) : null}
-          <ul className="sale-history">
-            {revenues.map((r) => (
-              <li key={r.id} className="sale-history-row">
-                <div>
-                  <strong>{r.sourceName}</strong>
-                  <small>{r.recordedByName ?? r.recordedBy}</small>
-                </div>
-                <div>
-                  <strong>{currency.format(r.amount)}</strong>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="finance-list">
+            {revenues.length === 0 ? (
+              <p className="finance-empty">Belum ada pemasukan non-tiket hari ini.</p>
+            ) : (
+              <ul>
+                {revenues.map((r) => (
+                  <li key={r.id} className="finance-row">
+                    <div>
+                      <strong>{r.sourceName}</strong>
+                      <small>{r.recordedByName ?? r.recordedBy}</small>
+                    </div>
+                    <div className="finance-amount finance-amount-in">
+                      +{currency.format(r.amount)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
 
+        {/* 4. Pengeluaran */}
         <section className="panel">
           <div className="panel-heading">
             <h2>Pengeluaran</h2>
           </div>
           {canManageFinance ? (
-            <div className="finance-form">
-              <input
-                type="text"
-                placeholder="Keterangan"
-                value={expDesc}
-                onChange={(e) => setExpDesc(e.target.value)}
-              />
-              <input
-                type="number"
-                inputMode="numeric"
-                placeholder="Nominal (Rp)"
-                value={expAmount}
-                onChange={(e) => setExpAmount(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Catatan"
-                value={expNote}
-                onChange={(e) => setExpNote(e.target.value)}
-              />
-              <button type="button" onClick={handleAddExpense}>
-                Catat
+            <form
+              className="finance-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleAddExpense();
+              }}
+            >
+              <label>
+                <span>Keterangan</span>
+                <input
+                  type="text"
+                  placeholder="Mis. beli ATK"
+                  value={expDesc}
+                  onChange={(e) => setExpDesc(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>Nominal (Rp)</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder="0"
+                  value={expAmount}
+                  onChange={(e) => setExpAmount(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>Catatan (opsional)</span>
+                <input
+                  type="text"
+                  placeholder="Mis. pembelian mingguan"
+                  value={expNote}
+                  onChange={(e) => setExpNote(e.target.value)}
+                />
+              </label>
+              <button type="submit" className="finance-btn finance-btn-primary">
+                Catat pengeluaran
               </button>
-            </div>
+            </form>
           ) : null}
-          <ul className="sale-history">
-            {expenses.map((e) => (
-              <li key={e.id} className="sale-history-row">
-                <div>
-                  <strong>{e.description}</strong>
-                  <small>{e.recordedByName ?? e.recordedBy}</small>
-                </div>
-                <div>
-                  <span className={`sale-status sale-status-${e.status}`}>
-                    {e.status === "pending"
-                      ? "Pending"
-                      : e.status === "approved"
-                        ? "Disetujui"
-                        : "Void"}
-                  </span>
-                  <strong>{currency.format(e.amount)}</strong>
-                  {e.status === "pending" && canManageFinance ? (
-                    <button type="button" onClick={() => handleApprove(e.id)}>
-                      Setujui
-                    </button>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="finance-list">
+            {expenses.length === 0 ? (
+              <p className="finance-empty">Belum ada pengeluaran hari ini.</p>
+            ) : (
+              <ul>
+                {expenses.map((e) => (
+                  <li key={e.id} className="finance-row">
+                    <div>
+                      <strong>{e.description}</strong>
+                      <small>{e.recordedByName ?? e.recordedBy}</small>
+                    </div>
+                    <div className="finance-amount finance-amount-out">
+                      −{currency.format(e.amount)}
+                    </div>
+                    <span className={`sale-status sale-status-${e.status}`}>
+                      {e.status === "pending"
+                        ? "Menunggu"
+                        : e.status === "approved"
+                          ? "Disetujui"
+                          : "Void"}
+                    </span>
+                    {e.status === "pending" && canManageFinance ? (
+                      <button
+                        type="button"
+                        className="finance-btn finance-btn-ghost"
+                        onClick={() => handleApprove(e.id)}
+                      >
+                        Setujui
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
 
         {loading ? <p>Memuat…</p> : null}
+
+        {/* Modal setor kas */}
+        {closeModalOpen ? (
+          <div
+            className="modal-overlay"
+            role="presentation"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) setCloseModalOpen(false);
+            }}
+          >
+            <div
+              className="modal-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="close-shift-title"
+            >
+              <h2 id="close-shift-title">Setor kas harian</h2>
+              <p className="modal-subtitle">
+                Masukkan jumlah uang yang disetor dari kas. Sistem akan menghitung
+                selisih terhadap catatan transaksi.
+              </p>
+              {summary ? (
+                <div className="modal-summary">
+                  <span>Total pendapatan tercatat</span>
+                  <strong>{currency.format(summary.totalRevenue)}</strong>
+                </div>
+              ) : null}
+              <label className="modal-field">
+                <span>Jumlah setoran kas (Rp)</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  autoFocus
+                  placeholder="0"
+                  value={declaredCash}
+                  onChange={(e) => setDeclaredCash(e.target.value)}
+                />
+              </label>
+              {error ? (
+                <p className="sale-form-error" role="alert">
+                  {error}
+                </p>
+              ) : null}
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="finance-btn finance-btn-ghost"
+                  onClick={() => {
+                    setCloseModalOpen(false);
+                    setError("");
+                  }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  className="finance-btn finance-btn-primary"
+                  onClick={() => void handleCloseShift()}
+                >
+                  Setor kas
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );

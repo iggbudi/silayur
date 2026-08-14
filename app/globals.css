@@ -3449,6 +3449,312 @@
   color: #8fe3b0;
 }
 
+/* ===== Keuangan: shift kas, ringkasan, form & list ===== */
+.finance-workspace {
+  padding-bottom: 60px;
+}
+
+.finance-notice {
+  background: var(--success-soft);
+  border: 1px solid rgba(30, 138, 90, 0.25);
+  border-radius: 12px;
+  color: #14633f;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+}
+
+.shift-panel {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.shift-panel-body {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.shift-status-icon {
+  align-items: center;
+  border-radius: 999px;
+  display: flex;
+  font-size: 1.1rem;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.shift-open .shift-status-icon {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.shift-closed .shift-status-icon {
+  background: var(--line);
+  color: var(--muted);
+}
+
+.shift-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shift-status-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.shift-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 3px;
+}
+
+.shift-actions {
+  margin-left: auto;
+}
+
+.finance-btn {
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 9px 16px;
+}
+
+.finance-btn-primary {
+  background: var(--green);
+  border: 1px solid var(--green);
+  color: #ffffff;
+}
+
+.finance-btn-primary:hover {
+  background: var(--forest);
+}
+
+.finance-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.finance-btn-ghost:hover {
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+.finance-summary {
+  background: var(--forest-dark);
+  border-radius: 18px;
+  color: #ffffff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 20px 22px;
+}
+
+.finance-summary-main span,
+.finance-summary-breakdown span {
+  color: rgba(255, 255, 255, 0.72);
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.finance-summary-main strong {
+  color: #ffffff;
+  display: block;
+  font-size: 1.7rem;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+}
+
+.finance-summary-breakdown {
+  display: flex;
+  gap: 26px;
+}
+
+.finance-summary-breakdown div {
+  min-width: 110px;
+}
+
+.finance-summary-breakdown strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-top: 6px;
+}
+
+.finance-form {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.finance-form label,
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.finance-form label > span,
+.modal-field > span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.finance-form input,
+.finance-form select,
+.modal-field input {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  padding: 9px 11px;
+}
+
+.finance-form input:focus,
+.finance-form select:focus,
+.modal-field input:focus {
+  border-color: var(--green);
+  outline: 3px solid rgba(108, 92, 231, 0.16);
+}
+
+.finance-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.finance-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 11px 2px;
+}
+
+.finance-row:first-child {
+  border-top: 0;
+}
+
+.finance-row div:first-child {
+  min-width: 0;
+}
+
+.finance-row strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.finance-row small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.finance-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.finance-amount-in {
+  color: var(--success);
+}
+
+.finance-amount-out {
+  color: var(--red);
+}
+
+.finance-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+/* Modal tutup shift */
+.modal-overlay {
+  align-items: center;
+  backdrop-filter: blur(3px);
+  background: rgba(29, 21, 71, 0.45);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 60;
+}
+
+.modal-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(29, 21, 71, 0.28);
+  max-width: 420px;
+  padding: 22px;
+  width: 100%;
+}
+
+.modal-card h2 {
+  font-size: 1.2rem;
+  margin: 0 0 6px;
+}
+
+.modal-subtitle {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.modal-summary {
+  background: var(--green-soft);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+}
+
+.modal-summary span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.modal-summary strong {
+  color: var(--forest);
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
 /* --- Laporan (halaman /laporan) --- */
 
 .report-workspace {
@@ -3653,6 +3959,37 @@
 }
 
 @media (max-width: 620px) {
+  .shift-panel {
+    align-items: stretch;
+  }
+
+  .shift-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .shift-actions .finance-btn {
+    width: 100%;
+  }
+
+  .finance-summary {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .finance-summary-breakdown {
+    gap: 16px;
+  }
+
+  .finance-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .finance-form .finance-btn {
+    width: 100%;
+  }
+
   .report-range-form {
     align-items: stretch;
     flex-direction: column;
@@ -3675,89 +4012,6 @@
 
 .complaint-workspace {
   gap: 18px;
-}
-
-/* Class form/list yang dipakai halaman komplain — self-contained agar
-   tidak bergantung pada CSS modul keuangan yang belum ter-commit. */
-.complaint-notice {
-  background: var(--success-soft);
-  border: 1px solid rgba(30, 138, 90, 0.25);
-  border-radius: 12px;
-  color: #14633f;
-  font-size: 0.9rem;
-  margin: 0 0 14px;
-  padding: 10px 14px;
-}
-
-.complaint-empty {
-  color: var(--muted);
-  font-size: 0.88rem;
-  margin: 4px 0;
-}
-
-.complaint-btn {
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 9px 16px;
-}
-
-.complaint-btn-primary {
-  background: var(--green);
-  border: 1px solid var(--green);
-  color: #ffffff;
-}
-
-.complaint-btn-primary:hover {
-  background: var(--forest);
-}
-
-.complaint-btn-ghost {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--muted);
-}
-
-.complaint-btn-ghost:hover {
-  background: var(--canvas);
-  color: var(--ink);
-}
-
-.complaint-form {
-  align-items: flex-end;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.complaint-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.complaint-form label > span {
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.complaint-form input,
-.complaint-form select {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  color: var(--ink);
-  font-size: 0.95rem;
-  padding: 9px 11px;
-}
-
-.complaint-form input:focus,
-.complaint-form select:focus {
-  border-color: var(--green);
-  outline: 3px solid rgba(108, 92, 231, 0.16);
 }
 
 .complaint-status {
