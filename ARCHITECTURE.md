@@ -207,6 +207,17 @@ route thin handler: [`app/api/reports/route.ts`](./app/api/reports/route.ts)
 endpoint existing (`/api/sales?date=`, `/api/revenue?date=`,
 `/api/expenses?date=`).
 
+## Slice Komplain: `complaints/`
+
+Modul komplain end-to-end (halaman `/complaints`), pilot untuk dead-link
+modul. Tabel `complaints` (migration `0007`) dengan siklus hidup
+`open → assigned → processing → resolved` (atau `reopened`). Public API:
+[`app/features/complaints/`](./app/features/complaints/); route thin
+handler: `app/api/complaints/*` (RBAC `assertCanViewComplaints` /
+`assertCanManageComplaints`); halaman:
+[`app/complaints/page.tsx`](./app/complaints/page.tsx). Dashboard memakai
+`listRecentComplaints` + `countOpenComplaints` untuk panel & KPI komplain.
+
 ## Mengikuti Roadmap
 
 Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./adr/0001-hybrid-layered-with-co-location.md)

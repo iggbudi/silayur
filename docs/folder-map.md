@@ -164,6 +164,7 @@ dashboard/
 | **ticket-sales** | `app/features/ticket-sales/`, `app/api/sales/*`, `app/penjualan/` | Transaksi penjualan tiket (POS, void) |
 | **finance** | `app/features/finance/`, `app/api/{revenue,expenses,cash-session,finance/summary}/*`, `app/keuangan/` | Pemasukan non-tiket, pengeluaran, kas harian |
 | **reports** | `app/features/reports/`, `app/api/reports/`, `app/laporan/` | Rekap & rincian lintas tanggal |
+| **complaints** | `app/features/complaints/`, `app/api/complaints/*`, `app/complaints/` | Komplain pengunjung (catat, status, tindak lanjut) |
 | **platform** | `app/components/{brand,toggle,dev-runtime-guard}.tsx`, `app/hooks/use-mobile-sidebar.ts`, `app/lib/*` | Cross-cutting utilities |
 
 ## Cross-slice Dependency

@@ -10,8 +10,13 @@ import { SidebarNavigation } from "./components/sidebar-navigation";
 import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
-import { listTodaySales } from "./features/ticket-sales";
-import { financeSummary } from "./features/finance";
+import { fetchRemoteConfig } from "./lib/config-api";
+import { listTodaySales, type Sale } from "./features/ticket-sales";
+import { financeSummary, listRevenue } from "./features/finance";
+import type { RevenueEntry } from "./features/finance";
+import { recentComplaints, type Complaint } from "./features/complaints";
+import type { ConfigItem } from "../shared/config";
+import { todayIsoDate } from "../shared/date";
 import {
   DEFAULT_MODULE_CONFIG,
   type ModuleKey,
@@ -49,6 +54,93 @@ const currency = new Intl.NumberFormat("id-ID", {
 
 const numberFormat = new Intl.NumberFormat("id-ID");
 
+/** Warna donut per bucket komposisi pendapatan (cycle bila lebih banyak). */
+const REVENUE_COLORS = ["green", "blue", "purple", "orange", "red"] as const;
+const REVENUE_CSS: Record<string, string> = {
+  green: "var(--green)",
+  blue: "var(--blue)",
+  purple: "var(--purple)",
+  orange: "var(--orange)",
+  red: "var(--red)",
+};
+
+type RevenueBucket = { label: string; amount: number };
+
+/**
+ * Susun breakdown pendapatan hari ini per sumber:
+ * - Tiket: group subtotal per nama produk dari line items penjualan.
+ * - Non-tiket: group amount per nama sumber dari pemasukan.
+ * Urutan: sumber aktif dari konfigurasi (sortOrder), lalu sumber lain yang
+ * muncul di transaksi, lalu tiket. Bucket bernilai nol dibuang.
+ */
+function buildRevenueBreakdown(
+  sales: Sale[],
+  revenues: RevenueEntry[],
+  revenueConfig: ConfigItem[],
+): RevenueBucket[] {
+  const ticketMap = new Map<string, number>();
+  for (const sale of sales) {
+    for (const item of sale.items) {
+      ticketMap.set(
+        item.productName,
+        (ticketMap.get(item.productName) ?? 0) + item.subtotal,
+      );
+    }
+  }
+
+  const revenueMap = new Map<string, number>();
+  for (const entry of revenues) {
+    revenueMap.set(
+      entry.sourceName,
+      (revenueMap.get(entry.sourceName) ?? 0) + entry.amount,
+    );
+  }
+
+  const ordered: RevenueBucket[] = [];
+  const seen = new Set<string>();
+  for (const item of revenueConfig) {
+    if (!item.active) continue;
+    seen.add(item.name);
+    ordered.push({ label: item.name, amount: revenueMap.get(item.name) ?? 0 });
+  }
+  for (const [label, amount] of revenueMap) {
+    if (seen.has(label)) continue;
+    seen.add(label);
+    ordered.push({ label, amount });
+  }
+  for (const [label, amount] of ticketMap) {
+    ordered.push({ label, amount });
+  }
+
+  return ordered.filter((bucket) => bucket.amount > 0);
+}
+
+/** Tanggal hari ini dalam format WIB ("Jumat, 14 Agustus 2026"). */
+function formatTodayWib(): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+}
+
+/** `background: conic-gradient(...)` untuk donut komposisi pendapatan. */
+function revenueDonutStyle(buckets: RevenueBucket[]): string {
+  const total = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
+  if (total <= 0) return "var(--line)";
+  let cursor = 0;
+  const segments = buckets.map((bucket, index) => {
+    const start = cursor;
+    cursor += (bucket.amount / total) * 100;
+    const color =
+      REVENUE_CSS[REVENUE_COLORS[index % REVENUE_COLORS.length]];
+    return `${color} ${start}% ${cursor}%`;
+  });
+  return `conic-gradient(${segments.join(", ")})`;
+}
+
 const facilityRows = [
   { name: "Kolam Renang", status: "Baik", tone: "good" },
   { name: "Playground", status: "Baik", tone: "good" },
@@ -56,11 +148,13 @@ const facilityRows = [
   { name: "Toilet Utama", status: "Baik", tone: "good" },
 ];
 
-const complaintRows = [
-  { time: "10.15", title: "Kebersihan toilet wanita", status: "Diproses" },
-  { time: "11.20", title: "Antrean kolam cukup lama", status: "Ditugaskan" },
-  { time: "13.05", title: "Pilihan makanan kurang", status: "Baru" },
-];
+const complaintStatusLabel: Record<Complaint["status"], string> = {
+  open: "Baru",
+  assigned: "Ditugaskan",
+  processing: "Diproses",
+  resolved: "Selesai",
+  reopened: "Dibuka lagi",
+};
 
 function getInitials(name: string): string {
   return name
@@ -88,6 +182,13 @@ export default function DashboardPage() {
     revenue: number;
   } | null>(null);
   const [finance, setFinance] = useState<{ totalRevenue: number } | null>(null);
+  const [revenueBreakdown, setRevenueBreakdown] = useState<
+    RevenueBucket[] | null
+  >(null);
+  const [recentComplaintList, setRecentComplaintList] = useState<
+    Complaint[] | null
+  >(null);
+  const [openComplaints, setOpenComplaints] = useState<number | null>(null);
 
   const currentUser = session?.user ?? null;
   const access = session?.access ?? NO_ACCESS;
@@ -102,6 +203,7 @@ export default function DashboardPage() {
 
   const showVisitors = modules.visitors && canView(access.visitors);
   const showFinance = modules.finance && canView(access.finance);
+  const showComplaints = modules.complaints && canView(access.complaints);
 
   useEffect(() => {
     if (!authReady || !session || !showVisitors) return;
@@ -125,11 +227,27 @@ export default function DashboardPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const summary = await financeSummary();
+        const date = todayIsoDate();
+        const [summary, sales, revenues, config] = await Promise.all([
+          financeSummary(),
+          listTodaySales(),
+          listRevenue(date),
+          fetchRemoteConfig(),
+        ]);
         if (cancelled) return;
         setFinance({ totalRevenue: summary.totalRevenue });
+        setRevenueBreakdown(
+          buildRevenueBreakdown(
+            sales.sales,
+            revenues,
+            config.configItems.revenue,
+          ),
+        );
       } catch {
-        if (!cancelled) setFinance(null);
+        if (!cancelled) {
+          setFinance(null);
+          setRevenueBreakdown(null);
+        }
       }
     })();
     return () => {
@@ -137,13 +255,33 @@ export default function DashboardPage() {
     };
   }, [authReady, session, showFinance]);
 
+  useEffect(() => {
+    if (!authReady || !session || !showComplaints) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await recentComplaints();
+        if (cancelled) return;
+        setRecentComplaintList(result.complaints);
+        setOpenComplaints(result.openCount);
+      } catch {
+        if (!cancelled) {
+          setRecentComplaintList(null);
+          setOpenComplaints(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, session, showComplaints]);
+
   const metrics = useMemo(() => {
     if (!canViewDashboard) return [];
 
     const items = [];
     const showOperations = modules.operations && canView(access.operations);
     const showFacilities = modules.facilities && canView(access.facilities);
-    const showComplaints = modules.complaints && canView(access.complaints);
 
     if (showVisitors) {
       items.push(
@@ -175,9 +313,8 @@ export default function DashboardPage() {
         <MetricCard
           key="facility-fallback"
           eyebrow="Fasilitas aktif"
-          value="8"
-          suffix="dari 9"
-          note="Satu perlu pemeriksaan"
+          value="—"
+          note="Modul fasilitas belum tersedia"
           icon="◇"
           tone="blue"
         />,
@@ -189,11 +326,10 @@ export default function DashboardPage() {
         <MetricCard
           key="operations"
           eyebrow="Status operasional"
-          value="Buka"
-          note="Checklist 8 dari 10 selesai"
+          value="—"
+          note="Modul operasional belum tersedia"
           icon="✓"
           tone="orange"
-          badge="80%"
         />,
       );
     }
@@ -203,9 +339,8 @@ export default function DashboardPage() {
         <MetricCard
           key="attention"
           eyebrow="Perlu perhatian"
-          value="3"
-          suffix="item"
-          note="1 prioritas tinggi"
+          value="—"
+          note="Belum ada data pemantauan"
           icon="!"
           tone="purple"
         />,
@@ -217,9 +352,17 @@ export default function DashboardPage() {
         <MetricCard
           key="complaints"
           eyebrow="Komplain terbuka"
-          value="2"
+          value={
+            openComplaints === null
+              ? "—"
+              : numberFormat.format(openComplaints)
+          }
           suffix="kasus"
-          note="1 baru, 1 sedang diproses"
+          note={
+            openComplaints === null
+              ? "Belum ada data komplain"
+              : "Menunggu tindak lanjut"
+          }
           icon="…"
           tone="red"
         />,
@@ -229,9 +372,8 @@ export default function DashboardPage() {
         <MetricCard
           key="issue-fallback"
           eyebrow="Kendala terbuka"
-          value="2"
-          suffix="tugas"
-          note="Menunggu tindak lanjut"
+          value="—"
+          note="Menunggu data operasional"
           icon="!"
           tone="red"
         />,
@@ -239,7 +381,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance]);
+  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance, showComplaints, openComplaints]);
 
   async function persistModules(next: ModuleState) {
     setSaveError("");
@@ -349,7 +491,7 @@ export default function DashboardPage() {
           <div className="top-actions">
             <button className="date-button" type="button">
               <span aria-hidden="true">□</span>
-              Kamis, 23 Juli 2026
+              {formatTodayWib()}
             </button>
             {canManageSettings ? (
               <button
@@ -361,9 +503,12 @@ export default function DashboardPage() {
                 Atur modul
               </button>
             ) : null}
-            <button className="notification-button" type="button" aria-label="Notifikasi">
+            <button
+              className="notification-button"
+              type="button"
+              aria-label="Notifikasi belum tersedia"
+            >
               ♢
-              <span>3</span>
             </button>
           </div>
         </header>
@@ -512,43 +657,53 @@ export default function DashboardPage() {
                     <span className="section-kicker">Keuangan</span>
                     <h2>Komposisi pendapatan</h2>
                   </div>
-                  <button type="button">Hari ini⌄</button>
+                  <span className="updated-label">Hari ini</span>
                 </div>
 
-                <div className="revenue-content">
-                  <div className="donut donut-revenue">
-                    <div>
-                      <strong>7,85</strong>
-                      <span>juta</span>
+                {revenueBreakdown === null ||
+                revenueBreakdown.length === 0 ? (
+                  <div className="revenue-content">
+                    <p className="finance-empty">
+                      Belum ada data pendapatan hari ini.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="revenue-content">
+                    <div
+                      className="donut donut-revenue"
+                      style={{ background: revenueDonutStyle(revenueBreakdown) }}
+                    >
+                      <div>
+                        <strong>
+                          {currency
+                            .format(
+                              revenueBreakdown.reduce(
+                                (sum, bucket) => sum + bucket.amount,
+                                0,
+                              ),
+                            )
+                            .replace(/,00$/, "")}
+                        </strong>
+                        <span>total hari ini</span>
+                      </div>
+                    </div>
+                    <div className="revenue-list">
+                      {revenueBreakdown.map((bucket, index) => (
+                        <div key={`${bucket.label}-${index}`}>
+                          <span>
+                            <i
+                              className={`revenue-${
+                                REVENUE_COLORS[index % REVENUE_COLORS.length]
+                              }`}
+                            />
+                            {bucket.label}
+                          </span>
+                          <strong>{currency.format(bucket.amount)}</strong>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="revenue-list">
-                    <div>
-                      <span>
-                        <i className="revenue-green" /> Tiket & kunjungan
-                      </span>
-                      <strong>Rp5,60 jt</strong>
-                    </div>
-                    <div>
-                      <span>
-                        <i className="revenue-blue" /> Parkir
-                      </span>
-                      <strong>Rp1,20 jt</strong>
-                    </div>
-                    <div>
-                      <span>
-                        <i className="revenue-purple" /> Tenant
-                      </span>
-                      <strong>Rp850 rb</strong>
-                    </div>
-                    <div>
-                      <span>
-                        <i className="revenue-orange" /> Lainnya
-                      </span>
-                      <strong>Rp200 rb</strong>
-                    </div>
-                  </div>
-                </div>
+                )}
               </article>
             ) : null}
 
@@ -588,15 +743,29 @@ export default function DashboardPage() {
                   <button type="button">Semua komplain</button>
                 </div>
 
-                <div className="complaint-list">
-                  {complaintRows.map((complaint) => (
-                    <div key={`${complaint.time}-${complaint.title}`}>
-                      <time>{complaint.time}</time>
-                      <span>{complaint.title}</span>
-                      <strong>{complaint.status}</strong>
-                    </div>
-                  ))}
-                </div>
+                {recentComplaintList === null ||
+                recentComplaintList.length === 0 ? (
+                  <p className="finance-empty">
+                    Belum ada komplain terbaru.
+                  </p>
+                ) : (
+                  <div className="complaint-list">
+                    {recentComplaintList.map((complaint) => (
+                      <div key={complaint.id}>
+                        <time>
+                          {new Date(complaint.reportedAt).toLocaleTimeString(
+                            "id-ID",
+                            { hour: "2-digit", minute: "2-digit" },
+                          )}
+                        </time>
+                        <span>{complaint.title}</span>
+                        <strong className={`complaint-status complaint-status-${complaint.status}`}>
+                          {complaintStatusLabel[complaint.status]}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </article>
             ) : null}
           </section>

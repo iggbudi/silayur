@@ -15,7 +15,8 @@ type ActiveSidebarItem =
   | "settings"
   | "penjualan"
   | "keuangan"
-  | "laporan";
+  | "laporan"
+  | "complaints";
 
 type NavigationItem = {
   label: string;
@@ -62,6 +63,8 @@ const navigation: NavigationItem[] = [
     icon: "!",
     key: "complaints",
     permission: "complaints",
+    href: "/complaints",
+    activeKey: "complaints",
   },
   {
     label: "Laporan",

@@ -368,3 +368,41 @@ export const cashSessions = sqliteTable(
   },
   (table) => [index("cash_sessions_status_idx").on(table.status)],
 );
+
+/**
+ * Komplain pengunjung (modul Komplain).
+ * Siklus hidup: open → assigned → processing → resolved (atau reopened).
+ * Kategori bebas (biasanya dari config_items section `facilities`).
+ */
+export const complaints = sqliteTable(
+  "complaints",
+  {
+    id: text("id").primaryKey(),
+    /** Ringkasan singkat komplain. */
+    title: text("title").notNull(),
+    description: text("description").notNull().default(""),
+    /** Kategori (snapshot; umumnya nama config_items.facilities). */
+    category: text("category").notNull().default(""),
+    status: text("status", {
+      enum: ["open", "assigned", "processing", "resolved", "reopened"],
+    })
+      .notNull()
+      .default("open"),
+    priority: text("priority", {
+      enum: ["low", "medium", "high"],
+    })
+      .notNull()
+      .default("medium"),
+    /** Tanggal kalender WIB (YYYY-MM-DD) untuk pengelompokan harian. */
+    date: text("date").notNull(),
+    reportedBy: text("reported_by")
+      .notNull()
+      .references(() => users.id),
+    reportedAt: text("reported_at").notNull(),
+    updatedBy: text("updated_by")
+      .notNull()
+      .references(() => users.id),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [index("complaints_status_idx").on(table.status)],
+);

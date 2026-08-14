@@ -149,7 +149,9 @@ Semua thin handler mengikuti pola `app/api/sales/route.ts` (same-origin, auth, R
 - Slice `finance` (types, repo, api, komponen, test).
 - Endpoint revenue, expenses, cash-session, finance-summary.
 - Halaman `/keuangan` + nav sidebar.
-- Dashboard total pendapatan + komposisi nyata.
+- Dashboard total pendapatan + komposisi nyata. ✅ **Selesai 14 Agt 2026**:
+  panel "Komposisi pendapatan" menampilkan breakdown per sumber real (tiket
+  per produk + non-tiket per sumber) dari transaksi hari ini.
 
 **Di luar scope (future):**
 

@@ -540,3 +540,17 @@ export async function assertCanManageReports(
 ): Promise<AppUser> {
   return assertCanAccessModule(db, userId, "reports", "manage", "laporan");
 }
+
+export async function assertCanViewComplaints(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "complaints", "view", "komplain");
+}
+
+export async function assertCanManageComplaints(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "complaints", "manage", "komplain");
+}

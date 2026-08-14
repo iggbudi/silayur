@@ -513,3 +513,54 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
 - **Tidak ada perubahan schema DB** (tidak ada migration baru).
 - Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
   pass (termasuk test baru `shared/date` + `reports`).
+
+## Dashboard Data Nyata (14 Agustus 2026)
+
+- **Panel "Komposisi pendapatan"** (`app/page.tsx`) kini memakai data nyata
+  hari ini, bukan hardcoded "7,85 juta": breakdown per sumber dari transaksi
+  (tiket per produk via `sales[].items[]`, non-tiket per sumber via
+  `listRevenue`), urutan label dari `config.configItems.revenue` (aktif),
+  donut `conic-gradient` dinamis + list bucket. Empty state jujur
+  ("Belum ada data pendapatan hari ini").
+- **Kartu KPI operasional/fasilitas/komplain** jadi jujur: nilai hardcoded
+  ("8 dari 9", "Buka", "3 item", "2 kasus") diganti `"—"` dengan catatan
+  "Modul belum tersedia" / "Belum ada data" — tidak menyesatkan saat demo.
+  Gating modul & permission tetap.
+- **Tanggal topbar** dinamis WIB (`Intl.DateTimeFormat("id-ID", timeZone:
+  "Asia/Jakarta")`) menggantikan literal "Kamis, 23 Juli 2026".
+- **Badge notifikasi "3"** dihapus (angka palsu); tombol tetap ada dengan
+  `aria-label` "Notifikasi belum tersedia".
+- Tanpa perubahan schema DB, tanpa migration, tanpa endpoint baru — komposisi
+  dihitung client-side memakai API existing (`listTodaySales`, `listRevenue`,
+  `fetchRemoteConfig`).
+- Grafik tren per hari di-defer (butuh permission `reports`, tidak selalu
+  dimiliki role penampil panel finance).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  pass, smoke manual dashboard dengan DB demo.
+
+## Modul Komplain — Pilot Dead-Link (14 Agustus 2026)
+
+- **Tabel `complaints`** baru di `db/schema.ts` + migration
+  `drizzle/0007_checkpoint_16_complaints.sql` (siklus hidup: `open` →
+  `assigned` → `processing` → `resolved` / `reopened`; kolom audit
+  `reportedBy`/`updatedBy`, WIB `date`, `priority`).
+- **Slice baru `app/features/complaints/`** (types, repo, api, index,
+  MANIFEST, test) — `createComplaint`, `listComplaintsByDate`,
+  `listRecentComplaints`, `countOpenComplaints`, `updateComplaintStatus`
+  (validasi transisi).
+- **RBAC baru** `assertCanViewComplaints` / `assertCanManageComplaints`
+  (`db/config-repo.ts`); route thin handler:
+  `app/api/complaints/` (GET/POST), `app/api/complaints/recent/` (GET),
+  `app/api/complaints/[id]/status/` (POST).
+- **Halaman `/complaints`** + nav sidebar "Komplain" diaktifkan (sebelumnya
+  dead link). Form catat komplain (judul, kategori dari config facilities,
+  prioritas) + daftar hari ini + tombol lanjut status — hanya untuk
+  `complaints=manage`; view hanya lihat.
+- **Dashboard di-wire**: panel "Komplain terbaru" memakai
+  `listRecentComplaints` (bukan `complaintRows` hardcoded); KPI "Komplain
+  terbuka" memakai `countOpenComplaints` (angka real).
+- **CSS** `.complaint-status-*` + `.complaint-row` di `app/globals.css`.
+- Migration 0007 hanya dijalankan di DB lokal/test; **rollout Turso remote
+  menunggu otorisasi owner** (AGENTS.md).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  pass (termasuk test baru `complaints`), smoke manual.

@@ -120,7 +120,14 @@ Role di DB: `super_admin`, `manager`, `supervisor`, `ticket_officer`,
 
 1. **Bersihkan data hardcoded di Dashboard** → ganti placeholder fasilitas &
    komplain dengan data DB, atau sembunyikan sampai fitur dibuat (hindari
-   menyesatkan saat demo).
+   menyesatkan saat demo). ✅ **Sebagian selesai 14 Agt 2026**: panel
+   "Komposisi pendapatan" kini real per sumber (tiket per produk + non-tiket
+   per sumber), tanggal topbar dinamis WIB, badge notifikasi palsu dihapus,
+   dan kartu KPI operasional/fasilitas/komplain menampilkan "—" / "Modul
+   belum tersedia" (jujur, tidak lagi angka palsu). ✅ **Komplain selesai
+   14 Agt 2026**: panel "Komplain terbaru" + KPI "Komplain terbuka" kini
+   data nyata dari modul `/complaints`. Sisa: panel operasional & fasilitas
+   sungguhan menunggu modul terkait.
 2. **Ganti semua `window.prompt()`** dengan modal/form dialog yang proper
    (void reason, void password, close shift declared cash, dst.).
 3. **(Urgent) Lengkapi tarif**: seed tarif anak + aktifkan tarif weekend, atau

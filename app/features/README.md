@@ -17,7 +17,8 @@
 - `ticket-sales/` — transaksi penjualan tiket (Fase 5 pilot)
 - `visitor-checkin/` — check-in pengunjung di loket
 - `cashier-report/` — laporan kas harian
-- `complaint-handler/` — alur komplain end-to-end
+- `complaints/` — alur komplain end-to-end ✅ **dibuat 14 Agt 2026** sebagai
+  pilot dead-link (lihat [`complaints/`](./complaints/))
 
 ## Konvensi Struktur
 
