@@ -482,3 +482,34 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   - Merge `app/lib/access.ts` (re-export 1 baris) sengaja **tidak**
     dilakukan — adapter tipis yang tidak mengganggu; di-defer agar diff
     minim (keputusan di PLAN-PERBAIKAN #7).
+
+## Halaman Laporan & Rekap Lintas Tanggal (14 Agustus 2026)
+
+- **Slice baru `app/features/reports/`** — `rangeReport(db, from, to)`: 4 query
+  paralel (sales, revenue_entries, expenses, cash_sessions) pada satu rentang
+  tanggal WIB, agregasi & grouping per hari di JS. Semantik waktu konsisten
+  dengan modul existing: window UTC WIB untuk `sold_at`, filter string untuk
+  `entry_date`; penjualan `voided` dikecualikan dari total tapi dilaporkan
+  terpisah (`voidedCount`/`voidedAmount`); pengeluaran hanya `approved` dihitung
+  sebagai uang keluar; sesi kas `closed` diagregasi ke `cashTotals`, sesi `open`
+  dilaporkan via `openCount`.
+- **Route baru `app/api/reports/route.ts`** — thin handler, RBAC
+  `assertCanViewReports` (baru di `db/config-repo.ts`), validasi rentang
+  (format tanggal, `from <= to`, maksimal 366 hari) → 400 "Rentang tanggal
+  tidak valid."
+- **Halaman baru `app/laporan/page.tsx`** — form rentang tanggal (Dari/Sampai)
+  + preset cepat (Hari ini / 7 hari terakhir / Bulan ini), 6 kartu KPI rekap
+  (Pengunjung, Transaksi, Pendapatan tiket, Non-tiket, Pengeluaran disetujui,
+  Selisih kas net), panel sesi kas, tabel rincian per hari (klik baris → detail
+  hari itu via endpoint existing `/api/sales?date=`, `/api/revenue?date=`,
+  `/api/expenses?date=`). Role `reports=view` tanpa akses `visitors`/`finance`
+  mendapat pesan ramah saat membuka detail (bukan error mentah).
+- **Nav "Laporan" diaktifkan** (`app/components/sidebar-navigation.tsx`):
+  `href: "/laporan"`, `activeKey: "laporan"` — sebelumnya dead link.
+- **Helper tanggal baru** di `shared/date.ts`: `isValidDateIso`,
+  `localUtcRange`, `utcIsoToLocalDate`, `eachDateInRange` + test.
+- **CSS baru** `.report-*` di `app/globals.css` (grid KPI, tabel, detail,
+  status sesi, responsif < 620px).
+- **Tidak ada perubahan schema DB** (tidak ada migration baru).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  pass (termasuk test baru `shared/date` + `reports`).

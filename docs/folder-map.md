@@ -161,6 +161,9 @@ dashboard/
 | **settings** | `app/pengaturan/`, `db/config-repo.ts`, `app/api/config/route.ts`, `app/components/settings-user-form.tsx` | Konfigurasi sistem, user management |
 | **ticket-master** | `db/ticket-repo.ts`, `app/components/ticket-settings.tsx` | Produk tiket & tarif |
 | **dashboard** | `app/page.tsx`, `app/components/dashboard-widgets.tsx` | Halaman utama & KPI |
+| **ticket-sales** | `app/features/ticket-sales/`, `app/api/sales/*`, `app/penjualan/` | Transaksi penjualan tiket (POS, void) |
+| **finance** | `app/features/finance/`, `app/api/{revenue,expenses,cash-session,finance/summary}/*`, `app/keuangan/` | Pemasukan non-tiket, pengeluaran, kas harian |
+| **reports** | `app/features/reports/`, `app/api/reports/`, `app/laporan/` | Rekap & rincian lintas tanggal |
 | **platform** | `app/components/{brand,toggle,dev-runtime-guard}.tsx`, `app/hooks/use-mobile-sidebar.ts`, `app/lib/*` | Cross-cutting utilities |
 
 ## Cross-slice Dependency

@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   dayTypeFor,
+  eachDateInRange,
   effectivePriceFor,
+  isValidDateIso,
   isWeekend,
   localDayUtcRange,
+  localUtcRange,
   todayIsoDate,
+  utcIsoToLocalDate,
 } from "../date";
 import type { TicketProduct } from "../config";
 
@@ -55,6 +59,48 @@ test("localDayUtcRange maps a WIB calendar day to 24h UTC bounds", () => {
     earlyMorningWib >= startIso && earlyMorningWib < endIso,
     "01:00 WIB 27 Juli harus termasuk rentang 27 Juli",
   );
+});
+
+test("isValidDateIso accepts real dates and rejects bad formats", () => {
+  assert.equal(isValidDateIso("2026-07-27"), true);
+  assert.equal(isValidDateIso("2026-02-28"), true);
+  assert.equal(isValidDateIso("2026-02-31"), false, "tanggal mustahil ditolak");
+  assert.equal(isValidDateIso("2026-7-27"), false, "bulan tanpa nol depan");
+  assert.equal(isValidDateIso("27-07-2026"), false);
+  assert.equal(isValidDateIso(""), false);
+  assert.equal(isValidDateIso("not-a-date"), false);
+});
+
+test("localUtcRange spans from start of from-day to start of day after to", () => {
+  const { startIso, endIso } = localUtcRange("2026-07-25", "2026-07-27");
+  assert.equal(startIso, "2026-07-24T17:00:00.000Z");
+  assert.equal(endIso, "2026-07-27T17:00:00.000Z");
+  // Satu hari → sama dengan localDayUtcRange.
+  const single = localUtcRange("2026-07-27", "2026-07-27");
+  assert.deepEqual(single, localDayUtcRange("2026-07-27"));
+});
+
+test("utcIsoToLocalDate converts ISO UTC to the WIB calendar day", () => {
+  // 17:00 UTC 24 Juli = 00:00 WIB 25 Juli → masuk hari 25.
+  assert.equal(utcIsoToLocalDate("2026-07-24T17:00:00.000Z"), "2026-07-25");
+  assert.equal(utcIsoToLocalDate("2026-07-24T16:59:59.999Z"), "2026-07-24");
+  assert.equal(utcIsoToLocalDate("2026-07-25T10:00:00.000Z"), "2026-07-25");
+});
+
+test("eachDateInRange lists every date inclusive and in order", () => {
+  assert.deepEqual(eachDateInRange("2026-07-25", "2026-07-27"), [
+    "2026-07-25",
+    "2026-07-26",
+    "2026-07-27",
+  ]);
+  assert.deepEqual(eachDateInRange("2026-07-27", "2026-07-27"), [
+    "2026-07-27",
+  ]);
+  assert.deepEqual(eachDateInRange("2026-12-30", "2027-01-01"), [
+    "2026-12-30",
+    "2026-12-31",
+    "2027-01-01",
+  ]);
 });
 
 test("effectivePriceFor picks the active tariff for the day type", () => {

@@ -62,6 +62,59 @@ export function localDayUtcRange(dateIso: string): {
 }
 
 /**
+ * Apakah string `YYYY-MM-DD` adalah tanggal kalender yang valid
+ * (format benar dan tanggal nyata, mis. menolak `2026-02-31`).
+ */
+export function isValidDateIso(dateIso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) return false;
+  const parsed = new Date(`${dateIso}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return parsed.toISOString().slice(0, 10) === dateIso;
+}
+
+/**
+ * Rentang waktu UTC untuk rentang tanggal kalender WIB (bawah inklusif,
+ * atas eksklusif). Mulai dari awal hari `from` sampai awal hari setelah
+ * `to` — mencakup seluruh hari di antaranya.
+ */
+export function localUtcRange(
+  fromIso: string,
+  toIso: string,
+): { startIso: string; endIso: string } {
+  const start = localDayUtcRange(fromIso);
+  const end = localDayUtcRange(toIso);
+  return { startIso: start.startIso, endIso: end.endIso };
+}
+
+/**
+ * Konversi timestamp ISO UTC ke tanggal kalender WIB `YYYY-MM-DD`.
+ * Dipakai untuk mengelompokkan transaksi (kolom `sold_at`) per hari WIB.
+ */
+export function utcIsoToLocalDate(isoUtc: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: JAKARTA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(isoUtc));
+}
+
+/**
+ * Daftar tanggal `YYYY-MM-DD` dari `fromIso` sampai `toIso` (inklusif,
+ * urutan menaik). Prasyarat: `fromIso <= toIso` dan keduanya valid.
+ */
+export function eachDateInRange(fromIso: string, toIso: string): string[] {
+  const dates: string[] = [];
+  const cursor = new Date(`${fromIso}T00:00:00.000Z`);
+  const end = new Date(`${toIso}T00:00:00.000Z`);
+  while (cursor.getTime() <= end.getTime()) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return dates;
+}
+
+/**
  * Tarif efektif untuk produk pada tanggal tertentu: tarif aktif dengan
  * dayType yang sesuai dan periode `validFrom`/`validUntil` mencakup tanggal.
  * Bila beberapa periode berlaku, ambil yang mulai paling akhir.

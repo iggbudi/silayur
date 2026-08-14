@@ -128,7 +128,9 @@ Role di DB: `super_admin`, `manager`, `supervisor`, `ticket_officer`,
 4. **Seed user untuk semua role** yang ingin didemokan (setidaknya
    `finance_officer`, `supervisor`) agar RBAC bisa benar-benar diuji.
 5. **Tambah riwayat/filter lintas tanggal** untuk penjualan & keuangan agar
-   atasan dapat melihat tren, bukan hanya "hari ini".
+   atasan dapat melihat tren, bukan hanya "hari ini". ✅ **Selesai 14 Agt 2026**:
+   halaman `/laporan` (slice `app/features/reports/`) — rekap rentang tanggal
+   (penjualan, pemasukan non-tiket, pengeluaran, sesi kas) + rincian per hari.
 6. **Sediakan void/koreksi** untuk pemasukan & pengeluaran.
 7. Pertimbangkan role **viewer/owner** agar diberi akses view penjualan &
    keuangan bila tujuannya untuk atasan melihat data.

@@ -193,6 +193,20 @@ app/features/ticket-sales/
   RBAC: butuh `access.visitors` (view/manage).
 - **Nav**: BELUM ditambahkan ke `sidebar-navigation.tsx` (todo next phase).
 
+## Slice Laporan: `reports/`
+
+Fitur rekap & rincian lintas tanggal (halaman `/laporan`). Membaca langsung
+tabel `sales`, `revenue_entries`, `expenses`, `cash_sessions` (tanpa
+perubahan schema). Semantik waktu konsisten dengan modul existing: window
+UTC WIB untuk `sold_at`, filter string untuk `entry_date`, penjualan
+`voided` dikecualikan, pengeluaran hanya `approved` dihitung sebagai uang
+keluar. Public API: [`app/features/reports/`](./app/features/reports/);
+route thin handler: [`app/api/reports/route.ts`](./app/api/reports/route.ts)
+(RBAC `assertCanViewReports`); halaman:
+[`app/laporan/page.tsx`](./app/laporan/page.tsx). Rincian per hari memakai
+endpoint existing (`/api/sales?date=`, `/api/revenue?date=`,
+`/api/expenses?date=`).
+
 ## Mengikuti Roadmap
 
 Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./adr/0001-hybrid-layered-with-co-location.md)

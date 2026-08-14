@@ -10,7 +10,12 @@ import type {
 } from "../../shared/config";
 
 type SidebarAccess = Record<PermissionModuleKey, AccessLevel>;
-type ActiveSidebarItem = "dashboard" | "settings" | "penjualan" | "keuangan";
+type ActiveSidebarItem =
+  | "dashboard"
+  | "settings"
+  | "penjualan"
+  | "keuangan"
+  | "laporan";
 
 type NavigationItem = {
   label: string;
@@ -58,7 +63,14 @@ const navigation: NavigationItem[] = [
     key: "complaints",
     permission: "complaints",
   },
-  { label: "Laporan", icon: "↗", key: null, permission: "reports" },
+  {
+    label: "Laporan",
+    icon: "↗",
+    key: null,
+    permission: "reports",
+    href: "/laporan",
+    activeKey: "laporan",
+  },
 ];
 
 export function SidebarNavigation({
