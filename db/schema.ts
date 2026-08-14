@@ -406,3 +406,37 @@ export const complaints = sqliteTable(
   },
   (table) => [index("complaints_status_idx").on(table.status)],
 );
+
+/**
+ * Status fasilitas per hari kalender WIB (modul Fasilitas).
+ * Satu baris per (facility_id, date) — di-upsert saat petugas mencatat.
+ * `facilityId` menunjuk config_items section `facilities`.
+ */
+export const facilityStatus = sqliteTable(
+  "facility_status",
+  {
+    id: text("id").primaryKey(),
+    /** ID fasilitas (ref config_items section `facilities`). */
+    facilityId: text("facility_id")
+      .notNull()
+      .references(() => configItems.id),
+    /** Tanggal kalender WIB (YYYY-MM-DD). */
+    date: text("date").notNull(),
+    status: text("status", {
+      enum: ["operational", "needs_attention", "closed"],
+    })
+      .notNull()
+      .default("operational"),
+    note: text("note").notNull().default(""),
+    recordedBy: text("recorded_by")
+      .notNull()
+      .references(() => users.id),
+    recordedAt: text("recorded_at").notNull(),
+  },
+  (table) => [
+    index("facility_status_facility_date_idx").on(
+      table.facilityId,
+      table.date,
+    ),
+  ],
+);

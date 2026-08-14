@@ -15,6 +15,7 @@ import { listTodaySales, type Sale } from "./features/ticket-sales";
 import { financeSummary, listRevenue } from "./features/finance";
 import type { RevenueEntry } from "./features/finance";
 import { recentComplaints, type Complaint } from "./features/complaints";
+import { facilitySummary, type FacilityStatusSummary } from "./features/facilities";
 import type { ConfigItem } from "../shared/config";
 import { todayIsoDate } from "../shared/date";
 import {
@@ -141,19 +142,18 @@ function revenueDonutStyle(buckets: RevenueBucket[]): string {
   return `conic-gradient(${segments.join(", ")})`;
 }
 
-const facilityRows = [
-  { name: "Kolam Renang", status: "Baik", tone: "good" },
-  { name: "Playground", status: "Baik", tone: "good" },
-  { name: "Area Parkir", status: "Perlu perhatian", tone: "warn" },
-  { name: "Toilet Utama", status: "Baik", tone: "good" },
-];
-
 const complaintStatusLabel: Record<Complaint["status"], string> = {
   open: "Baru",
   assigned: "Ditugaskan",
   processing: "Diproses",
   resolved: "Selesai",
   reopened: "Dibuka lagi",
+};
+
+const facilityStatusLabel: Record<string, string> = {
+  operational: "Beroperasi",
+  needs_attention: "Perlu cek",
+  closed: "Ditutup",
 };
 
 function getInitials(name: string): string {
@@ -189,6 +189,7 @@ export default function DashboardPage() {
     Complaint[] | null
   >(null);
   const [openComplaints, setOpenComplaints] = useState<number | null>(null);
+  const [facility, setFacility] = useState<FacilityStatusSummary | null>(null);
 
   const currentUser = session?.user ?? null;
   const access = session?.access ?? NO_ACCESS;
@@ -204,6 +205,7 @@ export default function DashboardPage() {
   const showVisitors = modules.visitors && canView(access.visitors);
   const showFinance = modules.finance && canView(access.finance);
   const showComplaints = modules.complaints && canView(access.complaints);
+  const showFacilities = modules.facilities && canView(access.facilities);
 
   useEffect(() => {
     if (!authReady || !session || !showVisitors) return;
@@ -276,12 +278,28 @@ export default function DashboardPage() {
     };
   }, [authReady, session, showComplaints]);
 
+  useEffect(() => {
+    if (!authReady || !session || !showFacilities) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await facilitySummary();
+        if (cancelled) return;
+        setFacility(data);
+      } catch {
+        if (!cancelled) setFacility(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, session, showFacilities]);
+
   const metrics = useMemo(() => {
     if (!canViewDashboard) return [];
 
     const items = [];
     const showOperations = modules.operations && canView(access.operations);
-    const showFacilities = modules.facilities && canView(access.facilities);
 
     if (showVisitors) {
       items.push(
@@ -313,8 +331,17 @@ export default function DashboardPage() {
         <MetricCard
           key="facility-fallback"
           eyebrow="Fasilitas aktif"
-          value="—"
-          note="Modul fasilitas belum tersedia"
+          value={
+            facility ? numberFormat.format(facility.counts.operational) : "—"
+          }
+          suffix="dari 3"
+          note={
+            facility
+              ? `${numberFormat.format(
+                  facility.counts.needsAttention,
+                )} perlu cek · ${numberFormat.format(facility.counts.closed)} ditutup`
+              : "Modul fasilitas belum tersedia"
+          }
           icon="◇"
           tone="blue"
         />,
@@ -339,8 +366,19 @@ export default function DashboardPage() {
         <MetricCard
           key="attention"
           eyebrow="Perlu perhatian"
-          value="—"
-          note="Belum ada data pemantauan"
+          value={
+            facility
+              ? numberFormat.format(
+                  facility.counts.needsAttention + facility.counts.closed,
+                )
+              : "—"
+          }
+          suffix="item"
+          note={
+            facility
+              ? "Fasilitas perlu pemeriksaan"
+              : "Belum ada data pemantauan"
+          }
           icon="!"
           tone="purple"
         />,
@@ -381,7 +419,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance, showComplaints, openComplaints]);
+  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance, showComplaints, openComplaints, facility, showFacilities]);
 
   async function persistModules(next: ModuleState) {
     setSaveError("");
@@ -592,8 +630,7 @@ export default function DashboardPage() {
 
         {canViewDashboard ? (
           <section className="content-grid">
-            {(modules.operations && canView(access.operations)) ||
-            (modules.facilities && canView(access.facilities)) ? (
+            {showFacilities ? (
               <article className="panel status-panel">
                 <div className="panel-heading">
                   <div>
@@ -607,43 +644,33 @@ export default function DashboardPage() {
                   <div className="donut-wrap">
                     <div className="donut donut-status">
                       <div>
-                        <strong>8</strong>
+                        <strong>
+                          {facility
+                            ? facility.facilities.length
+                            : "—"}
+                        </strong>
                         <span>terpantau</span>
                       </div>
                     </div>
                     <div className="legend">
                       <span>
-                        <i className="legend-green" /> Beroperasi <strong>7</strong>
+                        <i className="legend-green" /> Beroperasi{" "}
+                        <strong>
+                          {facility ? facility.counts.operational : "—"}
+                        </strong>
                       </span>
                       <span>
-                        <i className="legend-orange" /> Perlu cek <strong>1</strong>
+                        <i className="legend-orange" /> Perlu cek{" "}
+                        <strong>
+                          {facility ? facility.counts.needsAttention : "—"}
+                        </strong>
                       </span>
                       <span>
-                        <i className="legend-red" /> Ditutup <strong>0</strong>
+                        <i className="legend-red" /> Ditutup{" "}
+                        <strong>
+                          {facility ? facility.counts.closed : "—"}
+                        </strong>
                       </span>
-                    </div>
-                  </div>
-
-                  <div className="checklist-progress">
-                    <div className="progress-heading">
-                      <div>
-                        <span>Checklist pembukaan</span>
-                        <strong>8 dari 10 selesai</strong>
-                      </div>
-                      <b>80%</b>
-                    </div>
-                    <div className="progress-track">
-                      <span />
-                    </div>
-                    <div className="pending-items">
-                      <p>
-                        <i>!</i>
-                        Lampu area parkir belum diperiksa
-                      </p>
-                      <p>
-                        <i>!</i>
-                        Foto kebersihan food court belum ada
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -707,25 +734,40 @@ export default function DashboardPage() {
               </article>
             ) : null}
 
-            {modules.facilities && canView(access.facilities) ? (
+            {showFacilities ? (
               <article className="panel facility-panel">
                 <div className="panel-heading">
                   <div>
                     <span className="section-kicker">Pemantauan</span>
                     <h2>Kesiapan fasilitas</h2>
                   </div>
-                  <span className="updated-label">Diperbarui 10 menit lalu</span>
+                  <span className="updated-label">
+                    {facility?.updatedAt
+                      ? `Diperbarui ${new Date(
+                          facility.updatedAt,
+                        ).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
+                      : "Belum ada catatan"}
+                  </span>
                 </div>
 
+                {facility && facility.facilities.length === 0 ? (
+                  <p className="finance-empty">Belum ada fasilitas terdaftar.</p>
+                ) : null}
+
                 <div className="facility-list">
-                  {facilityRows.map((facility) => (
-                    <div key={facility.name}>
+                  {facility?.facilities.map((facilityItem) => (
+                    <div key={facilityItem.id}>
                       <span className="facility-symbol" aria-hidden="true">
                         ◇
                       </span>
-                      <strong>{facility.name}</strong>
-                      <span className={`status-pill status-${facility.tone}`}>
-                        {facility.status}
+                      <strong>{facilityItem.name}</strong>
+                      <span
+                        className={`status-pill status-${facilityItem.status === "needs_attention" ? "warn" : facilityItem.status === "closed" ? "bad" : "good"}`}
+                      >
+                        {facilityStatusLabel[facilityItem.status]}
                       </span>
                     </div>
                   ))}

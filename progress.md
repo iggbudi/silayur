@@ -564,3 +564,30 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   menunggu otorisasi owner** (AGENTS.md).
 - Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
   pass (termasuk test baru `complaints`), smoke manual.
+
+## Modul Fasilitas — Status Harian (14 Agustus 2026)
+
+- **Tabel `facility_status`** baru di `db/schema.ts` + migration
+  `drizzle/0008_checkpoint_17_facilities.sql` — satu baris per
+  `(facility_id, date)` WIB, status `operational` / `needs_attention` /
+  `closed`, kolom audit (`recordedBy`, `recordedAt`, `note`). Upsert per hari.
+- **Slice baru `app/features/facilities/`** (types, repo, api, index,
+  MANIFEST, test) — `upsertFacilityStatus` (validasi fasilitas aktif dari
+  config_items), `listFacilitiesWithStatus` (fasilitas aktif + status hari
+  ini, default `operational`), `facilityStatusSummary` (counts + updatedAt).
+- **RBAC baru** `assertCanViewFacilities` / `assertCanManageFacilities`
+  (`db/config-repo.ts`); route thin handler `app/api/facilities/` (GET
+  summary) + `app/api/facilities/status/` (POST upsert).
+- **Halaman `/fasilitas`** + **nav "Fasilitas" baru** di sidebar (sebelumnya
+  tidak ada). Tabel fasilitas + status pill + tombol ubah status & catatan
+  (hanya `facilities=manage`; view hanya lihat).
+- **Dashboard di-wire**: donut "Status operasional" (kini milik modul
+  fasilitas — gating diubah dari `operations || facilities` ke
+  `facilities`), panel "Kesiapan fasilitas", KPI "Fasilitas aktif" &
+  "Perlu perhatian" — semua dari `facilityStatusSummary` (bukan 8/7/1/0
+  palsu). Tombol "Lihat detail" → `/fasilitas`.
+- **CSS** `.facility-*` di `app/globals.css`.
+- Migration 0008 hanya dijalankan di DB lokal/test; **rollout Turso remote
+  menunggu otorisasi owner** (AGENTS.md).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  pass (termasuk test baru `facilities`), smoke manual.

@@ -218,6 +218,19 @@ handler: `app/api/complaints/*` (RBAC `assertCanViewComplaints` /
 [`app/complaints/page.tsx`](./app/complaints/page.tsx). Dashboard memakai
 `listRecentComplaints` + `countOpenComplaints` untuk panel & KPI komplain.
 
+## Slice Fasilitas: `facilities/`
+
+Status fasilitas harian (halaman `/fasilitas`). Tabel `facility_status`
+(migration `0008`) — satu baris per `(facility_id, date)` WIB dengan status
+`operational` / `needs_attention` / `closed` (upsert). Sumber fasilitas =
+`config_items` section `facilities`. Public API:
+[`app/features/facilities/`](./app/features/facilities/); route thin
+handler: `app/api/facilities/*` (RBAC `assertCanViewFacilities` /
+`assertCanManageFacilities`); halaman:
+[`app/fasilitas/page.tsx`](./app/fasilitas/page.tsx). Dashboard memakai
+`facilityStatusSummary` untuk donut "Status operasional", panel "Kesiapan
+fasilitas", dan KPI fasilitas.
+
 ## Mengikuti Roadmap
 
 Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./adr/0001-hybrid-layered-with-co-location.md)

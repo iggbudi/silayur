@@ -126,8 +126,10 @@ Role di DB: `super_admin`, `manager`, `supervisor`, `ticket_officer`,
    dan kartu KPI operasional/fasilitas/komplain menampilkan "—" / "Modul
    belum tersedia" (jujur, tidak lagi angka palsu). ✅ **Komplain selesai
    14 Agt 2026**: panel "Komplain terbaru" + KPI "Komplain terbuka" kini
-   data nyata dari modul `/complaints`. Sisa: panel operasional & fasilitas
-   sungguhan menunggu modul terkait.
+   data nyata dari modul `/complaints`. ✅ **Fasilitas selesai 14 Agt 2026**:
+   donut "Status operasional" + panel "Kesiapan fasilitas" + KPI fasilitas
+   kini data nyata dari modul `/fasilitas` (status harian). Sisa: modul
+   Operasional (checklist).
 2. **Ganti semua `window.prompt()`** dengan modal/form dialog yang proper
    (void reason, void password, close shift declared cash, dst.).
 3. **(Urgent) Lengkapi tarif**: seed tarif anak + aktifkan tarif weekend, atau

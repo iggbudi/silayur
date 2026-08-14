@@ -3852,3 +3852,151 @@
     flex-wrap: wrap;
   }
 }
+
+/* --- Fasilitas (halaman /fasilitas + dashboard) --- */
+
+.facility-workspace {
+  gap: 18px;
+}
+
+.facility-notice {
+  background: var(--success-soft);
+  border: 1px solid rgba(30, 138, 90, 0.25);
+  border-radius: 12px;
+  color: #14633f;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+}
+
+.facility-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+.facility-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 2px;
+}
+
+.facility-row:first-child {
+  border-top: 0;
+}
+
+.facility-main {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.facility-main strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.facility-main small {
+  color: var(--muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.facility-status {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+}
+
+.facility-status-operational {
+  background: var(--green-soft);
+  color: var(--forest);
+}
+
+.facility-status-needs_attention {
+  background: var(--orange-soft);
+  color: #8a5a0d;
+}
+
+.facility-status-closed {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  color: #b3261e;
+}
+
+.facility-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.facility-actions input {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  width: 180px;
+}
+
+.facility-btn {
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 12px;
+}
+
+.facility-btn-primary {
+  background: var(--green);
+  border: 1px solid var(--green);
+  color: #ffffff;
+}
+
+.facility-btn-primary:hover {
+  background: var(--forest);
+}
+
+.facility-btn-warn {
+  background: var(--orange-soft);
+  border: 1px solid var(--orange);
+  color: #8a5a0d;
+}
+
+.facility-btn-warn:hover {
+  background: var(--orange);
+  color: #ffffff;
+}
+
+.facility-btn-danger {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  border: 1px solid var(--red);
+  color: #b3261e;
+}
+
+.facility-btn-danger:hover {
+  background: var(--red);
+  color: #ffffff;
+}
+
+@media (max-width: 620px) {
+  .facility-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .facility-actions input {
+    width: 100%;
+  }
+}

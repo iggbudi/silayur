@@ -19,6 +19,8 @@
 - `cashier-report/` — laporan kas harian
 - `complaints/` — alur komplain end-to-end ✅ **dibuat 14 Agt 2026** sebagai
   pilot dead-link (lihat [`complaints/`](./complaints/))
+- `facilities/` — status fasilitas harian ✅ **dibuat 14 Agt 2026**
+  (lihat [`facilities/`](./facilities/))
 
 ## Konvensi Struktur
 

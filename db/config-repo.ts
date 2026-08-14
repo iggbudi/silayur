@@ -554,3 +554,17 @@ export async function assertCanManageComplaints(
 ): Promise<AppUser> {
   return assertCanAccessModule(db, userId, "complaints", "manage", "komplain");
 }
+
+export async function assertCanViewFacilities(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "facilities", "view", "fasilitas");
+}
+
+export async function assertCanManageFacilities(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(db, userId, "facilities", "manage", "fasilitas");
+}
