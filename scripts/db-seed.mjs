@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
+import { Client } from "pg";
 import seedData from "../db/seed-data.json" with { type: "json" };
 import { hashPassword } from "../shared/password.mjs";
 
@@ -31,66 +31,58 @@ async function loadDotEnv() {
 }
 
 function resolveUrl() {
-  return process.env.TURSO_DATABASE_URL?.trim() || "file:./.data/silayur.db";
+  return process.env.DATABASE_URL?.trim() || "";
 }
 
 async function main() {
   await loadDotEnv();
   const url = resolveUrl();
-  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
-  const mode =
-    url.startsWith("libsql://") || url.startsWith("https://")
-      ? "remote"
-      : "local-file";
-  if (mode === "remote" && !authToken) {
-    throw new Error("Remote Turso URL requires TURSO_AUTH_TOKEN.");
+  if (!url) {
+    throw new Error("DATABASE_URL is required (postgres://...).");
   }
 
-  const client = createClient({
-    url: url.startsWith("file:")
-      ? `file:${path.resolve(root, url.slice("file:".length))}`
-      : url,
-    authToken,
-  });
+  const client = new Client({ connectionString: url });
+  await client.connect();
   const adminPassword = process.env.SILAYUR_SEED_ADMIN_PASSWORD?.trim();
   const defaultPassword = process.env.SILAYUR_SEED_DEFAULT_PASSWORD?.trim();
 
-  const tx = await client.transaction("write");
   try {
+    await client.query("BEGIN");
+
     for (const item of seedData.modules) {
-      await tx.execute({
-        sql: `INSERT INTO modules (key, label, description, active, updated_at)
-              VALUES (?, ?, ?, ?, datetime('now'))
-              ON CONFLICT(key) DO NOTHING`,
-        args: [item.key, item.label, item.description, item.active ? 1 : 0],
-      });
+      await client.query(
+        `INSERT INTO modules (key, label, description, active, updated_at)
+         VALUES ($1, $2, $3, $4, now())
+         ON CONFLICT(key) DO NOTHING`,
+        [item.key, item.label, item.description, item.active],
+      );
     }
 
     for (const role of seedData.roles) {
-      await tx.execute({
-        sql: `INSERT INTO roles
-              (key, label, description, active, system, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-              ON CONFLICT(key) DO NOTHING`,
-        args: [
+      await client.query(
+        `INSERT INTO roles
+         (key, label, description, active, system, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, now(), now())
+         ON CONFLICT(key) DO NOTHING`,
+        [
           role.key,
           role.label,
           role.description,
-          role.active ? 1 : 0,
-          role.system ? 1 : 0,
+          role.active,
+          role.system,
         ],
-      });
+      );
     }
 
     for (const [roleKey, accessMap] of Object.entries(seedData.permissions)) {
       for (const [moduleKey, access] of Object.entries(accessMap)) {
-        await tx.execute({
-          sql: `INSERT INTO role_permissions
-                (role_key, module_key, access, updated_at)
-                VALUES (?, ?, ?, datetime('now'))
-                ON CONFLICT(role_key, module_key) DO NOTHING`,
-          args: [roleKey, moduleKey, access],
-        });
+        await client.query(
+          `INSERT INTO role_permissions
+           (role_key, module_key, access, updated_at)
+           VALUES ($1, $2, $3, now())
+           ON CONFLICT(role_key, module_key) DO NOTHING`,
+          [roleKey, moduleKey, access],
+        );
       }
     }
 
@@ -98,78 +90,78 @@ async function main() {
       const password =
         user.role === "super_admin" ? adminPassword : defaultPassword;
       const passwordHash = password ? await hashPassword(password) : null;
-      await tx.execute({
-        sql: `INSERT INTO users
-              (id, name, username, role_key, active, password_hash, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-              ON CONFLICT(id) DO UPDATE SET
-                password_hash = CASE
-                  WHEN users.password_hash IS NULL AND excluded.password_hash IS NOT NULL
-                  THEN excluded.password_hash
-                  ELSE users.password_hash
-                END`,
-        args: [
+      await client.query(
+        `INSERT INTO users
+         (id, name, username, role_key, active, password_hash, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, now(), now())
+         ON CONFLICT(id) DO UPDATE SET
+           password_hash = CASE
+             WHEN users.password_hash IS NULL AND EXCLUDED.password_hash IS NOT NULL
+             THEN EXCLUDED.password_hash
+             ELSE users.password_hash
+           END`,
+        [
           user.id,
           user.name,
           user.username,
           user.role,
-          user.active ? 1 : 0,
+          user.active,
           passwordHash,
         ],
-      });
+      );
     }
 
     for (const product of seedData.ticketProducts) {
-      await tx.execute({
-        sql: `INSERT INTO ticket_products
-              (id, code, name, visitor_category, validity_mode, description, active, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-              ON CONFLICT(id) DO NOTHING`,
-        args: [
+      await client.query(
+        `INSERT INTO ticket_products
+         (id, code, name, visitor_category, validity_mode, description, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, now(), now())
+         ON CONFLICT(id) DO NOTHING`,
+        [
           product.id,
           product.code,
           product.name,
           product.visitorCategory,
           product.validityMode,
           product.description,
-          product.active ? 1 : 0,
+          product.active,
         ],
-      });
+      );
     }
 
     for (const price of seedData.ticketPrices) {
-      await tx.execute({
-        sql: `INSERT INTO ticket_prices
-              (id, ticket_product_id, day_type, price, valid_from, valid_until, active, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-              ON CONFLICT(id) DO NOTHING`,
-        args: [
+      await client.query(
+        `INSERT INTO ticket_prices
+         (id, ticket_product_id, day_type, price, valid_from, valid_until, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, now(), now())
+         ON CONFLICT(id) DO NOTHING`,
+        [
           price.id,
           price.ticketProductId,
           price.dayType,
           price.price,
           price.validFrom,
           price.validUntil,
-          price.active ? 1 : 0,
+          price.active,
         ],
-      });
+      );
     }
 
     for (const item of seedData.configItems) {
-      await tx.execute({
-        sql: `INSERT INTO config_items
-              (id, section, name, detail, active, sort_order, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-              ON CONFLICT(id) DO NOTHING`,
-        args: [
+      await client.query(
+        `INSERT INTO config_items
+         (id, section, name, detail, active, sort_order, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, now(), now())
+         ON CONFLICT(id) DO NOTHING`,
+        [
           item.id,
           item.section,
           item.name,
           item.detail,
-          item.active ? 1 : 0,
+          item.active,
           item.sortOrder,
         ],
-      });
+      );
     }
 
     for (const version of [
@@ -182,18 +174,19 @@ async function main() {
         notes: "Structured admission ticket products and effective tariffs.",
       },
     ]) {
-      await tx.execute({
-        sql: `INSERT INTO schema_version (label, applied_at, notes)
-              SELECT ?, datetime('now'), ?
-              WHERE NOT EXISTS (
-                SELECT 1 FROM schema_version WHERE label = ?
-              )`,
-        args: [version.label, version.notes, version.label],
-      });
+      await client.query(
+        `INSERT INTO schema_version (label, applied_at, notes)
+         SELECT $1, now(), $2
+         WHERE NOT EXISTS (
+           SELECT 1 FROM schema_version WHERE label = $1
+         )`,
+        [version.label, version.notes],
+      );
     }
-    await tx.commit();
+
+    await client.query("COMMIT");
   } catch (error) {
-    await tx.rollback();
+    await client.query("ROLLBACK");
     throw error;
   }
 
@@ -208,17 +201,16 @@ async function main() {
     "config_items",
     "auth_sessions",
   ]) {
-    const result = await client.execute(`SELECT COUNT(*) AS c FROM ${table}`);
+    const result = await client.query(`SELECT COUNT(*) AS c FROM ${table}`);
     counts[table] = Number(result.rows[0].c);
   }
-  client.close();
+  await client.end();
 
   console.log(
     JSON.stringify(
       {
         ok: true,
         action: "seed",
-        mode,
         counts,
         adminPasswordConfigured: Boolean(adminPassword),
         defaultPasswordConfigured: Boolean(defaultPassword),

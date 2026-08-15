@@ -12,7 +12,7 @@ const envPath = path.join(root, ".env");
 const devVarsPath = path.join(root, ".dev.vars");
 const gitignorePath = path.join(root, ".gitignore");
 
-const keys = new Set(["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN"]);
+const keys = new Set(["DATABASE_URL"]);
 const out = {};
 
 if (!existsSync(envPath)) {
@@ -38,8 +38,8 @@ for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
   out[key] = value;
 }
 
-if (!out.TURSO_DATABASE_URL) {
-  console.error("TURSO_DATABASE_URL missing in .env");
+if (!out.DATABASE_URL) {
+  console.error("DATABASE_URL missing in .env");
   process.exitCode = 1;
   process.exit();
 }
@@ -61,23 +61,15 @@ if (!gitignore.includes(".dev.vars")) {
   );
 }
 
-const mode =
-  out.TURSO_DATABASE_URL.startsWith("libsql://") ||
-  out.TURSO_DATABASE_URL.startsWith("https://")
-    ? "remote"
-    : "local-file";
-
 console.log(
   JSON.stringify(
     {
       ok: true,
       action: "sync-dev-vars",
-      mode,
       keys: Object.keys(out),
-      host: out.TURSO_DATABASE_URL.replace(
-        /^(libsql|https):\/\/([^/]+).*/,
-        "$2",
-      ),
+      host: out.DATABASE_URL.replace(/^postgres(ql)?:\/\/([^@/]+)@/, "").split(
+        "/",
+      )[0],
     },
     null,
     2,

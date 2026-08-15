@@ -1,46 +1,38 @@
-import { createClient, type Client } from "@libsql/client";
-import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
+import { Pool } from "pg";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
-import { resolveTursoEnv, type TursoEnv } from "./env";
+import { getRuntimeCredentials } from "./runtime-env";
 
-export type AppDatabase = LibSQLDatabase<typeof schema>;
+export type AppDatabase = NodePgDatabase<typeof schema>;
 
 export type DbBundle = {
-  client: Client;
+  client: Pool;
   db: AppDatabase;
-  env: TursoEnv;
+  url: string;
 };
 
 /**
- * Node-oriented Turso/libSQL client (scripts, tests, Node runtimes).
- * For Workers/edge prefer `createWebDb()` from `./client-web`.
+ * PostgreSQL-oriented client for scripts, tests, dan runtime Node.
+ * Untuk API routes gunakan `getRequestDb()` dari `./get-db`.
  */
 export function createDb(
   envSource: Record<string, string | undefined> = process.env,
 ): DbBundle {
-  const env = resolveTursoEnv(envSource);
-  if (!env.configured) {
+  const url = envSource.DATABASE_URL?.trim();
+  if (!url) {
     throw new Error(
-      "Database is not configured. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, or use a local file URL (file:./.data/silayur.db).",
+      "Database is not configured. Set DATABASE_URL (postgres://...).",
     );
   }
-
-  if (env.mode === "remote" && !env.authToken) {
-    throw new Error(
-      "Remote Turso URL requires TURSO_AUTH_TOKEN (or LIBSQL_AUTH_TOKEN).",
-    );
-  }
-
-  const client = createClient({
-    url: env.url,
-    authToken: env.authToken,
-  });
-
-  const db = drizzle(client, { schema });
-  return { client, db, env };
+  const client = new Pool({ connectionString: url });
+  const db = drizzle(client, { schema }) as unknown as AppDatabase;
+  return { client, db, url };
 }
 
-/** Convenience helper used by API routes when running in Node. */
+/** Convenience helper dipakai scripts/tests ketika berjalan di Node. */
 export function getDb(): AppDatabase {
-  return createDb().db;
+  const creds = getRuntimeCredentials();
+  if (!creds.ok) throw new Error(creds.error);
+  const client = new Pool({ connectionString: creds.url });
+  return drizzle(client, { schema }) as unknown as AppDatabase;
 }

@@ -6,8 +6,7 @@ interface Env {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
-  TURSO_DATABASE_URL?: string;
-  TURSO_AUTH_TOKEN?: string;
+  DATABASE_URL?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -28,21 +27,18 @@ interface ExecutionContext {
 // dangerouslyAllowSVG: true in next.config.js and uncomment below:
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
-function exposeTursoEnv(env?: Env | null) {
-  // Make Turso credentials visible to route handlers via process.env.
+function exposeDbEnv(env?: Env | null) {
+  // Make DB credentials visible to route handlers via process.env.
   // vinext prod-server may call fetch without Cloudflare env bindings.
   if (!env) return;
-  if (env.TURSO_DATABASE_URL) {
-    process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
-  }
-  if (env.TURSO_AUTH_TOKEN) {
-    process.env.TURSO_AUTH_TOKEN = env.TURSO_AUTH_TOKEN;
+  if (env.DATABASE_URL) {
+    process.env.DATABASE_URL = env.DATABASE_URL;
   }
 }
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    exposeTursoEnv(env);
+    exposeDbEnv(env);
     // Fallback: keep host process.env when Worker bindings are absent.
     const url = new URL(request.url);
 

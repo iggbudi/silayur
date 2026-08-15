@@ -3,12 +3,12 @@ import path from "node:path";
 
 let envFileLoaded = false;
 
-/** Best-effort load of dashboard `.env` when process.env lacks Turso keys (Node only). */
+/** Best-effort load of dashboard `.env` when process.env lacks DB keys (Node only). */
 function ensureDotEnvLoaded() {
   if (envFileLoaded) return;
   envFileLoaded = true;
   if (typeof process === "undefined" || !process.versions?.node) return;
-  if (process.env.TURSO_DATABASE_URL || process.env.LIBSQL_URL) return;
+  if (process.env.DATABASE_URL) return;
 
   try {
     const candidates = [
@@ -40,7 +40,7 @@ function ensureDotEnvLoaded() {
   }
 }
 
-/** Read Turso credentials from process.env (Worker injects via worker/index.ts). */
+/** Read DB credentials from process.env (Worker injects via worker/index.ts). */
 export function readRuntimeEnv(name: string): string | undefined {
   ensureDotEnvLoaded();
   const value = process.env[name];
@@ -49,32 +49,22 @@ export function readRuntimeEnv(name: string): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-export function getTursoRuntimeCredentials() {
+export function getRuntimeCredentials(): {
+  ok: true;
+  url: string;
+} | {
+  ok: false;
+  error: string;
+} {
   ensureDotEnvLoaded();
-  const url =
-    readRuntimeEnv("TURSO_DATABASE_URL") ?? readRuntimeEnv("LIBSQL_URL");
-  const authToken =
-    readRuntimeEnv("TURSO_AUTH_TOKEN") ?? readRuntimeEnv("LIBSQL_AUTH_TOKEN");
+  const url = readRuntimeEnv("DATABASE_URL");
 
   if (!url) {
     return {
-      ok: false as const,
-      error: "TURSO_DATABASE_URL is not set in the runtime environment.",
+      ok: false,
+      error: "DATABASE_URL is not set in the runtime environment.",
     };
   }
 
-  const isRemote = url.startsWith("libsql://") || url.startsWith("https://");
-  if (isRemote && !authToken) {
-    return {
-      ok: false as const,
-      error: "TURSO_AUTH_TOKEN is required for remote Turso access.",
-    };
-  }
-
-  return {
-    ok: true as const,
-    url,
-    authToken,
-    mode: isRemote ? ("remote" as const) : ("local-file" as const),
-  };
+  return { ok: true, url };
 }

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
+import { Client } from "pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -30,29 +30,18 @@ async function loadDotEnv() {
 }
 
 function resolveUrl() {
-  const fromEnv = process.env.TURSO_DATABASE_URL?.trim();
-  return fromEnv && fromEnv.length > 0 ? fromEnv : "file:./.data/silayur.db";
+  return process.env.DATABASE_URL?.trim() || "";
 }
 
 async function main() {
   await loadDotEnv();
   const url = resolveUrl();
-  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
-  const mode =
-    url.startsWith("libsql://") || url.startsWith("https://")
-      ? "remote"
-      : "local-file";
-
-  if (mode === "remote" && !authToken) {
-    throw new Error("Remote Turso URL requires TURSO_AUTH_TOKEN.");
+  if (!url) {
+    throw new Error("DATABASE_URL is required (postgres://...).");
   }
 
-  const client = createClient({
-    url: url.startsWith("file:")
-      ? `file:${path.resolve(root, url.slice("file:".length))}`
-      : url,
-    authToken,
-  });
+  const client = new Client({ connectionString: url });
+  await client.connect();
 
   const tables = [
     "modules",
@@ -70,25 +59,28 @@ async function main() {
     "revenue_entries",
     "expenses",
     "cash_sessions",
+    "complaints",
+    "facility_status",
+    "operations_checklist",
+    "holidays",
   ];
   const counts = {};
   for (const table of tables) {
-    const result = await client.execute(`SELECT COUNT(*) AS c FROM ${table}`);
+    const result = await client.query(`SELECT COUNT(*) AS c FROM ${table}`);
     counts[table] = Number(result.rows[0].c);
   }
 
-  const sampleUsers = await client.execute(
+  const sampleUsers = await client.query(
     `SELECT id, name, username, role_key, active FROM users ORDER BY username LIMIT 10`,
   );
 
-  client.close();
+  await client.end();
 
   console.log(
     JSON.stringify(
       {
         ok: true,
         action: "check",
-        mode,
         counts,
         sampleUsers: sampleUsers.rows,
       },

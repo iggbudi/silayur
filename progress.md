@@ -1,12 +1,13 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **15 Agustus 2026** — quick wins dashboard (tombol mati
-di-wire, label jujur), modal void penjualan menggantikan `window.prompt()`,
-dan kalender hari libur (tarif weekend untuk tanggal libur, dikelola di
-Pengaturan).
+Pembaruan terakhir: **15 Agustus 2026** — migrasi database dari Turso/libSQL
+(SQLite) ke **PostgreSQL** (driver `pg`, Drizzle pg-core, env `DATABASE_URL`).
+Schema 19 tabel di-rewrite, migration di-generate ulang, seed & scripts
+di-porting, test memakai Postgres terpisah (`TEST_DATABASE_URL`).
 
 ## Status Saat Ini
 
+- Database: **PostgreSQL** (lokal `silayur` + `silayur_test`)
 - Implementasi dan verifikasi lokal CP11: **selesai**
 - Fitur void transaksi (permintaan + persetujuan manajer/supervisor): **selesai**
 - Modul keuangan — pemasukan non-tiket, pengeluaran + persetujuan, rekap kas shift: **selesai**
@@ -687,6 +688,50 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   ticket-sales 8/8 pass, verifikasi end-to-end: login 200, `/penjualan` 200,
   asset 200, POST sale (2 Dewasa + 1 Anak = Rp 52.000, receipt
   `RCP-20260815-0001`) sukses, history GET 200 (data uji dihapus setelahnya).
+
+## Migrasi Turso/libSQL → PostgreSQL (15 Agustus 2026)
+
+- **Keputusan**: driver `pg` (node-postgres), Postgres lokal (service
+  PostgreSQL 18 di `localhost:5432`), test pakai database terpisah
+  (`silayur_test`). Drizzle tetap.
+- **Postgres disiapkan**: password user `postgres` di-reset (metode trust
+  sementara → scram-sha-256, `pg_hba.conf` di-backup), database `silayur` dan
+  `silayur_test` dibuat.
+- **Schema `db/schema.ts` di-rewrite**: `sqliteTable` → `pgTable`,
+  `integer({mode:"boolean"})` → `boolean`, 13 enum inline → `.$type<>()`,
+  `sql\`(datetime('now'))\`` → `sql\`now()\``, `serial` untuk schema_version.
+- **Runtime client**: `db/get-db.ts` → satu client `pg` (`Pool` + Drizzle
+  `node-postgres`), mekanisme dual-client Turso (`createRequire` vs web)
+  dihapus. `db/client-web.ts` dihapus. `db/env.ts`/`runtime-env.ts` baca
+  `DATABASE_URL`.
+- **Env**: `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` → `DATABASE_URL`
+  (`postgres://...`) + `TEST_DATABASE_URL`. Backup Turso di
+  `.env.turso-backup` / `.dev.vars.turso-backup`. `.env.example` di-update.
+- **Migration**: `drizzle.config.ts` `dialect: "postgresql"`; semua migration
+  SQLite (0000–0010) di-backup ke `drizzle-backup-sqlite/` dan diganti satu
+  migration Postgres `0000_postgres_migration` (19 tabel). `db-migrate.mjs`
+  memakai `pg` + `drizzle-orm/node-postgres/migrator`.
+- **Seed & scripts**: `db-seed*.mjs`, `auth-set-password.mjs`, `db-check.mjs`,
+  `sync-dev-vars.mjs` di-porting ke `pg` (`$1` placeholder, `now()`, `EXCLUDED`,
+  BEGIN/COMMIT). Guard anti-remote demo kini menolak host non-localhost.
+  `backup-remote.mjs` dan `db-check-local-fase-b.mjs` (artefak Turso) dihapus.
+- **Worker**: `worker/index.ts` env `TURSO_*` → `DATABASE_URL`
+  (`exposeDbEnv`).
+- **Test**: helper baru di `tests/test-utils.mjs` (`prepareTestEnv`,
+  `resetTestDb`, `connectTestDb`, `truncateAllTables`) menggantikan pola temp
+  `file:` DB + spawn migrate/seed. 13 test file di-update ke Postgres
+  (`information_schema`, `now() + interval`, boolean). `tsconfig` exclude
+  `examples` (D1 example SQLite).
+- **Dependencies**: tambah `pg` + `@types/pg`; `npm audit` 0 kerentanan
+  (setelah `audit fix`; catatan: 2 vulnerability transitive `image-size`
+  via vinext menuntut upgrade breaking `vinext@1.0.0-beta.6` — sengaja
+  di-defer, risiko rendah).
+- Validasi: type-check hijau, lint 0 error, migrate+seed+seed-demo+extras ke
+  Postgres sukses (19 tabel, 8 user, tarif 4 aktif, demo data), 22/22 test
+  Postgres pass, `db:generate` no-op.
+- **Catatan**: data Turso remote **tidak** dimigrasi (fresh start di
+  Postgres); kredensial Turso tetap di backup lokal. Rollout Postgres ke
+  production belum dilakukan.
 
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan

@@ -1,36 +1,42 @@
 # SILAYUR Dashboard
 
-Dashboard operasional Silayur Park berbasis React/vinext, Turso/libSQL, dan
+Dashboard operasional Silayur Park berbasis React/vinext, PostgreSQL, dan
 Drizzle ORM. Checkpoint 11 menggunakan sesi autentikasi server-side dan master
 tiket masuk terstruktur dengan tarif efektif.
 
 ## Persyaratan
 
 - Node.js `>=22.13.0`
-- Database Turso atau file libSQL lokal
+- PostgreSQL (lokal, mis. `localhost:5432`)
 
 ## Menjalankan secara lokal
 
-1. Salin `.env.example` menjadi `.env`.
-2. Gunakan URL file lokal atau isi kredensial Turso.
+1. Salin `.env.example` menjadi `.env`, isi `DATABASE_URL` (`postgres://...`).
+2. Buat database dev + test bila belum ada.
 3. Isi `SILAYUR_SEED_ADMIN_PASSWORD` dengan password minimal 10 karakter.
 4. Jalankan:
 
 ```bash
 npm install
 npm run db:setup
-npm run dev
+npm run start:local
 ```
+
+`npm run start:local` melakukan build lalu menjalankan server standalone di
+`http://localhost:3000` (mode ini yang mendukung Postgres lokal).
 
 Masuk menggunakan username `admin.resepsionis` dan password yang dipakai saat
 seed.
+
+> `npm run dev` memakai workerd (Miniflare) — hanya cocok bila `DATABASE_URL`
+> menunjuk layanan Postgres yang bisa diakses worker.
 
 ## Perintah penting
 
 ```bash
 npm run type-check
 npm run lint
-npm test
+npm test          # butuh TEST_DATABASE_URL (Postgres)
 npm run build
 npm run db:migrate
 npm run db:seed

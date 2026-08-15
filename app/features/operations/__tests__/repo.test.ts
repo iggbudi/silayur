@@ -1,50 +1,14 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { eq } from "drizzle-orm";
-import { cleanupTempDirectory } from "../../../../tests/test-utils.mjs";
-
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-  "..",
-);
-const testPassword = "LocalTestPassword-2026!";
-
-function runScript(script: string, env: NodeJS.ProcessEnv): void {
-  const result = spawnSync(process.execPath, [path.join(root, script)], {
-    cwd: root,
-    env,
-    encoding: "utf8",
-  });
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-}
-
-function testDb() {
-  const dir = mkdtempSync(path.join(tmpdir(), "silayur-operations-repo-"));
-  const dbFile = path.join(dir, "test.db");
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    TURSO_DATABASE_URL: `file:${dbFile}`,
-    TURSO_AUTH_TOKEN: "",
-    SILAYUR_SEED_ADMIN_PASSWORD: testPassword,
-    SILAYUR_SEED_DEFAULT_PASSWORD: testPassword,
-  };
-  return { dir, env };
-}
+import {
+  prepareTestEnv,
+  resetTestDb,
+} from "../../../../tests/test-utils.mjs";
 
 async function freshDb() {
-  const { dir, env } = testDb();
-  runScript("scripts/db-migrate.mjs", env);
-  runScript("scripts/db-seed.mjs", env);
-  process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
-  delete process.env.TURSO_AUTH_TOKEN;
+  await resetTestDb();
+  prepareTestEnv();
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const [
     { listOperationsChecklist, operationsStatus, upsertOperationsChecklist },
@@ -59,12 +23,11 @@ async function freshDb() {
     listOperationsChecklist,
     operationsStatus,
     upsertOperationsChecklist,
-    dir,
   };
 }
 
 test("operations: upsert validates input and checklist must exist & be active", async () => {
-  const { db, upsertOperationsChecklist, dir } = await freshDb();
+  const { db, upsertOperationsChecklist } = await freshDb();
   try {
     await assert.rejects(
       upsertOperationsChecklist(
@@ -106,12 +69,12 @@ test("operations: upsert validates input and checklist must exist & be active", 
     assert.equal(created.note, "Loket dibuka");
     assert.equal(created.recordedBy, "admin-resepsionis");
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });
 
 test("operations: upsert same checklist+date keeps single row, last status wins", async () => {
-  const { db, upsertOperationsChecklist, dir } = await freshDb();
+  const { db, upsertOperationsChecklist } = await freshDb();
   try {
     const stamp = `${Date.now()}`;
     const { operationsChecklist: table } = await import(
@@ -138,12 +101,12 @@ test("operations: upsert same checklist+date keeps single row, last status wins"
     assert.equal(rows.length, 1, "hanya satu baris per item per hari");
     assert.equal(rows[0].done, true);
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });
 
 test("operations: list shows active checklist items with today's status, default undone", async () => {
-  const { db, listOperationsChecklist, upsertOperationsChecklist, dir } =
+  const { db, listOperationsChecklist, upsertOperationsChecklist } =
     await freshDb();
   try {
     await upsertOperationsChecklist(
@@ -170,12 +133,12 @@ test("operations: list shows active checklist items with today's status, default
     assert.equal(emptyDay[0].done, false, "default saat belum dicatat");
     assert.equal(emptyDay[0].recordedAt, null);
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });
 
 test("operations: summary counts done/total and updatedAt", async () => {
-  const { db, operationsStatus, upsertOperationsChecklist, dir } =
+  const { db, operationsStatus, upsertOperationsChecklist } =
     await freshDb();
   try {
     const empty = await operationsStatus(db, "2000-01-01");
@@ -194,6 +157,6 @@ test("operations: summary counts done/total and updatedAt", async () => {
     assert.equal(status.doneCount, 1);
     assert.ok(status.updatedAt, "updatedAt dari catatan terbaru");
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });

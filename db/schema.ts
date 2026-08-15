@@ -1,121 +1,120 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
+  pgTable,
   primaryKey,
-  sqliteTable,
+  serial,
   text,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 /**
- * SILAYUR foundation and configuration tables.
+ * SILAYUR foundation and configuration tables (PostgreSQL).
  * Covers RBAC, secure sessions, and durable operational configuration.
  */
 
-export const modules = sqliteTable("modules", {
+export const modules = pgTable("modules", {
   key: text("key").primaryKey(),
   label: text("label").notNull(),
   description: text("description").notNull().default(""),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  active: boolean("active").notNull().default(true),
   updatedAt: text("updated_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
 });
 
-export const roles = sqliteTable("roles", {
+export const roles = pgTable("roles", {
   key: text("key").primaryKey(),
   label: text("label").notNull(),
   description: text("description").notNull().default(""),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
-  system: integer("system", { mode: "boolean" }).notNull().default(false),
+  active: boolean("active").notNull().default(true),
+  system: boolean("system").notNull().default(false),
   createdAt: text("created_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
   updatedAt: text("updated_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
 });
 
-export const rolePermissions = sqliteTable(
+export const rolePermissions = pgTable(
   "role_permissions",
   {
     roleKey: text("role_key")
       .notNull()
       .references(() => roles.key, { onDelete: "cascade" }),
     moduleKey: text("module_key").notNull(),
-    access: text("access", { enum: ["none", "view", "manage"] })
+    access: text("access").$type<"none" | "view" | "manage">()
       .notNull()
       .default("none"),
     updatedAt: text("updated_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [primaryKey({ columns: [table.roleKey, table.moduleKey] })],
 );
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   username: text("username").notNull().unique(),
   roleKey: text("role_key")
     .notNull()
     .references(() => roles.key),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  active: boolean("active").notNull().default(true),
   /** Reserved for server auth; null while prototype uses local session. */
   passwordHash: text("password_hash"),
   createdAt: text("created_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
   updatedAt: text("updated_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
 });
 
-export const ticketProducts = sqliteTable(
+export const ticketProducts = pgTable(
   "ticket_products",
   {
     id: text("id").primaryKey(),
     code: text("code").notNull(),
     name: text("name").notNull(),
-    visitorCategory: text("visitor_category", {
-      enum: ["adult", "child"],
-    }).notNull(),
-    validityMode: text("validity_mode", {
-      enum: ["same_day", "selected_date"],
-    })
+    visitorCategory: text("visitor_category").$type<"adult" | "child">().notNull(),
+    validityMode: text("validity_mode")
+      .$type<"same_day" | "selected_date">()
       .notNull()
       .default("same_day"),
     description: text("description").notNull().default(""),
-    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    active: boolean("active").notNull().default(true),
     createdAt: text("created_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
     updatedAt: text("updated_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [uniqueIndex("ticket_products_code_idx").on(table.code)],
 );
 
-export const ticketPrices = sqliteTable(
+export const ticketPrices = pgTable(
   "ticket_prices",
   {
     id: text("id").primaryKey(),
     ticketProductId: text("ticket_product_id")
       .notNull()
       .references(() => ticketProducts.id, { onDelete: "cascade" }),
-    dayType: text("day_type", { enum: ["weekday", "weekend"] }).notNull(),
+    dayType: text("day_type").$type<"weekday" | "weekend">().notNull(),
     price: integer("price").notNull(),
     validFrom: text("valid_from").notNull(),
     validUntil: text("valid_until"),
-    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    active: boolean("active").notNull().default(true),
     createdAt: text("created_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
     updatedAt: text("updated_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [
     index("ticket_prices_product_day_idx").on(
@@ -126,23 +125,23 @@ export const ticketPrices = sqliteTable(
   ],
 );
 
-export const configItems = sqliteTable(
+export const configItems = pgTable(
   "config_items",
   {
     id: text("id").primaryKey(),
-    section: text("section", {
-      enum: ["tickets", "hours", "facilities", "revenue"],
-    }).notNull(),
+    section: text("section")
+      .$type<"tickets" | "hours" | "facilities" | "revenue">()
+      .notNull(),
     name: text("name").notNull(),
     detail: text("detail").notNull().default(""),
-    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    active: boolean("active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: text("created_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
     updatedAt: text("updated_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [
     index("config_items_section_sort_idx").on(
@@ -152,7 +151,7 @@ export const configItems = sqliteTable(
   ],
 );
 
-export const authSessions = sqliteTable(
+export const authSessions = pgTable(
   "auth_sessions",
   {
     tokenHash: text("token_hash").primaryKey(),
@@ -161,21 +160,21 @@ export const authSessions = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: text("created_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
     expiresAt: text("expires_at").notNull(),
     lastSeenAt: text("last_seen_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [index("auth_sessions_user_idx").on(table.userId)],
 );
 
-export const schemaVersion = sqliteTable("schema_version", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const schemaVersion = pgTable("schema_version", {
+  id: serial("id").primaryKey(),
   label: text("label").notNull(),
   appliedAt: text("applied_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
   notes: text("notes").notNull().default(""),
 });
 
@@ -185,7 +184,7 @@ export const schemaVersion = sqliteTable("schema_version", {
  * sale_items adalah line items (1 transaksi bisa multi tiket / multi kategori).
  */
 
-export const sales = sqliteTable(
+export const sales = pgTable(
   "sales",
   {
     id: text("id").primaryKey(),
@@ -199,7 +198,7 @@ export const sales = sqliteTable(
       .references(() => users.id),
     soldAt: text("sold_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
     /**
      * Snapshot tanggal kunjungan. Untuk tiket same_day selalu = soldAt.
      * Untuk tiket selected_date bisa berbeda (untuk MVP selalu = soldAt).
@@ -217,9 +216,8 @@ export const sales = sqliteTable(
     /**
      * Status: completed, void_pending (menunggu persetujuan), voided.
      */
-    status: text("status", {
-      enum: ["completed", "void_pending", "voided"],
-    })
+    status: text("status")
+      .$type<"completed" | "void_pending" | "voided">()
       .notNull()
       .default("completed"),
     notes: text("notes").notNull().default(""),
@@ -241,7 +239,7 @@ export const sales = sqliteTable(
   ],
 );
 
-export const saleItems = sqliteTable(
+export const saleItems = pgTable(
   "sale_items",
   {
     id: text("id").primaryKey(),
@@ -256,9 +254,7 @@ export const saleItems = sqliteTable(
      * Penting: jika nanti master tiket di-rename, transaksi lama tetap refer ke nama lama.
      */
     productName: text("product_name").notNull(),
-    visitorCategory: text("visitor_category", {
-      enum: ["adult", "child"],
-    }).notNull(),
+    visitorCategory: text("visitor_category").$type<"adult" | "child">().notNull(),
     /**
      * Snapshot harga satuan saat transaksi.
      */
@@ -278,7 +274,7 @@ export const saleItems = sqliteTable(
  * atomik (upsert inkremental) agar bebas race saat banyak loket transaksi
  * bersamaan — menggantikan pendekatan count(*)+1 yang rawan duplikat.
  */
-export const receiptCounters = sqliteTable("receipt_counters", {
+export const receiptCounters = pgTable("receipt_counters", {
   counterDate: text("counter_date").primaryKey(),
   seq: integer("seq").notNull(),
 });
@@ -288,7 +284,7 @@ export const receiptCounters = sqliteTable("receipt_counters", {
  * Pendapatan tiket dicatat terpisah di tabel `sales`; tabel ini untuk
  * sumber pendapatan lain yang dikelola modul keuangan.
  */
-export const revenueEntries = sqliteTable(
+export const revenueEntries = pgTable(
   "revenue_entries",
   {
     id: text("id").primaryKey(),
@@ -305,7 +301,7 @@ export const revenueEntries = sqliteTable(
       .references(() => users.id),
     recordedAt: text("recorded_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .default(sql`now()`),
   },
   (table) => [
     index("revenue_entries_date_idx").on(table.entryDate),
@@ -317,7 +313,7 @@ export const revenueEntries = sqliteTable(
  * Pengeluaran operasional sederhana dengan persetujuan.
  * status: pending → approved (oleh finance: manage).
  */
-export const expenses = sqliteTable(
+export const expenses = pgTable(
   "expenses",
   {
     id: text("id").primaryKey(),
@@ -330,10 +326,9 @@ export const expenses = sqliteTable(
       .references(() => users.id),
     recordedAt: text("recorded_at")
       .notNull()
-      .default(sql`(datetime('now'))`),
-    status: text("status", {
-      enum: ["pending", "approved", "voided"],
-    })
+      .default(sql`now()`),
+    status: text("status")
+      .$type<"pending" | "approved" | "voided">()
       .notNull()
       .default("pending"),
     approvedBy: text("approved_by").references(() => users.id),
@@ -349,7 +344,7 @@ export const expenses = sqliteTable(
  * Rekap kas shift (buka/tutup). Satu shift aktif pada satu waktu (MVP).
  * systemCash dihitung server-side saat tutup; difference = declared - system.
  */
-export const cashSessions = sqliteTable(
+export const cashSessions = pgTable(
   "cash_sessions",
   {
     id: text("id").primaryKey(),
@@ -362,7 +357,7 @@ export const cashSessions = sqliteTable(
     declaredCash: integer("declared_cash"),
     systemCash: integer("system_cash"),
     difference: integer("difference"),
-    status: text("status", { enum: ["open", "closed"] })
+    status: text("status").$type<"open" | "closed">()
       .notNull()
       .default("open"),
   },
@@ -374,7 +369,7 @@ export const cashSessions = sqliteTable(
  * Siklus hidup: open → assigned → processing → resolved (atau reopened).
  * Kategori bebas (biasanya dari config_items section `facilities`).
  */
-export const complaints = sqliteTable(
+export const complaints = pgTable(
   "complaints",
   {
     id: text("id").primaryKey(),
@@ -383,14 +378,12 @@ export const complaints = sqliteTable(
     description: text("description").notNull().default(""),
     /** Kategori (snapshot; umumnya nama config_items.facilities). */
     category: text("category").notNull().default(""),
-    status: text("status", {
-      enum: ["open", "assigned", "processing", "resolved", "reopened"],
-    })
+    status: text("status")
+      .$type<"open" | "assigned" | "processing" | "resolved" | "reopened">()
       .notNull()
       .default("open"),
-    priority: text("priority", {
-      enum: ["low", "medium", "high"],
-    })
+    priority: text("priority")
+      .$type<"low" | "medium" | "high">()
       .notNull()
       .default("medium"),
     /** Tanggal kalender WIB (YYYY-MM-DD) untuk pengelompokan harian. */
@@ -412,7 +405,7 @@ export const complaints = sqliteTable(
  * Satu baris per (facility_id, date) — di-upsert saat petugas mencatat.
  * `facilityId` menunjuk config_items section `facilities`.
  */
-export const facilityStatus = sqliteTable(
+export const facilityStatus = pgTable(
   "facility_status",
   {
     id: text("id").primaryKey(),
@@ -422,9 +415,8 @@ export const facilityStatus = sqliteTable(
       .references(() => configItems.id),
     /** Tanggal kalender WIB (YYYY-MM-DD). */
     date: text("date").notNull(),
-    status: text("status", {
-      enum: ["operational", "needs_attention", "closed"],
-    })
+    status: text("status")
+      .$type<"operational" | "needs_attention" | "closed">()
       .notNull()
       .default("operational"),
     note: text("note").notNull().default(""),
@@ -446,7 +438,7 @@ export const facilityStatus = sqliteTable(
  * Satu baris per (checklistId, date) WIB — di-upsert saat petugas menandai.
  * `checklistId` menunjuk config_items section `hours` (item jadwal aktif).
  */
-export const operationsChecklist = sqliteTable(
+export const operationsChecklist = pgTable(
   "operations_checklist",
   {
     id: text("id").primaryKey(),
@@ -456,7 +448,7 @@ export const operationsChecklist = sqliteTable(
       .references(() => configItems.id),
     /** Tanggal kalender WIB (YYYY-MM-DD). */
     date: text("date").notNull(),
-    done: integer("done", { mode: "boolean" }).notNull().default(false),
+    done: boolean("done").notNull().default(false),
     note: text("note").notNull().default(""),
     recordedBy: text("recorded_by")
       .notNull()
@@ -475,7 +467,7 @@ export const operationsChecklist = sqliteTable(
  * Hari libur khusus (modul tarif) — tanggal WIB yang memakai tarif weekend.
  * Dikelola di Pengaturan (RBAC settings manage). Satu baris per tanggal.
  */
-export const holidays = sqliteTable("holidays", {
+export const holidays = pgTable("holidays", {
   id: text("id").primaryKey(),
   /** Tanggal kalender WIB (YYYY-MM-DD), unik. */
   date: text("date").notNull().unique(),
@@ -486,5 +478,5 @@ export const holidays = sqliteTable("holidays", {
     .references(() => users.id),
   createdAt: text("created_at")
     .notNull()
-    .default(sql`(datetime('now'))`),
+    .default(sql`now()`),
 });

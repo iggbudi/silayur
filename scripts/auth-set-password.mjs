@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
+import { Client } from "pg";
 import { hashPassword } from "../shared/password.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -40,38 +40,35 @@ async function main() {
     throw new Error("Set SILAYUR_NEW_PASSWORD before running this command.");
   }
 
-  const url =
-    process.env.TURSO_DATABASE_URL?.trim() || "file:./.data/silayur.db";
-  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
-  const client = createClient({
-    url: url.startsWith("file:")
-      ? `file:${path.resolve(root, url.slice("file:".length))}`
-      : url,
-    authToken,
-  });
+  const url = process.env.DATABASE_URL?.trim();
+  if (!url) {
+    throw new Error("DATABASE_URL is required (postgres://...).");
+  }
+  const client = new Client({ connectionString: url });
+  await client.connect();
   const passwordHash = await hashPassword(password);
-  const tx = await client.transaction("write");
   try {
-    const result = await tx.execute({
-      sql: `UPDATE users
-            SET password_hash = ?, updated_at = datetime('now')
-            WHERE username = ?`,
-      args: [passwordHash, username],
-    });
-    if (result.rowsAffected !== 1) {
+    await client.query("BEGIN");
+    const result = await client.query(
+      `UPDATE users
+       SET password_hash = $1, updated_at = now()
+       WHERE username = $2`,
+      [passwordHash, username],
+    );
+    if (result.rowCount !== 1) {
       throw new Error(`Pengguna tidak ditemukan: ${username}`);
     }
-    await tx.execute({
-      sql: `DELETE FROM auth_sessions
-            WHERE user_id = (SELECT id FROM users WHERE username = ?)`,
-      args: [username],
-    });
-    await tx.commit();
+    await client.query(
+      `DELETE FROM auth_sessions
+       WHERE user_id = (SELECT id FROM users WHERE username = $1)`,
+      [username],
+    );
+    await client.query("COMMIT");
   } catch (error) {
-    await tx.rollback();
+    await client.query("ROLLBACK");
     throw error;
   } finally {
-    client.close();
+    await client.end();
   }
   console.log(
     JSON.stringify({ ok: true, username, sessionsRevoked: true }, null, 2),

@@ -1,9 +1,9 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -33,50 +33,29 @@ async function loadDotEnv() {
 }
 
 function resolveUrl() {
-  const fromEnv = process.env.TURSO_DATABASE_URL?.trim();
-  return fromEnv && fromEnv.length > 0 ? fromEnv : "file:./.data/silayur.db";
-}
-
-async function ensureLocalDir(url) {
-  if (!url.startsWith("file:")) return;
-  const filePath = path.resolve(root, url.slice("file:".length));
-  await mkdir(path.dirname(filePath), { recursive: true });
+  return process.env.DATABASE_URL?.trim() || "";
 }
 
 async function main() {
   await loadDotEnv();
   const url = resolveUrl();
-  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
-  const mode =
-    url.startsWith("libsql://") || url.startsWith("https://")
-      ? "remote"
-      : "local-file";
-
-  if (mode === "remote" && !authToken) {
-    throw new Error("Remote Turso URL requires TURSO_AUTH_TOKEN.");
+  if (!url) {
+    throw new Error("DATABASE_URL is required (postgres://...).");
   }
 
-  await ensureLocalDir(url);
+  const pool = new Pool({ connectionString: url });
+  const db = drizzle(pool);
 
-  const client = createClient({
-    url: url.startsWith("file:")
-      ? `file:${path.resolve(root, url.slice("file:".length))}`
-      : url,
-    authToken,
-  });
-
-  const db = drizzle(client);
   const migrationsFolder = path.join(root, "drizzle");
   await migrate(db, { migrationsFolder });
-  client.close();
+  await pool.end();
 
   console.log(
     JSON.stringify(
       {
         ok: true,
         action: "migrate",
-        mode,
-        url: mode === "remote" ? url : path.resolve(root, url.slice("file:".length)),
+        url: url.replace(/:[^:@/]+@/, ":***@"),
       },
       null,
       2,

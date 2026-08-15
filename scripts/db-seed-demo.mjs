@@ -1,18 +1,17 @@
 /**
- * Seed data demo untuk menguji fitur yang SUDAH ADA secara lokal.
+ * Seed data demo untuk menguji fitur yang SUDAH ADA secara lokal (PostgreSQL).
  *
  * Menambahkan data transaksi contoh (penjualan tiket, pemasukan non-tiket,
  * pengeluaran, dan rekap kas shift) dengan pola idempotent
  * `ON CONFLICT ... DO NOTHING` — hanya menambah, tidak menimpa data operasional.
  *
- * ✅ Aman: MENOLAK database remote (libsql:// / https://) kecuali di-force
- *    lewat env `SILAYUR_DEMO_ALLOW_REMOTE=1` (perlu otorisasi owner).
- *    Default: hanya berjalan pada database file lokal (file:).
+ * ✅ Aman: MENOLAK database non-lokal (host selain localhost/127.0.0.1)
+ *    kecuali di-force lewat env `SILAYUR_DEMO_ALLOW_REMOTE=1`
+ *    (perlu otorisasi owner).
  *
- * Penggunaan (DB lokal fresh):
- *   $env:TURSO_DATABASE_URL='file:./.data/silayur-demo.db'
+ * Penggunaan:
+ *   $env:DATABASE_URL='postgres://...@127.0.0.1:5432/silayur'
  *   node scripts/db-migrate.mjs
- *   $env:SILAYUR_SEED_ADMIN_PASSWORD='...'; $env:SILAYUR_SEED_DEFAULT_PASSWORD='...'
  *   node scripts/db-seed.mjs
  *   node scripts/db-seed-demo.mjs
  */
@@ -20,7 +19,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createClient } from "@libsql/client";
+import { Client } from "pg";
 import demoData from "../db/demo-data.json" with { type: "json" };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,7 +41,7 @@ async function loadDotEnv() {
       ) {
         value = value.slice(1, -1);
       }
-      // Jangan override env yang sudah eksplisit (mis. override lokal file:).
+      // Jangan override env yang sudah eksplisit.
       if (process.env[key] === undefined) process.env[key] = value;
     }
   } catch {
@@ -51,7 +50,12 @@ async function loadDotEnv() {
 }
 
 function resolveUrl() {
-  return process.env.TURSO_DATABASE_URL?.trim() || "file:./.data/demo-silayur.db";
+  return process.env.DATABASE_URL?.trim() || "";
+}
+
+/** Apakah host DB menunjuk mesin lokal (localhost/127.0.0.1)? */
+function isLocalHost(url) {
+  return /localhost|127\.0\.0\.1|::1/i.test(url);
 }
 
 /** Tanggal kalender WIB (YYYY-MM-DD), offset hari dari hari ini. */
@@ -111,54 +115,49 @@ function pricedSale(sale) {
 async function main() {
   await loadDotEnv();
   const url = resolveUrl();
-  const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
-  const isRemote = url.startsWith("libsql://") || url.startsWith("https://");
+  if (!url) throw new Error("DATABASE_URL is required (postgres://...).");
 
-  if (isRemote) {
+  const isLocal = isLocalHost(url);
+  if (!isLocal) {
     const allow = process.env.SILAYUR_DEMO_ALLOW_REMOTE?.trim() === "1";
     if (!allow) {
       throw new Error(
-        "Menolak men-seed data demo ke database REMOTE (" + url + ").\n" +
-          "Demo hanya boleh masuk ke database file lokal (file:). " +
-          "Untuk remote, set SILAYUR_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
+        "Menolak men-seed data demo ke database non-lokal (" + url + ").\n" +
+          "Demo hanya boleh masuk ke database lokal (localhost/127.0.0.1). " +
+          "Untuk non-lokal, set SILAYUR_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
       );
     }
   }
 
-  const client = createClient({
-    url: url.startsWith("file:")
-      ? `file:${path.resolve(root, url.slice("file:".length))}`
-      : url,
-    authToken,
-  });
-  const mode = isRemote ? "remote" : "local-file";
+  const client = new Client({ connectionString: url });
+  await client.connect();
 
-  await client.execute(`SELECT COUNT(*) AS c FROM sales`);
+  await client.query(`SELECT COUNT(*) AS c FROM sales`);
 
-  const tx = await client.transaction("write");
   try {
-    await seedSales(tx);
-    await seedReceiptCounters(tx);
-    await seedRevenues(tx);
-    await seedExpenses(tx);
-    await seedCashSessions(tx);
-    await tx.commit();
+    await client.query("BEGIN");
+    await seedSales(client);
+    await seedReceiptCounters(client);
+    await seedRevenues(client);
+    await seedExpenses(client);
+    await seedCashSessions(client);
+    await client.query("COMMIT");
   } catch (error) {
-    await tx.rollback();
+    await client.query("ROLLBACK");
     throw error;
   }
 
   const counts = {};
   for (const table of ["sales", "sale_items", "revenue_entries", "expenses", "cash_sessions"]) {
-    const r = await client.execute(`SELECT COUNT(*) AS c FROM ${table}`);
+    const r = await client.query(`SELECT COUNT(*) AS c FROM ${table}`);
     counts[table] = Number(r.rows[0].c);
   }
-  client.close();
+  await client.end();
 
-  console.log(JSON.stringify({ ok: true, action: "seed-demo", mode, counts }, null, 2));
+  console.log(JSON.stringify({ ok: true, action: "seed-demo", counts }, null, 2));
 }
 
-async function seedSales(tx) {
+async function seedSales(client) {
   let id = 0;
   for (const sale of demoData.sales) {
     const { items, totalQuantity, totalAmount } = pricedSale(sale);
@@ -166,14 +165,14 @@ async function seedSales(tx) {
     const soldAt = wibToIso(dateIso, sale.timeWib);
     const receiptNumber = `RCP-${dateIso.replace(/-/g, "")}-${pad4(sale.seq)}`;
 
-    await tx.execute({
-      sql: `INSERT INTO sales
+    await client.query(
+      `INSERT INTO sales
         (id, receipt_number, sold_by, sold_at, visit_date, total_amount,
          total_quantity, status, notes, void_reason, void_requested_at,
          void_requested_by, voided_at, voided_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         ON CONFLICT(id) DO NOTHING`,
-      args: [
+      [
         sale.id,
         receiptNumber,
         sale.soldBy,
@@ -189,17 +188,17 @@ async function seedSales(tx) {
         sale.status === "voided" ? new Date().toISOString() : null,
         sale.status === "voided" ? "manajer-operasional" : null,
       ],
-    });
+    );
 
     for (const item of items) {
       const saleItemId = `${sale.id}-item-${id++}`;
-      await tx.execute({
-        sql: `INSERT INTO sale_items
+      await client.query(
+        `INSERT INTO sale_items
           (id, sale_id, ticket_product_id, product_name, visitor_category,
            unit_price, quantity, subtotal)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
           ON CONFLICT(id) DO NOTHING`,
-        args: [
+        [
           saleItemId,
           sale.id,
           item.ticketProductId,
@@ -209,12 +208,12 @@ async function seedSales(tx) {
           item.quantity,
           item.subtotal,
         ],
-      });
+      );
     }
   }
 }
 
-async function seedReceiptCounters(tx) {
+async function seedReceiptCounters(client) {
   // Atur counter per hari = seq terbesar yang di-seed, agar transaksi baru di
   // loket melanjutkan nomor receipt (tidak bentrok dengan nomor demo).
   const byDay = {};
@@ -223,25 +222,25 @@ async function seedReceiptCounters(tx) {
     byDay[dateIso] = Math.max(byDay[dateIso] ?? 0, sale.seq);
   }
   for (const [dateIso, seq] of Object.entries(byDay)) {
-    await tx.execute({
-      sql: `INSERT INTO receipt_counters (counter_date, seq)
-            VALUES (?, ?)
-            ON CONFLICT(counter_date) DO UPDATE SET seq = MAX(seq, excluded.seq)`,
-      args: [dateIso, seq],
-    });
+    await client.query(
+      `INSERT INTO receipt_counters (counter_date, seq)
+        VALUES ($1, $2)
+        ON CONFLICT(counter_date) DO UPDATE SET seq = GREATEST(receipt_counters.seq, EXCLUDED.seq)`,
+      [dateIso, seq],
+    );
   }
 }
 
-async function seedRevenues(tx) {
+async function seedRevenues(client) {
   for (const rev of demoData.revenues) {
     const { dateIso } = dateWithOffset(rev.dayOffset);
     const recordedAt = wibToIso(dateIso, rev.timeWib);
-    await tx.execute({
-      sql: `INSERT INTO revenue_entries
+    await client.query(
+      `INSERT INTO revenue_entries
         (id, source_key, source_name, amount, note, entry_date, recorded_by, recorded_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT(id) DO NOTHING`,
-      args: [
+      [
         rev.id,
         rev.sourceKey,
         rev.sourceName,
@@ -251,21 +250,21 @@ async function seedRevenues(tx) {
         rev.recordedBy,
         recordedAt,
       ],
-    });
+    );
   }
 }
 
-async function seedExpenses(tx) {
+async function seedExpenses(client) {
   for (const exp of demoData.expenses) {
     const { dateIso } = dateWithOffset(exp.dayOffset);
     const recordedAt = wibToIso(dateIso, exp.timeWib);
-    await tx.execute({
-      sql: `INSERT INTO expenses
+    await client.query(
+      `INSERT INTO expenses
         (id, description, amount, note, entry_date, recorded_by, recorded_at,
          status, approved_by, approved_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT(id) DO NOTHING`,
-      args: [
+      [
         exp.id,
         exp.description,
         exp.amount,
@@ -277,22 +276,22 @@ async function seedExpenses(tx) {
         exp.approvedBy ?? null,
         exp.approvedBy ? recordedAt : null,
       ],
-    });
+    );
   }
 }
 
-async function seedCashSessions(tx) {
+async function seedCashSessions(client) {
   for (const cs of demoData.cashSessions) {
     const { dateIso } = dateWithOffset(cs.dayOffset);
     const openedAt = wibToIso(dateIso, cs.openedWib);
     const closedAt = cs.closedWib ? wibToIso(dateIso, cs.closedWib) : null;
-    await tx.execute({
-      sql: `INSERT INTO cash_sessions
+    await client.query(
+      `INSERT INTO cash_sessions
         (id, opened_by, opened_at, closed_by, closed_at, declared_cash,
          system_cash, difference, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT(id) DO NOTHING`,
-      args: [
+      [
         cs.id,
         cs.openedBy,
         openedAt,
@@ -303,7 +302,7 @@ async function seedCashSessions(tx) {
         cs.difference ?? null,
         cs.status,
       ],
-    });
+    );
   }
 }
 

@@ -1,49 +1,13 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
-import { cleanupTempDirectory } from "../../../../tests/test-utils.mjs";
-
-const root = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-  "..",
-);
-const testPassword = "LocalTestPassword-2026!";
-
-function runScript(script: string, env: NodeJS.ProcessEnv): void {
-  const result = spawnSync(process.execPath, [path.join(root, script)], {
-    cwd: root,
-    env,
-    encoding: "utf8",
-  });
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-}
-
-function testDb() {
-  const dir = mkdtempSync(path.join(tmpdir(), "silayur-holidays-repo-"));
-  const dbFile = path.join(dir, "test.db");
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    TURSO_DATABASE_URL: `file:${dbFile}`,
-    TURSO_AUTH_TOKEN: "",
-    SILAYUR_SEED_ADMIN_PASSWORD: testPassword,
-    SILAYUR_SEED_DEFAULT_PASSWORD: testPassword,
-  };
-  return { dir, env };
-}
+import {
+  prepareTestEnv,
+  resetTestDb,
+} from "../../../../tests/test-utils.mjs";
 
 async function freshDb() {
-  const { dir, env } = testDb();
-  runScript("scripts/db-migrate.mjs", env);
-  runScript("scripts/db-seed.mjs", env);
-  process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
-  delete process.env.TURSO_AUTH_TOKEN;
+  await resetTestDb();
+  prepareTestEnv();
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const [
     { deleteHoliday, listHolidayDates, listHolidays, upsertHoliday },
@@ -59,12 +23,11 @@ async function freshDb() {
     listHolidayDates,
     listHolidays,
     upsertHoliday,
-    dir,
   };
 }
 
 test("holidays: upsert validates date and stores name", async () => {
-  const { db, upsertHoliday, dir } = await freshDb();
+  const { db, upsertHoliday } = await freshDb();
   try {
     await assert.rejects(
       upsertHoliday(db, { date: "not-a-date", name: "X" }, "admin-resepsionis"),
@@ -84,12 +47,12 @@ test("holidays: upsert validates date and stores name", async () => {
     assert.equal(created.name, "Natal");
     assert.equal(created.createdBy, "admin-resepsionis");
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });
 
 test("holidays: upsert same date keeps single row, last name wins", async () => {
-  const { db, upsertHoliday, listHolidays, dir } = await freshDb();
+  const { db, upsertHoliday, listHolidays } = await freshDb();
   try {
     await upsertHoliday(db, { date: "2026-01-01", name: "Tahun Baru" }, "admin-resepsionis");
     const updated = await upsertHoliday(db, { date: "2026-01-01", name: "Tahun Baru 2026" }, "admin-resepsionis");
@@ -99,12 +62,12 @@ test("holidays: upsert same date keeps single row, last name wins", async () => 
     assert.equal(all.length, 1);
     assert.equal(all[0].name, "Tahun Baru 2026");
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });
 
 test("holidays: list dates and delete by date", async () => {
-  const { db, upsertHoliday, listHolidayDates, deleteHoliday, listHolidays, dir } = await freshDb();
+  const { db, upsertHoliday, listHolidayDates, deleteHoliday, listHolidays } = await freshDb();
   try {
     await upsertHoliday(db, { date: "2026-08-17", name: "HUT RI" }, "admin-resepsionis");
     await upsertHoliday(db, { date: "2026-12-25", name: "Natal" }, "admin-resepsionis");
@@ -119,6 +82,6 @@ test("holidays: list dates and delete by date", async () => {
 
     await assert.rejects(deleteHoliday(db, "bad"), /Tanggal libur tidak valid/);
   } finally {
-    cleanupTempDirectory(dir);
+    // state dibersihkan oleh resetTestDb berikutnya
   }
 });

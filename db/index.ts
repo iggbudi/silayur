@@ -1,18 +1,9 @@
 /**
- * Database entrypoint for SILAYUR.
+ * Database entrypoint for SILAYUR (PostgreSQL).
  *
- * Prefer:
- * - `createDb()` / `getDb()` from `./client` in Node scripts and Node runtimes
- * - `createWebDb()` from `./client-web` on Cloudflare Workers / edge
- *
- * Schema is Turso/libSQL (SQLite dialect). Cloudflare D1 is not used.
+ * - API routes: `getRequestDb()` dari `./get-db`.
+ * - Scripts/tests Node: `createDb()` / `getDb()` dari `./client`.
  */
 export { createDb, getDb, type AppDatabase, type DbBundle } from "./client";
-export { createWebDb, type AppWebDatabase, type WebDbBundle } from "./client-web";
-export {
-  resolveTursoEnv,
-  localDbFilePath,
-  DEFAULT_LOCAL_URL,
-  type TursoEnv,
-} from "./env";
+export { resolveDbEnv, type DbEnv } from "./env";
 export * from "./schema";
