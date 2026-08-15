@@ -19,6 +19,8 @@ import {
   listExpenses,
   listRevenue,
   openCashSession,
+  voidExpense,
+  voidRevenueEntry,
   type CashSession,
   type Expense,
   type FinanceSummary,
@@ -162,6 +164,32 @@ export default function KeuanganPage() {
       await loadData();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Gagal menyetujui.");
+    }
+  }
+
+  async function handleVoidRevenue(id: string) {
+    setError("");
+    try {
+      await voidRevenueEntry(id);
+      setNotice("Pemasukan dibatalkan dan tidak dihitung.");
+      await loadData();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Gagal membatalkan pemasukan.",
+      );
+    }
+  }
+
+  async function handleVoidExpense(id: string) {
+    setError("");
+    try {
+      await voidExpense(id);
+      setNotice("Pengeluaran dibatalkan dan tidak dihitung.");
+      await loadData();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Gagal membatalkan pengeluaran.",
+      );
     }
   }
 
@@ -364,14 +392,29 @@ export default function KeuanganPage() {
             ) : (
               <ul>
                 {revenues.map((r) => (
-                  <li key={r.id} className="finance-row">
+                  <li
+                    key={r.id}
+                    className={`finance-row ${r.status === "voided" ? "finance-row-voided" : ""}`}
+                  >
                     <div>
                       <strong>{r.sourceName}</strong>
                       <small>{r.recordedByName ?? r.recordedBy}</small>
+                      {r.status === "voided" ? (
+                        <small className="sale-void-reason">Dibatalkan</small>
+                      ) : null}
                     </div>
                     <div className="finance-amount finance-amount-in">
                       +{currency.format(r.amount)}
                     </div>
+                    {r.status === "active" && canManageFinance ? (
+                      <button
+                        type="button"
+                        className="finance-btn finance-btn-danger"
+                        onClick={() => handleVoidRevenue(r.id)}
+                      >
+                        Batalkan
+                      </button>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -456,6 +499,15 @@ export default function KeuanganPage() {
                         onClick={() => handleApprove(e.id)}
                       >
                         Setujui
+                      </button>
+                    ) : null}
+                    {e.status !== "voided" && canManageFinance ? (
+                      <button
+                        type="button"
+                        className="finance-btn finance-btn-danger"
+                        onClick={() => handleVoidExpense(e.id)}
+                      >
+                        Batalkan
                       </button>
                     ) : null}
                   </li>

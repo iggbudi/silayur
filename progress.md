@@ -749,6 +749,24 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
 - Validasi: type-check hijau (tidak ada perubahan kode aplikasi), smoke
   login OK.
 
+## Void/Koreksi Keuangan (15 Agustus 2026)
+
+- **Schema**: `revenue_entries` mendapat kolom `status` (`active`/`voided`),
+  `voided_by`, `voided_at`, `void_reason` — migration
+  `drizzle/0001_revenue_void.sql`. `expenses` sudah punya `status: voided`.
+- **Repo `app/features/finance/repo.ts`**: `voidRevenueEntry` (set status +
+  audit, hanya dari `active`), `voidExpense` (dari `pending`/`approved`, cegah
+  double-void). `todayRevenueSummary` & `computeSystemCash` kini **mengecualikan
+  revenue `voided`**; list tetap menampilkan dengan status.
+- **Route baru**: `app/api/revenue/[id]/void/route.ts` +
+  `app/api/expenses/[id]/void/route.ts` (RBAC `finance` manage, same-origin).
+- **UI `/keuangan`**: tombol "Batalkan" pada riwayat pemasukan (aktif) &
+  pengeluaran (non-voided); baris voided tampil redup + coret + label
+  "Dibatalkan". CSS `.finance-row-voided` + `.finance-btn-danger`.
+- Validasi: type-check hijau, lint 0 error (16 warning pre-existing +
+  route void), test finance **4/4 pass** (2 test baru: void revenue eksklusi
+  summary + audit, void expense eksklusi system cash + cegah double-void).
+
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1

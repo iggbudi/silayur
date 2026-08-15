@@ -3,6 +3,8 @@
  * dan rekap kas shift.
  */
 
+export type RevenueEntryStatus = "active" | "voided";
+
 export type RevenueEntry = {
   id: string;
   sourceKey: string;
@@ -13,6 +15,10 @@ export type RevenueEntry = {
   recordedBy: string;
   recordedByName?: string;
   recordedAt: string;
+  status: RevenueEntryStatus;
+  voidedBy: string | null;
+  voidedAt: string | null;
+  voidReason: string;
 };
 
 export type RevenueEntryInput = {

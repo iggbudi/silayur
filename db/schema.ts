@@ -302,6 +302,16 @@ export const revenueEntries = pgTable(
     recordedAt: text("recorded_at")
       .notNull()
       .default(sql`now()`),
+    /**
+     * Status: active (normal) atau voided (dibatalkan oleh finance manage).
+     * Void mengecualikan baris dari ringkasan pendapatan & rekap kas.
+     */
+    status: text("status").$type<"active" | "voided">()
+      .notNull()
+      .default("active"),
+    voidedBy: text("voided_by").references(() => users.id),
+    voidedAt: text("voided_at"),
+    voidReason: text("void_reason").notNull().default(""),
   },
   (table) => [
     index("revenue_entries_date_idx").on(table.entryDate),

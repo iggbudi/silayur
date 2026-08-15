@@ -79,6 +79,24 @@ export async function approveExpense(expenseId: string): Promise<Expense> {
   return parseJson<Expense>(response);
 }
 
+export async function voidRevenueEntry(
+  entryId: string,
+): Promise<RevenueEntry> {
+  const response = await fetch(`/api/revenue/${entryId}/void`, {
+    method: "POST",
+    credentials: "same-origin",
+  });
+  return parseJson<RevenueEntry>(response);
+}
+
+export async function voidExpense(expenseId: string): Promise<Expense> {
+  const response = await fetch(`/api/expenses/${expenseId}/void`, {
+    method: "POST",
+    credentials: "same-origin",
+  });
+  return parseJson<Expense>(response);
+}
+
 export async function cashSession(): Promise<CashSession | null> {
   const response = await fetch("/api/cash-session", {
     method: "GET",

@@ -8,6 +8,13 @@
       "when": 1786794724137,
       "tag": "0000_postgres_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786801681181,
+      "tag": "0001_revenue_void",
+      "breakpoints": true
     }
   ]
 }

@@ -40,6 +40,10 @@ function mapRevenueEntry(row: {
     recordedBy: row.entry.recordedBy,
     recordedByName: row.recordedByName ?? undefined,
     recordedAt: row.entry.recordedAt,
+    status: row.entry.status,
+    voidedBy: row.entry.voidedBy,
+    voidedAt: row.entry.voidedAt,
+    voidReason: row.entry.voidReason,
   };
 }
 
@@ -120,6 +124,45 @@ export async function listRevenueEntries(
   return rows.map(mapRevenueEntry);
 }
 
+async function loadRevenueEntryById(
+  db: AppDb,
+  entryId: string,
+): Promise<RevenueEntry> {
+  const rows = await db
+    .select({ entry: revenueEntries, recordedByName: users.name })
+    .from(revenueEntries)
+    .innerJoin(users, eq(users.id, revenueEntries.recordedBy))
+    .where(eq(revenueEntries.id, entryId))
+    .limit(1);
+  const row = rows[0];
+  if (!row) throw new Error(`Pemasukan tidak ditemukan: ${entryId}`);
+  return mapRevenueEntry(row);
+}
+
+/** Batalkan pemasukan non-tiket (koreksi oleh finance manage). */
+export async function voidRevenueEntry(
+  db: AppDb,
+  entryId: string,
+  actorId: string,
+  reason?: string,
+): Promise<RevenueEntry> {
+  const existing = await loadRevenueEntryById(db, entryId);
+  if (existing.status !== "active") {
+    throw new Error("Hanya pemasukan aktif yang bisa dibatalkan.");
+  }
+  const now = new Date().toISOString();
+  await db
+    .update(revenueEntries)
+    .set({
+      status: "voided",
+      voidedBy: actorId,
+      voidedAt: now,
+      voidReason: reason?.trim() ?? "",
+    })
+    .where(eq(revenueEntries.id, entryId));
+  return loadRevenueEntryById(db, entryId);
+}
+
 /** Total pendapatan hari ini: tiket (sales) + non-tiket (revenue_entries). */
 export async function todayRevenueSummary(
   db: AppDb,
@@ -141,7 +184,12 @@ export async function todayRevenueSummary(
     db
       .select({ revenue: sql<number>`coalesce(sum(${revenueEntries.amount}), 0)` })
       .from(revenueEntries)
-      .where(eq(revenueEntries.entryDate, date)),
+      .where(
+        and(
+          eq(revenueEntries.entryDate, date),
+          ne(revenueEntries.status, "voided"),
+        ),
+      ),
   ]);
   const ticketRevenue = Number(ticketRows[0]?.revenue ?? 0);
   const otherRevenue = Number(otherRows[0]?.revenue ?? 0);
@@ -226,6 +274,26 @@ export async function listExpenses(
   return rows.map(mapExpense);
 }
 
+/** Batalkan pengeluaran (koreksi oleh finance manage). */
+export async function voidExpense(
+  db: AppDb,
+  expenseId: string,
+): Promise<Expense> {
+  const existing = await loadExpenseById(db, expenseId);
+  if (existing.status === "voided") {
+    throw new Error("Pengeluaran sudah dibatalkan.");
+  }
+  await db
+    .update(expenses)
+    .set({
+      status: "voided",
+      approvedBy: existing.approvedBy,
+      approvedAt: existing.approvedAt,
+    })
+    .where(eq(expenses.id, expenseId));
+  return loadExpenseById(db, expenseId);
+}
+
 export async function activeCashSession(
   db: AppDb,
 ): Promise<CashSession | null> {
@@ -276,6 +344,7 @@ async function computeSystemCash(
       .from(revenueEntries)
       .where(
         and(
+          ne(revenueEntries.status, "voided"),
           gte(revenueEntries.recordedAt, fromIso),
           lt(revenueEntries.recordedAt, toIso),
         ),

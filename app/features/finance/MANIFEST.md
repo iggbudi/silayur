@@ -63,7 +63,7 @@ Pengecekan server-side via `assertCanViewFinance` / `assertCanManageFinance`
 - ✅ Rekap kas shift (buka/tutup + selisih)
 - ✅ Dashboard KPI "Pendapatan hari ini" → total
 - ✅ Nav sidebar "Keuangan"
-- ⏳ Void/koreksi pemasukan & pengeluaran (deferred)
+- ✅ Void/koreksi pemasukan & pengeluaran (15 Agt 2026)
 - ⏳ Laporan/rekap berkala (future)
 
 ## Test

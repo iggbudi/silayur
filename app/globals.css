@@ -3909,6 +3909,25 @@
   margin-top: 2px;
 }
 
+.finance-row-voided {
+  opacity: 0.55;
+}
+
+.finance-row-voided strong {
+  text-decoration: line-through;
+}
+
+.finance-btn-danger {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  border: 1px solid var(--red);
+  color: #b3261e;
+}
+
+.finance-btn-danger:hover {
+  background: var(--red);
+  color: #ffffff;
+}
+
 .finance-amount {
   font-size: 0.95rem;
   font-weight: 700;

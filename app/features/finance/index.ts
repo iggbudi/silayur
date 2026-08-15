@@ -11,6 +11,8 @@ export {
   createExpense,
   listExpenses,
   approveExpense,
+  voidRevenueEntry,
+  voidExpense,
   cashSession,
   openCashSession,
   closeCashSession,
@@ -19,6 +21,7 @@ export {
 export type {
   RevenueEntry,
   RevenueEntryInput,
+  RevenueEntryStatus,
   Expense,
   ExpenseInput,
   ExpenseStatus,
