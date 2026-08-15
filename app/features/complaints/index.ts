@@ -3,6 +3,7 @@
  */
 
 export {
+  complaintHistory,
   createComplaint,
   listComplaints,
   recentComplaints,
@@ -11,6 +12,7 @@ export {
 } from "./api";
 export type {
   Complaint,
+  ComplaintHistoryEntry,
   ComplaintInput,
   ComplaintList,
   ComplaintPriority,

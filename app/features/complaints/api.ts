@@ -5,6 +5,7 @@
 
 import type {
   Complaint,
+  ComplaintHistoryEntry,
   ComplaintInput,
   ComplaintList,
   ComplaintStatus,
@@ -65,4 +66,17 @@ export async function recentComplaints(): Promise<RecentComplaintsResult> {
     cache: "no-store",
   });
   return parseJson<RecentComplaintsResult>(response);
+}
+
+/** Riwayat transisi status sebuah komplain. */
+export async function complaintHistory(
+  complaintId: string,
+): Promise<ComplaintHistoryEntry[]> {
+  const response = await fetch(`/api/complaints/${complaintId}/history`, {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  const data = await parseJson<{ history: ComplaintHistoryEntry[] }>(response);
+  return data.history;
 }

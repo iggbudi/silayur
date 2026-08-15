@@ -51,5 +51,5 @@ panel "Komplain terbaru" + KPI "Komplain terbuka" di dashboard.
 - [x] Schema + migration 0007 (lokal; rollout remote menunggu otorisasi).
 - [x] Slice lengkap (types, repo, api, index) + test logic-level.
 - [x] Route + RBAC + halaman + nav + wire dashboard.
-- [ ] Riwayat transisi status (tabel `complaint_history`) — future.
+- [x] Riwayat transisi status (`complaint_history`, migration 0002 pg) — 15 Agt 2026.
 - [ ] Lampiran foto / kategori kustom — future.

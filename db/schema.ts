@@ -411,6 +411,36 @@ export const complaints = pgTable(
 );
 
 /**
+ * Riwayat transisi status komplain.
+ * Satu baris per perubahan status; `fromStatus` null untuk pembuatan awal.
+ */
+export const complaintHistory = pgTable(
+  "complaint_history",
+  {
+    id: text("id").primaryKey(),
+    complaintId: text("complaint_id")
+      .notNull()
+      .references(() => complaints.id, { onDelete: "cascade" }),
+    /** Status sebelum berubah; null untuk entri pembuatan komplain. */
+    fromStatus: text("from_status").$type<
+      "open" | "assigned" | "processing" | "resolved" | "reopened" | null
+    >(),
+    toStatus: text("to_status").$type<
+      "open" | "assigned" | "processing" | "resolved" | "reopened"
+    >()
+      .notNull(),
+    changedBy: text("changed_by")
+      .notNull()
+      .references(() => users.id),
+    changedAt: text("changed_at").notNull(),
+    note: text("note").notNull().default(""),
+  },
+  (table) => [
+    index("complaint_history_complaint_idx").on(table.complaintId),
+  ],
+);
+
+/**
  * Status fasilitas per hari kalender WIB (modul Fasilitas).
  * Satu baris per (facility_id, date) — di-upsert saat petugas mencatat.
  * `facilityId` menunjuk config_items section `facilities`.

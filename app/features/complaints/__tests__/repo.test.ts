@@ -6,13 +6,13 @@ async function freshDb() {
   await resetTestDb();
   prepareTestEnv();
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const [{ createComplaint, listComplaints, listComplaintsByDate, updateComplaintStatus, countOpenComplaints }, { getRequestDb }] =
+  const [{ createComplaint, listComplaintHistory, listComplaints, listComplaintsByDate, updateComplaintStatus, countOpenComplaints }, { getRequestDb }] =
     await Promise.all([
       import(`../repo.ts?v=${stamp}`),
       import(`../../../../db/get-db?v=${stamp}`),
     ]);
   const db = await getRequestDb();
-  return { db, createComplaint, listComplaints, listComplaintsByDate, updateComplaintStatus, countOpenComplaints };
+  return { db, createComplaint, listComplaintHistory, listComplaints, listComplaintsByDate, updateComplaintStatus, countOpenComplaints };
 }
 
 test("complaints: create validates input and sets open status", async () => {
@@ -125,4 +125,30 @@ test("complaints: recent lists latest across dates with limit", async () => {
   const limited = await listRecentComplaints(db, 2);
   assert.equal(limited.length, 2);
   assert.equal(limited[0].title, "Komplain 2", "terbaru dulu");
+});
+
+test("complaints: history records creation and status transitions", async () => {
+  const { db, createComplaint, listComplaintHistory, updateComplaintStatus } = await freshDb();
+  const complaint = await createComplaint(
+    db,
+    { title: "Riwayat test", category: "Playground" },
+    "admin-resepsionis",
+    "2026-08-14",
+  );
+
+  let history = await listComplaintHistory(db, complaint.id);
+  assert.equal(history.length, 1, "entri pembuatan");
+  assert.equal(history[0].fromStatus, null);
+  assert.equal(history[0].toStatus, "open");
+
+  await updateComplaintStatus(db, complaint.id, "assigned", "manajer-operasional");
+  await updateComplaintStatus(db, complaint.id, "processing", "manajer-operasional");
+
+  history = await listComplaintHistory(db, complaint.id);
+  assert.equal(history.length, 3);
+  assert.equal(history[0].toStatus, "processing", "terbaru dulu");
+  assert.equal(history[1].fromStatus, "open");
+  assert.equal(history[1].toStatus, "assigned");
+  assert.equal(history[1].changedByName, "Manajer Operasional");
+  assert.ok(history[0].changedAt >= history[1].changedAt);
 });

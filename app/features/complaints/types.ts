@@ -42,3 +42,16 @@ export type ComplaintList = {
   /** Jumlah komplain berstatus terbuka (open/assigned/processing). */
   openCount: number;
 };
+
+/** Satu entri riwayat transisi status komplain. */
+export type ComplaintHistoryEntry = {
+  id: string;
+  complaintId: string;
+  /** Status sebelum berubah; null untuk entri pembuatan. */
+  fromStatus: ComplaintStatus | null;
+  toStatus: ComplaintStatus;
+  changedBy: string;
+  changedByName?: string;
+  changedAt: string;
+  note: string;
+};

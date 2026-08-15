@@ -6,10 +6,11 @@
 
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { AppDb } from "../../../db/get-db";
-import { complaints, users } from "../../../db/schema";
+import { complaintHistory, complaints, users } from "../../../db/schema";
 import { todayIsoDate } from "../../../shared/date";
 import type {
   Complaint,
+  ComplaintHistoryEntry,
   ComplaintInput,
   ComplaintList,
   ComplaintPriority,
@@ -70,6 +71,52 @@ async function loadComplaintById(db: AppDb, id: string): Promise<Complaint> {
   return mapComplaint(row);
 }
 
+/** Catat satu entri riwayat transisi status. */
+async function recordHistory(
+  db: AppDb,
+  complaintId: string,
+  fromStatus: ComplaintStatus | null,
+  toStatus: ComplaintStatus,
+  actorId: string,
+  note?: string,
+): Promise<void> {
+  await db.insert(complaintHistory).values({
+    id: newId("cmph"),
+    complaintId,
+    fromStatus,
+    toStatus,
+    changedBy: actorId,
+    changedAt: new Date().toISOString(),
+    note: note?.trim() ?? "",
+  });
+}
+
+/** Riwayat transisi status sebuah komplain (terbaru dulu). */
+export async function listComplaintHistory(
+  db: AppDb,
+  complaintId: string,
+): Promise<ComplaintHistoryEntry[]> {
+  const rows = await db
+    .select({
+      entry: complaintHistory,
+      changedByName: users.name,
+    })
+    .from(complaintHistory)
+    .leftJoin(users, eq(users.id, complaintHistory.changedBy))
+    .where(eq(complaintHistory.complaintId, complaintId))
+    .orderBy(desc(complaintHistory.changedAt));
+  return rows.map((row) => ({
+    id: row.entry.id,
+    complaintId: row.entry.complaintId,
+    fromStatus: row.entry.fromStatus as ComplaintStatus | null,
+    toStatus: row.entry.toStatus as ComplaintStatus,
+    changedBy: row.entry.changedBy,
+    changedByName: row.changedByName ?? undefined,
+    changedAt: row.entry.changedAt,
+    note: row.entry.note,
+  }));
+}
+
 /** Buat komplain baru berstatus `open`. */
 export async function createComplaint(
   db: AppDb,
@@ -101,6 +148,7 @@ export async function createComplaint(
     updatedBy: actorId,
     updatedAt: now,
   });
+  await recordHistory(db, id, null, "open", actorId, "Komplain dibuat.");
   return loadComplaintById(db, id);
 }
 
@@ -183,5 +231,6 @@ export async function updateComplaintStatus(
     .update(complaints)
     .set({ status, updatedBy: actorId, updatedAt: now })
     .where(and(eq(complaints.id, complaintId)));
+  await recordHistory(db, complaintId, current.status, status, actorId);
   return loadComplaintById(db, complaintId);
 }

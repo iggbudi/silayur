@@ -4412,6 +4412,44 @@
   font-size: 0.72rem;
 }
 
+.complaint-history {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.complaint-history-row {
+  align-items: baseline;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 2px;
+}
+
+.complaint-history-row:first-child {
+  border-top: 0;
+}
+
+.complaint-history-row time {
+  color: var(--muted);
+  font-size: 0.78rem;
+  min-width: 104px;
+}
+
+.complaint-history-row span {
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.complaint-history-row small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 @media (max-width: 620px) {
   .complaint-row {
     flex-direction: column;

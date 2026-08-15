@@ -9,10 +9,12 @@ import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
 import { todayIsoDate } from "../../shared/date";
 import {
+  complaintHistory,
   createComplaint,
   listComplaints,
   updateComplaintStatus,
   type Complaint,
+  type ComplaintHistoryEntry,
   type ComplaintPriority,
   type ComplaintStatus,
 } from "../features/complaints";
@@ -46,6 +48,9 @@ export default function ComplaintsPage() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [openCount, setOpenCount] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
+  const [history, setHistory] = useState<ComplaintHistoryEntry[]>([]);
+  const [historyFor, setHistoryFor] = useState<string | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -131,6 +136,20 @@ export default function ComplaintsPage() {
       await loadData();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Gagal mengubah status.");
+    }
+  }
+
+  async function handleShowHistory(complaintId: string) {
+    setError("");
+    setHistoryLoading(true);
+    try {
+      const entries = await complaintHistory(complaintId);
+      setHistory(entries);
+      setHistoryFor(complaintId);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Gagal memuat riwayat.");
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -324,6 +343,13 @@ export default function ComplaintsPage() {
                           Lanjut ke {statusLabel[NEXT_STATUS[complaint.status]!]}
                         </button>
                       ) : null}
+                      <button
+                        type="button"
+                        className="complaint-btn complaint-btn-ghost"
+                        onClick={() => void handleShowHistory(complaint.id)}
+                      >
+                        Riwayat
+                      </button>
                     </div>
                   </div>
                 </li>
@@ -331,6 +357,45 @@ export default function ComplaintsPage() {
             </ul>
           )}
         </section>
+
+        {/* 3. Riwayat transisi status */}
+        {historyFor ? (
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>Riwayat status</h2>
+              <span className="section-kicker">Perubahan status komplain</span>
+            </div>
+            {historyLoading ? (
+              <p className="complaint-empty">Memuat…</p>
+            ) : history.length === 0 ? (
+              <p className="complaint-empty">Belum ada riwayat.</p>
+            ) : (
+              <ul className="complaint-history">
+                {history.map((entry) => (
+                  <li key={entry.id} className="complaint-history-row">
+                    <time>
+                      {new Date(entry.changedAt).toLocaleString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                    <span>
+                      {entry.fromStatus
+                        ? `${statusLabel[entry.fromStatus]} → ${statusLabel[entry.toStatus]}`
+                        : `Dibuat (${statusLabel[entry.toStatus]})`}
+                    </span>
+                    <small>
+                      {entry.changedByName ?? entry.changedBy}
+                      {entry.note ? ` · ${entry.note}` : ""}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
       </section>
     </main>
   );
