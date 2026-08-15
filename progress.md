@@ -733,6 +733,22 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   Postgres); kredensial Turso tetap di backup lokal. Rollout Postgres ke
   production belum dilakukan.
 
+## Migrasi Password Turso → Postgres (15 Agustus 2026)
+
+- **Temuan**: DB Turso lokal (`.data/silayur.db`) hanya punya master data
+  (8 users, roles, permissions, produk, tarif, config) tanpa transaksi;
+  Postgres sudah lebih lengkap (termasuk demo data). Yang bernilai untuk
+  dimigrasi hanya **password hash users**.
+- **Script baru `scripts/migrate-passwords-turso-to-pg.mjs`** (+ npm
+  `db:migrate-passwords`): membaca `password_hash` dari DB Turso lokal
+  (`TURSO_DATABASE_URL=file:...`) dan men-update users di Postgres
+  (`DATABASE_URL`) — idempotent, satu arah, tidak menyentuh field lain.
+- Hasil: **8 user diperbarui**; verifikasi login admin di Postgres tetap
+  berhasil dengan `SilayurLocal-2026!` (hash Turso cocok dengan password
+  seed yang sama).
+- Validasi: type-check hijau (tidak ada perubahan kode aplikasi), smoke
+  login OK.
+
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1

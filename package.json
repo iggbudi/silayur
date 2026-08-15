@@ -22,6 +22,7 @@
     "db:seed-demo": "node --env-file=.env scripts/db-seed-demo.mjs",
     "db:seed-demo-extras": "node --env-file=.env scripts/db-seed-demo-extras.mjs",
     "db:sync-dev-vars": "node scripts/sync-dev-vars.mjs",
+    "db:migrate-passwords": "node scripts/migrate-passwords-turso-to-pg.mjs",
     "auth:set-password": "node --env-file=.env scripts/auth-set-password.mjs"
   },
   "dependencies": {
