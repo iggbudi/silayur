@@ -68,6 +68,9 @@ export default function LaporanPage() {
   const [report, setReport] = useState<ReportRange | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dayDetail, setDayDetail] = useState<DayDetail | null>(null);
+  const [saleStatusFilter, setSaleStatusFilter] = useState<
+    "all" | "completed" | "void_pending" | "voided"
+  >("all");
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
@@ -455,26 +458,63 @@ export default function LaporanPage() {
                   <div className="report-detail-grid">
                     {canViewVisitors ? (
                       <div className="report-detail-col">
-                        <h4>Penjualan tiket</h4>
-                        {dayDetail.sales.length === 0 ? (
+                        <div className="report-detail-head">
+                          <h4>Penjualan tiket</h4>
+                          <label className="report-status-filter">
+                            <select
+                              value={saleStatusFilter}
+                              onChange={(e) =>
+                                setSaleStatusFilter(
+                                  e.target.value as
+                                    | "all"
+                                    | "completed"
+                                    | "void_pending"
+                                    | "voided",
+                                )
+                              }
+                            >
+                              <option value="all">Semua status</option>
+                              <option value="completed">Selesai</option>
+                              <option value="void_pending">Menunggu void</option>
+                              <option value="voided">Dibatalkan</option>
+                            </select>
+                          </label>
+                        </div>
+                        {dayDetail.sales.filter(
+                          (sale) =>
+                            saleStatusFilter === "all" ||
+                            sale.status === saleStatusFilter,
+                        ).length === 0 ? (
                           <p className="finance-empty">Tidak ada transaksi.</p>
                         ) : (
                           <ul className="report-detail-list">
-                            {dayDetail.sales.map((sale) => (
-                              <li key={sale.id}>
-                                <span>
-                                  {sale.receiptNumber} ·{" "}
-                                  {sale.items.reduce(
-                                    (sum, item) => sum + item.quantity,
-                                    0,
-                                  )}{" "}
-                                  tiket
-                                </span>
-                                <strong>
-                                  {currency.format(sale.totalAmount)}
-                                </strong>
-                              </li>
-                            ))}
+                            {dayDetail.sales
+                              .filter(
+                                (sale) =>
+                                  saleStatusFilter === "all" ||
+                                  sale.status === saleStatusFilter,
+                              )
+                              .map((sale) => (
+                                <li key={sale.id}>
+                                  <span>
+                                    {sale.receiptNumber} ·{" "}
+                                    {sale.items.reduce(
+                                      (sum, item) => sum + item.quantity,
+                                      0,
+                                    )}{" "}
+                                    tiket
+                                    {sale.status === "voided" ? (
+                                      <em className="report-expense-status">
+                                        {" "}
+                                        dibatalkan
+                                      </em>
+                                    ) : null}
+                                  </span>
+                                  <strong>
+                                    {currency.format(sale.totalAmount)}
+                                  </strong>
+                                </li>
+                              ))}
                           </ul>
                         )}
                       </div>

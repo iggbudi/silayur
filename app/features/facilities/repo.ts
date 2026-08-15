@@ -4,7 +4,7 @@
  * Status per fasilitas per hari WIB di `facility_status` (upsert).
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { AppDb } from "../../../db/get-db";
 import { configItems, facilityStatus, users } from "../../../db/schema";
 import { todayIsoDate } from "../../../shared/date";
@@ -182,4 +182,29 @@ export async function facilityStatusSummary(
     }
   }
   return { facilities, counts, updatedAt };
+}
+
+/**
+ * Riwayat status fasilitas lintas hari (terbaru dulu).
+ * Join nama fasilitas dari config_items agar tampilan mudah dibaca.
+ */
+export async function listFacilityStatusHistory(
+  db: AppDb,
+  limit = 50,
+): Promise<Array<FacilityStatusRow & { facilityName: string }>> {
+  const rows = await db
+    .select({
+      status: facilityStatus,
+      recordedByName: users.name,
+      facilityName: configItems.name,
+    })
+    .from(facilityStatus)
+    .innerJoin(users, eq(users.id, facilityStatus.recordedBy))
+    .innerJoin(configItems, eq(configItems.id, facilityStatus.facilityId))
+    .orderBy(desc(facilityStatus.date), desc(facilityStatus.recordedAt))
+    .limit(limit);
+  return rows.map((row) => ({
+    ...mapFacilityStatus(row),
+    facilityName: row.facilityName,
+  }));
 }

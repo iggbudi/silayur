@@ -7,6 +7,7 @@ import type {
   FacilityStatusInput,
   FacilityStatusRow,
   FacilityStatusSummary,
+  FacilityHistoryEntry,
 } from "./types";
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -39,4 +40,17 @@ export async function setFacilityStatus(
     body: JSON.stringify(input),
   });
   return parseJson<FacilityStatusRow>(response);
+}
+
+/** Riwayat status fasilitas lintas hari (terbaru dulu). */
+export async function facilityHistory(
+  limit = 50,
+): Promise<FacilityHistoryEntry[]> {
+  const response = await fetch(`/api/facilities/history?limit=${limit}`, {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  const data = await parseJson<{ history: FacilityHistoryEntry[] }>(response);
+  return data.history;
 }

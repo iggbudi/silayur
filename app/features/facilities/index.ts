@@ -2,8 +2,9 @@
  * Public API slice `facilities` — satu-satunya pintu impor dari luar slice.
  */
 
-export { facilitySummary, setFacilityStatus } from "./api";
+export { facilityHistory, facilitySummary, setFacilityStatus } from "./api";
 export type {
+  FacilityHistoryEntry,
   FacilityStatusCounts,
   FacilityStatusInput,
   FacilityStatusRow,

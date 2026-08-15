@@ -44,3 +44,8 @@ export type FacilityStatusSummary = {
   counts: FacilityStatusCounts;
   updatedAt: string | null;
 };
+
+/** Satu entri riwayat status fasilitas pada suatu tanggal. */
+export type FacilityHistoryEntry = FacilityStatusRow & {
+  facilityName: string;
+};

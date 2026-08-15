@@ -8,8 +8,10 @@ import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SessionGate } from "../components/session-gate";
 import { todayIsoDate } from "../../shared/date";
 import {
+  facilityHistory,
   facilitySummary,
   setFacilityStatus,
+  type FacilityHistoryEntry,
   type FacilityStatusSummary,
   type FacilityStatusValue,
 } from "../features/facilities";
@@ -31,6 +33,7 @@ export default function FacilitiesPage() {
   } = useMobileSidebar();
 
   const [summary, setSummary] = useState<FacilityStatusSummary | null>(null);
+  const [history, setHistory] = useState<FacilityHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,6 +50,8 @@ export default function FacilitiesPage() {
     void (async () => {
       try {
         await loadData();
+        const h = await facilityHistory(30);
+        if (!cancelled) setHistory(h);
         if (!cancelled) setError("");
       } catch (caught) {
         if (!cancelled) {
@@ -238,6 +243,38 @@ export default function FacilitiesPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Riwayat status lintas hari */}
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Riwayat status</h2>
+            <span className="updated-label">30 catatan terakhir</span>
+          </div>
+          {history.length === 0 ? (
+            <p className="facility-empty">Belum ada catatan status fasilitas.</p>
+          ) : (
+            <ul className="facility-history">
+              {history.map((entry) => (
+                <li key={entry.id} className="facility-history-row">
+                  <span className="facility-history-date">
+                    {entry.date}
+                  </span>
+                  <strong>{entry.facilityName}</strong>
+                  <span
+                    className={`facility-status facility-status-${entry.status}`}
+                  >
+                    {statusLabel[entry.status]}
+                  </span>
+                  {entry.note ? (
+                    <small className="facility-history-note">
+                      “{entry.note}”
+                    </small>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </section>
     </main>
