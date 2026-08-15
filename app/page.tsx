@@ -57,6 +57,25 @@ const currency = new Intl.NumberFormat("id-ID", {
 
 const numberFormat = new Intl.NumberFormat("id-ID");
 
+/**
+ * Format angka Rupiah ringkas untuk tengah donut: nilai besar disingkat
+ * (M = juta, M = miliar dibedakan dari konteks; di sini "jt" dan "M").
+ * Contoh: 1.234.567 → "Rp 1,23 jt"; 1.234.567.890 → "Rp 1,23 M".
+ */
+function formatCompact(amount: number): string {
+  if (amount >= 1_000_000_000) {
+    return `Rp ${(amount / 1_000_000_000).toLocaleString("id-ID", {
+      maximumFractionDigits: 2,
+    })} M`;
+  }
+  if (amount >= 1_000_000) {
+    return `Rp ${(amount / 1_000_000).toLocaleString("id-ID", {
+      maximumFractionDigits: 1,
+    })} jt`;
+  }
+  return currency.format(amount).replace(/,00$/, "");
+}
+
 /** Warna donut per bucket komposisi pendapatan (cycle bila lebih banyak). */
 const REVENUE_COLORS = ["green", "blue", "purple", "orange", "red"] as const;
 const REVENUE_CSS: Record<string, string> = {
@@ -731,14 +750,12 @@ export default function DashboardPage() {
                     >
                       <div>
                         <strong>
-                          {currency
-                            .format(
-                              revenueBreakdown.reduce(
-                                (sum, bucket) => sum + bucket.amount,
-                                0,
-                              ),
-                            )
-                            .replace(/,00$/, "")}
+                          {formatCompact(
+                            revenueBreakdown.reduce(
+                              (sum, bucket) => sum + bucket.amount,
+                              0,
+                            ),
+                          )}
                         </strong>
                         <span>total hari ini</span>
                       </div>

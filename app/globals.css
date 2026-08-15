@@ -737,22 +737,23 @@
   border-radius: 50%;
   display: flex;
   flex: 0 0 auto;
-  height: 116px;
+  height: 140px;
   justify-content: center;
   position: relative;
-  width: 116px;
+  width: 140px;
 }
 
 .donut::after {
   background: #fff;
   border-radius: 50%;
   content: "";
-  height: 70px;
+  height: 86px;
   position: absolute;
-  width: 70px;
+  width: 86px;
 }
 
 .donut > div {
+  max-width: 76px;
   position: relative;
   text-align: center;
   z-index: 1;
@@ -764,13 +765,18 @@
 }
 
 .donut strong {
-  font-size: 20px;
-  letter-spacing: -0.04em;
+  font-size: clamp(12px, 4.5vw, 17px);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .donut span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
+  margin-top: 2px;
 }
 
 .donut-status {
@@ -4368,48 +4374,107 @@
   list-style: none;
 }
 
-.complaint-row {
-  align-items: flex-start;
-  border-top: 1px solid var(--line);
+.complaint-btn {
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
+.complaint-btn-primary {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.complaint-btn-primary:hover {
+  background: var(--forest);
+}
+
+.complaint-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--forest);
+}
+
+.complaint-btn-ghost:hover {
+  background: var(--green-soft);
+}
+
+.complaint-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
   display: flex;
-  gap: 14px;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+}
+
+.complaint-card-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: space-between;
-  padding: 12px 2px;
 }
 
-.complaint-row:first-child {
-  border-top: 0;
+.complaint-card-head strong {
+  color: var(--ink);
+  font-size: 0.98rem;
+  min-width: 0;
 }
 
-.complaint-row strong {
-  display: block;
-  font-size: 0.95rem;
+.complaint-card-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
 }
 
-.complaint-row small {
+.complaint-card-meta > span:first-child {
   color: var(--muted);
-  display: block;
   font-size: 0.78rem;
-  margin-top: 3px;
 }
 
 .complaint-desc {
   color: var(--muted);
   font-size: 0.85rem;
-  margin: 6px 0 0;
+  margin: 0;
 }
 
-.complaint-actions {
-  align-items: flex-end;
+.complaint-card-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .complaint-priority {
-  color: var(--muted);
-  font-size: 0.72rem;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 9px;
+}
+
+.complaint-priority-high {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  color: #b3261e;
+}
+
+.complaint-priority-medium {
+  background: var(--orange-soft);
+  color: #8a5a0d;
+}
+
+.complaint-priority-low {
+  background: var(--green-soft);
+  color: var(--forest);
 }
 
 .complaint-history {
@@ -4451,14 +4516,17 @@
 }
 
 @media (max-width: 620px) {
-  .complaint-row {
+  .complaint-card-meta {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .complaint-actions {
-    align-items: flex-start;
-    flex-direction: row;
-    flex-wrap: wrap;
+  .complaint-card-actions {
+    width: 100%;
+  }
+
+  .complaint-card-actions .complaint-btn {
+    flex: 1 1 auto;
   }
 }
 
@@ -4488,9 +4556,8 @@
   align-items: center;
   border-top: 1px solid var(--line);
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px 2px;
 }
 
@@ -4503,6 +4570,7 @@
   display: flex;
   gap: 10px;
   min-width: 0;
+  width: 100%;
 }
 
 .facility-main strong {
@@ -4517,9 +4585,29 @@
   margin-top: 2px;
 }
 
+.facility-name-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.facility-name-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.facility-name-line strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .facility-status {
   border-radius: 999px;
   display: inline-block;
+  flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 600;
   padding: 3px 10px;
@@ -4545,7 +4633,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-left: auto;
+  width: 100%;
 }
 
 .facility-actions input {

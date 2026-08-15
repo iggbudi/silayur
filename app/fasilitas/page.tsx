@@ -186,18 +186,20 @@ export default function FacilitiesPage() {
                   <span className="facility-symbol" aria-hidden="true">
                     ◇
                   </span>
-                  <div>
-                    <strong>{facility.name}</strong>
+                  <div className="facility-name-wrap">
+                    <div className="facility-name-line">
+                      <strong>{facility.name}</strong>
+                      <span
+                        className={`facility-status facility-status-${facility.status}`}
+                      >
+                        {statusLabel[facility.status]}
+                      </span>
+                    </div>
                     {facility.detail ? (
                       <small>{facility.detail}</small>
                     ) : null}
                   </div>
                 </div>
-                <span
-                  className={`facility-status facility-status-${facility.status}`}
-                >
-                  {statusLabel[facility.status]}
-                </span>
                 {canManageFacilities ? (
                   <div className="facility-actions">
                     <input

@@ -306,38 +306,42 @@ export default function ComplaintsPage() {
             <ul className="complaint-list">
               {complaints.map((complaint) => (
                 <li key={complaint.id}>
-                  <div className="complaint-row">
-                    <div>
+                  <div className="complaint-card">
+                    <div className="complaint-card-head">
                       <strong>{complaint.title}</strong>
-                      <small>
+                      <span
+                        className={`complaint-status complaint-status-${complaint.status}`}
+                      >
+                        {statusLabel[complaint.status]}
+                      </span>
+                    </div>
+                    <div className="complaint-card-meta">
+                      <span>
                         {complaint.category || "Tanpa kategori"} · oleh{" "}
                         {complaint.reportedByName ?? complaint.reportedBy} ·{" "}
                         {new Date(complaint.reportedAt).toLocaleTimeString(
                           "id-ID",
                           { hour: "2-digit", minute: "2-digit" },
                         )}
-                      </small>
-                      {complaint.description ? (
-                        <p className="complaint-desc">{complaint.description}</p>
-                      ) : null}
-                    </div>
-                    <div className="complaint-actions">
-                      <span
-                        className={`complaint-status complaint-status-${complaint.status}`}
-                      >
-                        {statusLabel[complaint.status]}
                       </span>
-                      <span className="complaint-priority">
+                      <span
+                        className={`complaint-priority complaint-priority-${complaint.priority}`}
+                      >
                         {complaint.priority === "high"
                           ? "Prioritas tinggi"
                           : complaint.priority === "low"
                             ? "Prioritas rendah"
                             : "Prioritas sedang"}
                       </span>
+                    </div>
+                    {complaint.description ? (
+                      <p className="complaint-desc">{complaint.description}</p>
+                    ) : null}
+                    <div className="complaint-card-actions">
                       {canManageComplaints && NEXT_STATUS[complaint.status] ? (
                         <button
                           type="button"
-                          className="complaint-btn complaint-btn-ghost"
+                          className="complaint-btn complaint-btn-primary"
                           onClick={() => void handleAdvance(complaint)}
                         >
                           Lanjut ke {statusLabel[NEXT_STATUS[complaint.status]!]}
