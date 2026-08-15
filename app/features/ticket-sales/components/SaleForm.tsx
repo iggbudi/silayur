@@ -2,7 +2,11 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import type { TicketProduct } from "../../../../shared/config";
-import { effectivePriceFor, todayIsoDate } from "../../../../shared/date";
+import {
+  dayTypeForWithHolidays,
+  effectivePriceFor,
+  todayIsoDate,
+} from "../../../../shared/date";
 import type { Sale, SaleInput, SaleInputItem } from "../types";
 import { createSale } from "../api";
 import { listHolidays } from "../../holidays";
@@ -44,6 +48,14 @@ export function SaleForm({
     };
   }, []);
 
+  const dayType = dayTypeForWithHolidays(previewDate, holidayDates);
+  const isHoliday = holidayDates.includes(previewDate);
+  const dayTypeLabel = isHoliday
+    ? "Hari libur — tarif akhir pekan"
+    : dayType === "weekend"
+      ? "Akhir pekan — tarif weekend"
+      : "Hari kerja — tarif weekday";
+
   const totalAmount = activeProducts.reduce((sum, p) => {
     const qty = items[p.id] ?? 0;
     return (
@@ -52,6 +64,9 @@ export function SaleForm({
     );
   }, 0);
   const totalQuantity = Object.values(items).reduce((a, b) => a + b, 0);
+  const purchasableCount = activeProducts.filter(
+    (p) => effectivePriceFor(p, previewDate, holidayDates) !== null,
+  ).length;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,6 +96,7 @@ export function SaleForm({
 
   return (
     <form className="sale-form" onSubmit={handleSubmit}>
+      <span className="sale-form-daytype">{dayTypeLabel}</span>
       <div className="sale-form-grid">
         {activeProducts.map((product) => {
           const qty = items[product.id] ?? 0;
@@ -89,21 +105,28 @@ export function SaleForm({
             previewDate,
             holidayDates,
           );
+          const unavailable = activePrice === null;
           return (
-            <div key={product.id} className="sale-form-row">
+            <div
+              key={product.id}
+              className={`sale-form-row ${
+                unavailable ? "sale-form-row-unavailable" : ""
+              }`}
+            >
               <div className="sale-form-product">
                 <strong>{product.name}</strong>
                 <small>
                   {activePrice
                     ? `${currency.format(activePrice.price)} (${activePrice.dayType === "weekday" ? "weekday" : "weekend"})`
-                    : "Belum ada tarif aktif"}
+                    : "Tarif belum dikonfigurasi — tanyakan admin"}
                 </small>
               </div>
               <input
                 type="number"
                 min="0"
                 max="999"
-                value={qty}
+                value={unavailable ? 0 : qty}
+                disabled={unavailable}
                 onChange={(event) => {
                   const next = Number(event.target.value);
                   setItems({ ...items, [product.id]: Number.isFinite(next) && next > 0 ? next : 0 });
@@ -127,8 +150,15 @@ export function SaleForm({
           {totalQuantity} tiket ·{" "}
           <strong>{currency.format(totalAmount)}</strong>
         </span>
-        <button type="submit" disabled={submitting || totalQuantity === 0}>
-          {submitting ? "Menyimpan…" : "Catat Penjualan"}
+        <button
+          type="submit"
+          disabled={submitting || totalQuantity === 0 || purchasableCount === 0}
+        >
+          {submitting
+            ? "Menyimpan…"
+            : purchasableCount === 0
+              ? "Belum ada tarif aktif"
+              : "Catat Penjualan"}
         </button>
       </div>
       {error ? (

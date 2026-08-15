@@ -3423,6 +3423,242 @@
   color: #8fe3b0;
 }
 
+/* ===== Penjualan tiket: summary, form, history ===== */
+
+.today-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 0 18px;
+}
+
+.today-summary > div {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.today-summary span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.today-summary strong {
+  color: var(--ink);
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.sale-form {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin: 0 0 18px;
+  padding: 18px;
+}
+
+.sale-form-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.sale-form-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 10px 2px;
+}
+
+.sale-form-row:first-child {
+  border-top: 0;
+}
+
+.sale-form-product {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sale-form-product strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.sale-form-product small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.sale-form-row input[type="number"] {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  text-align: center;
+  width: 84px;
+}
+
+.sale-form-row input[type="number"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sale-form-row-unavailable small {
+  color: var(--red);
+}
+
+.sale-form-notes {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.sale-form-notes span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.sale-form-notes textarea {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 10px;
+  resize: vertical;
+}
+
+.sale-form-summary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.sale-form-summary span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.sale-form-summary strong {
+  color: var(--forest);
+  font-size: 1.05rem;
+}
+
+.sale-form-summary button {
+  background: var(--green);
+  border: 0;
+  border-radius: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 650;
+  padding: 10px 18px;
+}
+
+.sale-form-summary button:hover:not(:disabled) {
+  background: var(--forest);
+}
+
+.sale-form-summary button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sale-form-daytype {
+  background: var(--purple-soft);
+  border-radius: 999px;
+  color: var(--purple);
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin: 10px 0 0;
+  padding: 4px 10px;
+}
+
+.sale-form-error {
+  background: var(--red-soft);
+  border-radius: 10px;
+  color: var(--red);
+  font-size: 0.85rem;
+  margin: 12px 0 0;
+  padding: 9px 12px;
+}
+
+.sale-history {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sale-history-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 2px;
+}
+
+.sale-history-row:first-child {
+  border-top: 0;
+}
+
+.sale-history-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sale-history-row strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.sale-history-row small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.sale-history-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+@media (max-width: 620px) {
+  .today-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .sale-form-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sale-form-row input[type="number"] {
+    width: 100%;
+  }
+}
+
 .finance-form {
   display: flex;
   flex-wrap: wrap;

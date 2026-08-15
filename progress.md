@@ -663,6 +663,31 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   dayTypeForWithHolidays, effectivePriceFor holiday), `db:generate` no-op,
   smoke API (anon 401, admin CRUD 200, viewer 403) pada DB lokal.
 
+## Perbaikan UI Penjualan (15 Agustus 2026)
+
+- **CSS fitur penjualan ternyata belum ada** di `app/globals.css` (hanya
+  sebagian kecil `.sale-history-actions`/`.sale-action-button`/`.sale-status-*`)
+  — halaman `/penjualan` tampil tanpa styling. Ditambahkan blok lengkap:
+  `.today-summary` (3 kartu rekap), `.sale-form` (grid produk, catatan,
+  ringkasan, error), `.sale-history` (row, status, empty) + responsif < 620px,
+  memakai token yang ada (`--panel`, `--line`, `--green`, `--forest`, dll).
+- **`SaleForm` UX diperbaiki**:
+  - Produk tanpa tarif aktif → input qty dinonaktifkan + pesan "Tarif belum
+    dikonfigurasi — tanyakan admin" (sebelumnya tetap bisa diisi lalu submit
+    gagal di server).
+  - Label jenis hari: "Hari kerja — tarif weekday" / "Akhir pekan — tarif
+    weekend" / "Hari libur — tarif akhir pekan" (menggunakan
+    `dayTypeForWithHolidays`).
+  - Tombol submit disable saat tidak ada produk yang bisa dibeli, teks berubah
+    "Belum ada tarif aktif".
+- **Data tarif lokal dilengkapi** via `db:seed-demo-extras` (guard anti-remote):
+  tarif Anak weekday Rp 10.000 & weekend Rp 12.000 aktif, tarif weekend Dewasa
+  Rp 20.000 diaktifkan — kini kedua produk bisa dijual di hari apa pun.
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), test
+  ticket-sales 8/8 pass, verifikasi end-to-end: login 200, `/penjualan` 200,
+  asset 200, POST sale (2 Dewasa + 1 Anak = Rp 52.000, receipt
+  `RCP-20260815-0001`) sukses, history GET 200 (data uji dihapus setelahnya).
+
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1
