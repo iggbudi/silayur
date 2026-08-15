@@ -841,7 +841,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="complaint-list">
                     {recentComplaintList.map((complaint) => (
-                      <div key={complaint.id}>
+                      <div key={complaint.id} className="complaint-list-row">
                         <time>
                           {new Date(complaint.reportedAt).toLocaleTimeString(
                             "id-ID",

@@ -961,7 +961,7 @@
 }
 
 .facility-list > .facility-list-row:first-child,
-.complaint-list > div:first-child {
+.complaint-list > .complaint-list-row:first-child {
   border-top: 0;
 }
 
@@ -998,7 +998,7 @@
   color: #a66b13;
 }
 
-.complaint-list > div {
+.complaint-list > .complaint-list-row {
   align-items: center;
   border-top: 1px solid #efedf6;
   display: grid;
@@ -1007,16 +1007,16 @@
   min-height: 43px;
 }
 
-.complaint-list time {
+.complaint-list-row time {
   color: #8d88a3;
   font-size: 11px;
 }
 
-.complaint-list span {
+.complaint-list-row span {
   font-size: 12px;
 }
 
-.complaint-list strong {
+.complaint-list-row strong {
   color: var(--red);
   font-size: 11px;
 }
@@ -4335,6 +4335,61 @@
 
 .complaint-workspace {
   gap: 18px;
+}
+
+.complaint-notice {
+  background: var(--success-soft);
+  border: 1px solid rgba(30, 138, 90, 0.25);
+  border-radius: 12px;
+  color: #14633f;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+}
+
+.complaint-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+.complaint-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.complaint-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.complaint-form label > span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.complaint-form input,
+.complaint-form select {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 9px 11px;
+  width: 100%;
+}
+
+.complaint-form input:focus,
+.complaint-form select:focus {
+  border-color: var(--green);
+  outline: none;
+}
+
+.complaint-form button {
+  align-self: end;
+  justify-self: start;
 }
 
 .complaint-status {
