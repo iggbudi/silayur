@@ -780,6 +780,31 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
 - Tanpa dependency baru; hasil rapi di kertas/PDF.
 - Validasi: type-check hijau, lint 0 error (warning pre-existing).
 
+## Enam Fitur Pelengkap (15 Agustus 2026)
+
+1. **Riwayat transaksi lintas tanggal di `/penjualan`** — date picker di
+   header; `listSalesByDate` di slice ticket-sales; judul riwayat dinamis.
+2. **Filter status eksplisit di `/laporan`** — dropdown status penjualan
+   (Semua/Selesai/Menunggu void/Dibatalkan) pada detail hari; label
+   "dibatalkan" pada baris voided.
+3. **Riwayat status fasilitas lintas hari** — `listFacilityStatusHistory` +
+   route `/api/facilities/history` + panel "Riwayat status" (30 catatan
+   terakhir) di `/fasilitas`.
+4. **Advance sale / selected_date** — `SaleForm` punya input tanggal
+   kunjungan; preview harga & submit memakai `visitDate`; route `/api/sales`
+   POST menerima `visitDate`; `SaleInput.visitDate`.
+5. **Riwayat transisi status komplain** — tabel `complaint_history` +
+   migration `0002_complaint_history` (pg); catat entri saat create & ubah
+   status; route `/api/complaints/[id]/history`; tombol "Riwayat" + panel di
+   `/complaints`; test baru.
+6. **Kalender libur nasional** — script `db:seed-holidays` (idempotent)
+   mengisi 13 libur nasional Indonesia 2026 ke `holidays`; tarif weekend
+   otomatis berlaku di tanggal merah.
+
+Validasi: type-check hijau, lint 0 error (warning pre-existing), test
+per-slice lulus (ticket-sales 8, complaints 5 dgn history, facilities 4,
+finance 4), seed holidays idempotent (13 inserted → 0/13 existing).
+
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1

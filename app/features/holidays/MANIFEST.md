@@ -42,4 +42,5 @@ Pengaturan → Hari libur (RBAC `settings` manage).
 - [x] Schema + migration 0010 (lokal; rollout remote menunggu otorisasi).
 - [x] Slice lengkap (types, repo, api, index) + test logic-level.
 - [x] Route + RBAC + UI Pengaturan + wire `priceSale` & `SaleForm`.
-- [ ] Sinkronisasi kalender libur nasional otomatis — future (saat ini manual).
+- [x] Seed libur nasional Indonesia 2026 (`db:seed-holidays`, idempotent) —
+      15 Agt 2026; daftar tahun berikutnya ditambah di script.
