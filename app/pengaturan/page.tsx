@@ -65,11 +65,11 @@ const sections: Array<{
   },
   {
     key: "hours",
-    label: "Jam operasional",
-    eyebrow: "Kalender",
-    description: "Buat jadwal normal, akhir pekan, atau hari khusus.",
-    icon: "◷",
-    addLabel: "Tambah jadwal",
+    label: "Daftar tugas harian",
+    eyebrow: "Operasional",
+    description: "Atur daftar pekerjaan harian untuk buka dan tutup taman.",
+    icon: "✓",
+    addLabel: "Tambah tugas",
   },
   {
     key: "holidays",

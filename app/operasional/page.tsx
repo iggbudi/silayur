@@ -171,8 +171,8 @@ export default function OperationsPage() {
             </li>
             <li>
               <strong>Catatan:</strong> daftar tugas ini diatur oleh admin di
-              menu Pengaturan → Jam operasional. Hubungi admin bila ada tugas
-              yang perlu ditambah atau diubah.
+              menu Pengaturan → Daftar tugas harian. Hubungi admin bila ada
+              tugas yang perlu ditambah atau diubah.
             </li>
           </ul>
         </section>
@@ -195,7 +195,7 @@ export default function OperationsPage() {
           {status && status.items.length === 0 ? (
             <p className="operations-empty">
               Belum ada tugas. Minta admin menambahkan jadwal operasional di
-              Pengaturan &gt; Jam operasional.
+              Pengaturan &gt; Daftar tugas harian.
             </p>
           ) : null}
 
@@ -277,7 +277,7 @@ export default function OperationsPage() {
           <div className="panel-heading">
             <h2>Daftar tugas tersedia</h2>
             <span className="updated-label">
-              Diatur admin di Pengaturan &gt; Jam operasional
+              Diatur admin di Pengaturan &gt; Daftar tugas harian
             </span>
           </div>
           <p className="operations-empty">

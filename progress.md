@@ -593,7 +593,8 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   `(checklist_id, date)` WIB, `done` boolean, kolom audit (`recordedBy`,
   `recordedAt`, `note`). Upsert per hari.
 - **Sumber checklist** = `config_items` section `hours` yang `active`
-  (dikelola di Pengaturan → Jam operasional). Item belum dicatat dianggap
+  (dikelola di Pengaturan → Daftar tugas harian; sebelumnya "Jam
+  operasional"). Item belum dicatat dianggap
   `done: false`; progress = `doneCount / totalCount`.
 - **Slice baru `app/features/operations/`** (types, repo, api, index,
   MANIFEST, test) — `upsertOperationsChecklist` (validasi item hours aktif),

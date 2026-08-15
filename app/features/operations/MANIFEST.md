@@ -16,7 +16,8 @@ dan dashboard.
 - **RBAC**: view = `operations` ≥ view; catat/ubah = `operations` = manage.
 - **Tanggal**: `date` = WIB `YYYY-MM-DD`; `recordedAt` = ISO UTC.
 - **Jam operasional** (section `hours`) tetap bermakna jadwal; di halaman
-  ditampilkan read-only sebagai info, bukan checklist terpisah.
+  disebut "Daftar tugas harian" dan ditampilkan read-only sebagai info,
+  bukan checklist terpisah.
 
 ## Anggota slice
 
