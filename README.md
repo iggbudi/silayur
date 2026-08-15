@@ -84,6 +84,20 @@ Metadata Sites berada di `.openai/hosting.json`. Deployment sengaja tidak
 dijalankan selama verifikasi lokal; lakukan migration dan konfigurasi password
 database target sebelum menerbitkan versi baru.
 
+### Menjalankan di lokal (database file)
+
+```bash
+npm run start:local
+```
+
+Menjalankan build lalu server standalone (Node) di `http://localhost:3000`.
+Mode ini memakai database file lokal (`.data/silayur.db` sesuai `.env`) dan
+mendukung semua fitur. Login demo: `admin.resepsionis` / `SilayurLocal-2026!`
+(password sesuai `SILAYUR_SEED_ADMIN_PASSWORD` di `.env`).
+
+> `npm run dev` memakai workerd (Miniflare) yang **tidak** mendukung database
+> file `file:` — gunakan hanya saat `.env` menunjuk Turso remote.
+
 ## Dokumentasi
 
 - [`AGENTS.md`](./AGENTS.md) — pedoman kerja agent: workflow sprint, aturan kode & keamanan.
