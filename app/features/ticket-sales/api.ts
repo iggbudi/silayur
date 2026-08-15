@@ -38,6 +38,18 @@ export async function listTodaySales(): Promise<ListSalesResponse> {
   return parseJson<ListSalesResponse>(response);
 }
 
+/** List transaksi pada tanggal kalender WIB tertentu (YYYY-MM-DD). */
+export async function listSalesByDate(
+  dateIso: string,
+): Promise<ListSalesResponse> {
+  const response = await fetch(`/api/sales?date=${encodeURIComponent(dateIso)}`, {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  return parseJson<ListSalesResponse>(response);
+}
+
 export async function requestVoid(
   saleId: string,
   reason: string,

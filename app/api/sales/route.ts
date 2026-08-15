@@ -43,8 +43,13 @@ export async function POST(request: Request) {
     const db = await getRequestDb();
     const actor = await requireRequestUser(db, request);
     await assertCanViewVisitors(db, actor.id);
-    const input = await readJsonBody<SaleInput>(request);
-    const sale = await createSale(db, input, actor.id);
+    const input = await readJsonBody<SaleInput & { visitDate?: string }>(request);
+    const sale = await createSale(
+      db,
+      input,
+      actor.id,
+      input.visitDate || undefined,
+    );
     return jsonOk(sale, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     return jsonError(error, statusFor(error));

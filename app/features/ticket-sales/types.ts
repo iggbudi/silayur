@@ -56,6 +56,8 @@ export type SaleInputItem = {
 export type SaleInput = {
   items: SaleInputItem[];
   notes?: string;
+  /** Tanggal kunjungan (WIB YYYY-MM-DD). Default: hari ini. */
+  visitDate?: string;
 };
 
 /**

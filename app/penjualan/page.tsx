@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
 import { Brand } from "../components/brand";
@@ -15,7 +15,7 @@ import {
   SaleHistory,
   TodaySummary,
   approveVoid,
-  listTodaySales,
+  listSalesByDate,
   requestVoid,
   type Sale,
 } from "../features/ticket-sales";
@@ -30,6 +30,7 @@ export default function PenjualanPage() {
   const { open: mobileMenuOpen, close: closeMobileMenu, toggle: toggleMobileMenu } = useMobileSidebar();
   const [products, setProducts] = useState<TicketProduct[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(() => todayIsoDate());
   const [summary, setSummary] = useState<{ date: string; count: number; revenue: number }>({
     date: todayIsoDate(),
     count: 0,
@@ -42,19 +43,22 @@ export default function PenjualanPage() {
   const [voidPassword, setVoidPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const loadDay = useCallback(async (date: string) => {
+    const list = await listSalesByDate(date);
+    setSales(list.sales);
+    setSummary({ date: list.date, count: list.count, revenue: list.revenue });
+    setError("");
+  }, []);
+
   useEffect(() => {
     if (!authReady || !session) return;
     let cancelled = false;
     void (async () => {
       try {
-        const [config, list] = await Promise.all([
-          fetchRemoteConfig(),
-          listTodaySales(),
-        ]);
+        const config = await fetchRemoteConfig();
         if (cancelled) return;
         setProducts(config.ticketProducts);
-        setSales(list.sales);
-        setSummary({ date: list.date, count: list.count, revenue: list.revenue });
+        await loadDay(selectedDate);
         setError("");
       } catch (caught) {
         if (cancelled) return;
@@ -66,7 +70,7 @@ export default function PenjualanPage() {
     return () => {
       cancelled = true;
     };
-  }, [authReady, session]);
+  }, [authReady, session, selectedDate, loadDay]);
 
   if (!authReady) {
     return <SessionGate title="Memuat penjualan…" />;
@@ -91,10 +95,7 @@ export default function PenjualanPage() {
   }
 
   async function refreshSales() {
-    const list = await listTodaySales();
-    setSales(list.sales);
-    setSummary({ date: list.date, count: list.count, revenue: list.revenue });
-    setError("");
+    await loadDay(selectedDate);
   }
 
   function openVoidModal(saleId: string, kind: "request" | "approve") {
@@ -188,8 +189,22 @@ export default function PenjualanPage() {
         <header className="topbar">
           <div className="title-line">
             <h1>Penjualan Tiket</h1>
-            <span className="section-kicker">Transaksi hari ini</span>
+            <span className="section-kicker">Transaksi &amp; riwayat</span>
           </div>
+          <label className="sale-date-filter">
+            <span>Tanggal</span>
+            <input
+              type="date"
+              value={selectedDate}
+              max={todayIsoDate()}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setSelectedDate(e.target.value);
+                  setLoading(true);
+                }
+              }}
+            />
+          </label>
         </header>
 
         <TodaySummary date={summary.date} count={summary.count} revenue={summary.revenue} />
@@ -227,7 +242,7 @@ export default function PenjualanPage() {
 
         <section className="panel">
           <div className="panel-heading">
-            <h2>Riwayat hari ini</h2>
+            <h2>Riwayat transaksi</h2>
             <button
               type="button"
               onClick={() => {

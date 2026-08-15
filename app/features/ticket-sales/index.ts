@@ -15,6 +15,7 @@
 export {
   createSale,
   listTodaySales,
+  listSalesByDate,
   requestVoid,
   approveVoid,
   type CreateSaleResponse,

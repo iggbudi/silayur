@@ -29,9 +29,10 @@ export function SaleForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [holidayDates, setHolidayDates] = useState<string[]>([]);
+  const [visitDate, setVisitDate] = useState<string>(() => todayIsoDate());
 
   const activeProducts = products.filter((p) => p.active);
-  const previewDate = todayIsoDate();
+  const previewDate = visitDate;
 
   useEffect(() => {
     let cancelled = false;
@@ -78,7 +79,7 @@ export function SaleForm({
       setError("Pilih minimal satu tiket.");
       return;
     }
-    const input: SaleInput = { items: inputItems, notes };
+    const input: SaleInput = { items: inputItems, notes, visitDate };
     setSubmitting(true);
     try {
       const sale = await createSale(input);
@@ -97,6 +98,17 @@ export function SaleForm({
   return (
     <form className="sale-form" onSubmit={handleSubmit}>
       <span className="sale-form-daytype">{dayTypeLabel}</span>
+      <label className="sale-form-visit">
+        <span>Tanggal kunjungan</span>
+        <input
+          type="date"
+          value={visitDate}
+          min={todayIsoDate()}
+          onChange={(e) => {
+            if (e.target.value) setVisitDate(e.target.value);
+          }}
+        />
+      </label>
       <div className="sale-form-grid">
         {activeProducts.map((product) => {
           const qty = items[product.id] ?? 0;
