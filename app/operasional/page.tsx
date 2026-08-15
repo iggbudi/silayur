@@ -134,10 +134,10 @@ export default function OperationsPage() {
             <h1>Operasional</h1>
             <span className="section-kicker">
               {status
-                ? `${numberFormat.format(status.doneCount)} dari ${numberFormat.format(
+                ? `Daftar tugas harian · ${numberFormat.format(status.doneCount)} dari ${numberFormat.format(
                     status.totalCount,
-                  )} checklist selesai`
-                : "Checklist harian"}
+                  )} selesai`
+                : "Daftar tugas harian"}
             </span>
           </div>
         </header>
@@ -153,9 +153,33 @@ export default function OperationsPage() {
           </p>
         ) : null}
 
+        {/* Panduan singkat untuk pengguna */}
+        <section className="panel operations-guide">
+          <div className="panel-heading">
+            <h2>Panduan singkat</h2>
+          </div>
+          <ul className="operations-guide-list">
+            <li>
+              <strong>Apa ini?</strong> Daftar pekerjaan harian untuk
+              menyiapkan dan menutup taman — misalnya cek kebersihan,
+              menyiapkan uang loket, atau memastikan fasilitas siap.
+            </li>
+            <li>
+              <strong>Cara pakai:</strong> centang <em>Selesai</em> setiap
+              tugas yang sudah dikerjakan. Tambahkan catatan bila perlu.
+              Tugas yang belum dikerjakan tampil berstatus <em>Belum</em>.
+            </li>
+            <li>
+              <strong>Catatan:</strong> daftar tugas ini diatur oleh admin di
+              menu Pengaturan → Jam operasional. Hubungi admin bila ada tugas
+              yang perlu ditambah atau diubah.
+            </li>
+          </ul>
+        </section>
+
         <section className="panel">
           <div className="panel-heading">
-            <h2>Checklist buka dan tutup hari ini</h2>
+            <h2>Daftar tugas hari ini</h2>
             {status?.updatedAt ? (
               <span className="updated-label">
                 Diperbarui{" "}
@@ -170,7 +194,7 @@ export default function OperationsPage() {
           {loading ? <p className="operations-empty">Memuat…</p> : null}
           {status && status.items.length === 0 ? (
             <p className="operations-empty">
-              Belum ada item checklist. Tambahkan jadwal operasional di
+              Belum ada tugas. Minta admin menambahkan jadwal operasional di
               Pengaturan &gt; Jam operasional.
             </p>
           ) : null}
@@ -251,13 +275,17 @@ export default function OperationsPage() {
 
         <section className="panel">
           <div className="panel-heading">
-            <h2>Jadwal operasional</h2>
+            <h2>Daftar tugas tersedia</h2>
             <span className="updated-label">
-              Dikelola di Pengaturan &gt; Jam operasional
+              Diatur admin di Pengaturan &gt; Jam operasional
             </span>
           </div>
+          <p className="operations-empty">
+            Ini daftar tugas yang bisa dikerjakan hari ini. Bila ada tugas
+            yang perlu ditambah atau diubah, hubungi admin.
+          </p>
           {status && status.items.length === 0 ? (
-            <p className="operations-empty">Belum ada jadwal terdaftar.</p>
+            <p className="operations-empty">Belum ada tugas terdaftar.</p>
           ) : (
             <div className="operations-schedule">
               {status?.items.map((item) => (

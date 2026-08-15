@@ -4798,6 +4798,28 @@
   gap: 18px;
 }
 
+.operations-guide {
+  background: var(--surface-soft, rgba(90, 72, 214, 0.05));
+}
+
+.operations-guide-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.operations-guide-list li {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.operations-guide-list strong {
+  color: var(--forest);
+}
+
 .operations-notice {
   background: var(--success-soft);
   border: 1px solid rgba(30, 138, 90, 0.25);
