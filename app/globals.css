@@ -951,7 +951,7 @@
   margin-top: 13px;
 }
 
-.facility-list > div {
+.facility-list > .facility-list-row {
   align-items: center;
   border-top: 1px solid #efedf6;
   display: grid;
@@ -960,7 +960,7 @@
   min-height: 43px;
 }
 
-.facility-list > div:first-child,
+.facility-list > .facility-list-row:first-child,
 .complaint-list > div:first-child {
   border-top: 0;
 }

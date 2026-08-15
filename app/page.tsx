@@ -805,7 +805,7 @@ export default function DashboardPage() {
 
                 <div className="facility-list">
                   {facility?.facilities.map((facilityItem) => (
-                    <div key={facilityItem.id}>
+                    <div key={facilityItem.id} className="facility-list-row">
                       <span className="facility-symbol" aria-hidden="true">
                         ◇
                       </span>
