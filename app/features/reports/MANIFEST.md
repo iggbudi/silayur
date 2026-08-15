@@ -47,5 +47,6 @@ dasar halaman `/laporan` (nav "Laporan" yang sebelumnya dead link).
 
 - [x] `rangeReport` — agregasi rentang (4 query paralel, grouping per hari WIB).
 - [x] Test logic-level (voided, approved-only, boundary WIB, sesi open/closed).
-- [ ] Export CSV / print — belum dikerjakan (di luar scope versi pertama).
+- [x] Cetak / PDF — print-friendly (`window.print()` + CSS `@media print`,
+      header cetak, sembunyikan UI) — 15 Agt 2026.
 - [ ] Filter status eksplisit (mis. hanya voided) — belum dikerjakan.

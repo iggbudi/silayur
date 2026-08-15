@@ -767,6 +767,19 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   route void), test finance **4/4 pass** (2 test baru: void revenue eksklusi
   summary + audit, void expense eksklusi system cash + cegah double-void).
 
+## Cetak/PDF Laporan (15 Agustus 2026)
+
+- **Halaman `/laporan`**: tombol "Cetak / PDF" di header (muncul saat report
+  ada) memanggil `window.print()` — user bisa pilih printer atau "Save as
+  PDF" dari dialog print browser.
+- **CSS `@media print`** di `app/globals.css`: sembunyikan sidebar, topbar,
+  form rentang, preset, tombol, dan detail hari; tampilkan header cetak
+  (judul "SILAYUR Park — Laporan Operasional" + rentang + tanggal cetak),
+  KPI, tabel sesi kas, dan rincian per hari dengan border rapi;
+  `break-inside: avoid` agar panel tidak terpotong antar halaman.
+- Tanpa dependency baru; hasil rapi di kertas/PDF.
+- Validasi: type-check hijau, lint 0 error (warning pre-existing).
+
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan
     upsert inkremental atomik (`ON CONFLICT ... DO UPDATE SET seq = seq + 1

@@ -235,11 +235,29 @@ export default function LaporanPage() {
       </aside>
 
       <section className="workspace report-workspace">
+        {/* Header cetak — hanya tampil saat print/PDF */}
+        <div className="report-print-header">
+          <h1>SILAYUR Park — Laporan Operasional</h1>
+          <p>
+            Rentang: {formatDate(appliedFrom)} — {formatDate(appliedTo)} ·{" "}
+            Dicetak {new Date().toLocaleString("id-ID")}
+          </p>
+        </div>
+
         <header className="topbar">
           <div className="title-line">
             <h1>Laporan</h1>
             <span className="section-kicker">Rekap operasional</span>
           </div>
+          {report ? (
+            <button
+              type="button"
+              className="finance-btn finance-btn-primary report-print-btn"
+              onClick={() => window.print()}
+            >
+              Cetak / PDF
+            </button>
+          ) : null}
         </header>
 
         {error ? (

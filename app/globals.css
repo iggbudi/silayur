@@ -4824,3 +4824,107 @@
   background: var(--red);
   color: #ffffff;
 }
+
+/* --- Laporan: header cetak & print-friendly --- */
+
+.report-print-header {
+  display: none;
+}
+
+.report-print-btn {
+  margin-left: auto;
+}
+
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .sidebar,
+  .mobile-menu-btn,
+  .sidebar-backdrop,
+  .topbar,
+  .report-range-form,
+  .report-presets,
+  .report-print-btn,
+  .report-day-detail,
+  .prototype-note,
+  .footer {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+  }
+
+  .workspace {
+    padding: 0 !important;
+  }
+
+  .report-print-header {
+    display: block !important;
+    margin-bottom: 14px;
+  }
+
+  .report-print-header h1 {
+    color: #000;
+    font-size: 1.3rem;
+    margin: 0 0 4px;
+  }
+
+  .report-print-header p {
+    color: #333;
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  .panel {
+    break-inside: avoid;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .report-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .report-kpi-card {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  .report-table-wrap {
+    overflow: visible !important;
+  }
+
+  .report-table {
+    font-size: 0.72rem;
+    width: 100%;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+  }
+
+  .report-row-selected {
+    background: transparent !important;
+  }
+
+  .finance-empty,
+  .sale-form-error {
+    color: #333 !important;
+  }
+
+  .report-daily-table tbody tr {
+    cursor: default !important;
+  }
+}
