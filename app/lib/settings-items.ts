@@ -7,6 +7,7 @@ import type {
 export type SettingsSectionKey =
   | "modules"
   | ConfigSectionKey
+  | "holidays"
   | "users";
 
 export type SettingsItem = {

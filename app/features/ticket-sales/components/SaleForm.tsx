@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { TicketProduct } from "../../../../shared/config";
 import { effectivePriceFor, todayIsoDate } from "../../../../shared/date";
 import type { Sale, SaleInput, SaleInputItem } from "../types";
 import { createSale } from "../api";
+import { listHolidays } from "../../holidays";
 
 const currency = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -23,13 +24,32 @@ export function SaleForm({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [holidayDates, setHolidayDates] = useState<string[]>([]);
 
   const activeProducts = products.filter((p) => p.active);
   const previewDate = todayIsoDate();
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const holidays = await listHolidays();
+        if (!cancelled) setHolidayDates(holidays.map((h) => h.date));
+      } catch {
+        if (!cancelled) setHolidayDates([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const totalAmount = activeProducts.reduce((sum, p) => {
     const qty = items[p.id] ?? 0;
-    return sum + (effectivePriceFor(p, previewDate)?.price ?? 0) * qty;
+    return (
+      sum +
+      (effectivePriceFor(p, previewDate, holidayDates)?.price ?? 0) * qty
+    );
   }, 0);
   const totalQuantity = Object.values(items).reduce((a, b) => a + b, 0);
 
@@ -64,7 +84,11 @@ export function SaleForm({
       <div className="sale-form-grid">
         {activeProducts.map((product) => {
           const qty = items[product.id] ?? 0;
-          const activePrice = effectivePriceFor(product, previewDate);
+          const activePrice = effectivePriceFor(
+            product,
+            previewDate,
+            holidayDates,
+          );
           return (
             <div key={product.id} className="sale-form-row">
               <div className="sale-form-product">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { canManage, canView } from "./lib/access";
 import { putRemoteConfig } from "./lib/config-api";
@@ -16,6 +17,7 @@ import { financeSummary, listRevenue } from "./features/finance";
 import type { RevenueEntry } from "./features/finance";
 import { recentComplaints, type Complaint } from "./features/complaints";
 import { facilitySummary, type FacilityStatusSummary } from "./features/facilities";
+import { operationsStatus, type OperationsStatus } from "./features/operations";
 import type { ConfigItem } from "../shared/config";
 import { todayIsoDate } from "../shared/date";
 import {
@@ -190,6 +192,7 @@ export default function DashboardPage() {
   >(null);
   const [openComplaints, setOpenComplaints] = useState<number | null>(null);
   const [facility, setFacility] = useState<FacilityStatusSummary | null>(null);
+  const [operations, setOperations] = useState<OperationsStatus | null>(null);
 
   const currentUser = session?.user ?? null;
   const access = session?.access ?? NO_ACCESS;
@@ -206,6 +209,7 @@ export default function DashboardPage() {
   const showFinance = modules.finance && canView(access.finance);
   const showComplaints = modules.complaints && canView(access.complaints);
   const showFacilities = modules.facilities && canView(access.facilities);
+  const showOperations = modules.operations && canView(access.operations);
 
   useEffect(() => {
     if (!authReady || !session || !showVisitors) return;
@@ -295,11 +299,27 @@ export default function DashboardPage() {
     };
   }, [authReady, session, showFacilities]);
 
+  useEffect(() => {
+    if (!authReady || !session || !showOperations) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await operationsStatus();
+        if (cancelled) return;
+        setOperations(data);
+      } catch {
+        if (!cancelled) setOperations(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, session, showOperations]);
+
   const metrics = useMemo(() => {
     if (!canViewDashboard) return [];
 
     const items = [];
-    const showOperations = modules.operations && canView(access.operations);
 
     if (showVisitors) {
       items.push(
@@ -334,7 +354,11 @@ export default function DashboardPage() {
           value={
             facility ? numberFormat.format(facility.counts.operational) : "—"
           }
-          suffix="dari 3"
+          suffix={
+            facility
+              ? `dari ${numberFormat.format(facility.facilities.length)}`
+              : undefined
+          }
           note={
             facility
               ? `${numberFormat.format(
@@ -353,8 +377,18 @@ export default function DashboardPage() {
         <MetricCard
           key="operations"
           eyebrow="Status operasional"
-          value="—"
-          note="Modul operasional belum tersedia"
+          value={
+            operations
+              ? `${numberFormat.format(operations.doneCount)}/${numberFormat.format(
+                  operations.totalCount,
+                )}`
+              : "—"
+          }
+          note={
+            operations
+              ? "Checklist operasional selesai"
+              : "Belum ada data checklist"
+          }
           icon="✓"
           tone="orange"
         />,
@@ -419,7 +453,7 @@ export default function DashboardPage() {
     }
 
     return items;
-  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance, showComplaints, openComplaints, facility, showFacilities]);
+  }, [access, canViewDashboard, modules, summary, finance, showVisitors, showFinance, showComplaints, openComplaints, facility, showFacilities, operations, showOperations]);
 
   async function persistModules(next: ModuleState) {
     setSaveError("");
@@ -481,10 +515,10 @@ export default function DashboardPage() {
         />
 
         <div className="sidebar-card">
-          <span className="sidebar-card-icon">☀</span>
-          <strong>31°C</strong>
-          <p>Cerah berawan</p>
-          <small>Ngaliyan, Semarang</small>
+          <span className="sidebar-card-icon">✓</span>
+          <strong>Hari ini</strong>
+          <p>Data operasional dari transaksi nyata</p>
+          <small>Silayur Park</small>
         </div>
 
         <div className="sidebar-footer">
@@ -519,7 +553,7 @@ export default function DashboardPage() {
                 <h1>Dashboard Operasional</h1>
                 <span className="live-pill">
                   <i />
-                  Penjualan live
+                  Data hari ini
                 </span>
               </div>
               <p>Ringkasan kondisi Silayur Park hari ini</p>
@@ -527,10 +561,10 @@ export default function DashboardPage() {
           </div>
 
           <div className="top-actions">
-            <button className="date-button" type="button">
+            <span className="date-button date-button-static">
               <span aria-hidden="true">□</span>
               {formatTodayWib()}
-            </button>
+            </span>
             {canManageSettings ? (
               <button
                 className={`settings-button ${settingsOpen ? "settings-active" : ""}`}
@@ -541,13 +575,6 @@ export default function DashboardPage() {
                 Atur modul
               </button>
             ) : null}
-            <button
-              className="notification-button"
-              type="button"
-              aria-label="Notifikasi belum tersedia"
-            >
-              ♢
-            </button>
           </div>
         </header>
 
@@ -562,7 +589,7 @@ export default function DashboardPage() {
         ) : null}
 
         {settingsOpen && canManageSettings ? (
-          <section className="module-panel" aria-label="Simulasi aktivasi modul">
+          <section className="module-panel" aria-label="Aktivasi modul">
             <div className="module-panel-heading">
               <div>
                 <span className="section-kicker">Mode konfigurasi</span>
@@ -637,7 +664,9 @@ export default function DashboardPage() {
                     <span className="section-kicker">Kondisi hari ini</span>
                     <h2>Status operasional</h2>
                   </div>
-                  <button type="button">Lihat detail</button>
+                  <Link className="panel-link" href="/fasilitas">
+                    Lihat detail
+                  </Link>
                 </div>
 
                 <div className="status-content">
@@ -782,7 +811,9 @@ export default function DashboardPage() {
                     <span className="section-kicker">Layanan pengunjung</span>
                     <h2>Komplain terbaru</h2>
                   </div>
-                  <button type="button">Semua komplain</button>
+                  <Link className="panel-link" href="/complaints">
+                    Semua komplain
+                  </Link>
                 </div>
 
                 {recentComplaintList === null ||

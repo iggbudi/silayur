@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   dayTypeFor,
+  dayTypeForWithHolidays,
   eachDateInRange,
   effectivePriceFor,
   isValidDateIso,
@@ -137,4 +138,31 @@ test("effectivePriceFor prefers the latest validFrom when periods overlap", () =
   ]);
   assert.equal(effectivePriceFor(ticket, "2026-07-27")?.price, 15000);
   assert.equal(effectivePriceFor(ticket, "2026-09-01")?.price, 17500);
+});
+
+test("dayTypeForWithHolidays treats configured holidays as weekend", () => {
+  const holidayDates = new Set(["2026-08-17", "2026-12-25"]);
+  assert.equal(dayTypeForWithHolidays(WEEKDAY, holidayDates), "weekday");
+  assert.equal(dayTypeForWithHolidays(WEEKEND, holidayDates), "weekend");
+  assert.equal(
+    dayTypeForWithHolidays("2026-08-17", holidayDates),
+    "weekend",
+    "hari libur weekday menjadi weekend",
+  );
+  assert.equal(dayTypeForWithHolidays("2026-08-16", holidayDates), "weekend", "Sabtu tetap weekend");
+  assert.equal(dayTypeForWithHolidays("2026-08-16", []), "weekend");
+});
+
+test("effectivePriceFor applies holiday tariff when holidayDates provided", () => {
+  const ticket = product([
+    { id: "p1", ticketProductId: "ticket-adult", dayType: "weekday", price: 15000, validFrom: "2026-01-01", validUntil: null, active: true },
+    { id: "p2", ticketProductId: "ticket-adult", dayType: "weekend", price: 20000, validFrom: "2026-01-01", validUntil: null, active: true },
+  ]);
+  const holidays = new Set(["2026-08-17"]);
+  // Weekday biasa → tarif weekday.
+  assert.equal(effectivePriceFor(ticket, "2026-08-10", holidays)?.price, 15000);
+  // Hari libur (weekday) → tarif weekend.
+  assert.equal(effectivePriceFor(ticket, "2026-08-17", holidays)?.price, 20000);
+  // Tanpa data holiday, tanggal libur tetap weekday.
+  assert.equal(effectivePriceFor(ticket, "2026-08-17")?.price, 15000);
 });

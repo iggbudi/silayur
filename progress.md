@@ -1,14 +1,17 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **14 Agustus 2026** — halaman Laporan baru: rekap lintas
-tanggal (penjualan, pemasukan non-tiket, pengeluaran, sesi kas) + rincian per
-hari; nav "Laporan" aktif dari sidebar.
+Pembaruan terakhir: **15 Agustus 2026** — quick wins dashboard (tombol mati
+di-wire, label jujur), modal void penjualan menggantikan `window.prompt()`,
+dan kalender hari libur (tarif weekend untuk tanggal libur, dikelola di
+Pengaturan).
 
 ## Status Saat Ini
 
 - Implementasi dan verifikasi lokal CP11: **selesai**
 - Fitur void transaksi (permintaan + persetujuan manajer/supervisor): **selesai**
 - Modul keuangan — pemasukan non-tiket, pengeluaran + persetujuan, rekap kas shift: **selesai**
+- Modul Operasional — checklist harian: **selesai** (15 Agustus 2026)
+- Kalender hari libur — tarif weekend untuk tanggal libur: **selesai** (15 Agustus 2026)
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`
@@ -570,6 +573,84 @@ Daftar lengkap: [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md).
   menunggu otorisasi owner** (AGENTS.md).
 - Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
   pass (termasuk test baru `facilities`), smoke manual.
+
+## Modul Operasional — Checklist Harian (15 Agustus 2026)
+
+- **Tabel `operations_checklist`** baru di `db/schema.ts` + migration
+  `drizzle/0009_checkpoint_18_operations.sql` — satu baris per
+  `(checklist_id, date)` WIB, `done` boolean, kolom audit (`recordedBy`,
+  `recordedAt`, `note`). Upsert per hari.
+- **Sumber checklist** = `config_items` section `hours` yang `active`
+  (dikelola di Pengaturan → Jam operasional). Item belum dicatat dianggap
+  `done: false`; progress = `doneCount / totalCount`.
+- **Slice baru `app/features/operations/`** (types, repo, api, index,
+  MANIFEST, test) — `upsertOperationsChecklist` (validasi item hours aktif),
+  `listOperationsChecklist` (item aktif + status per tanggal),
+  `operationsStatus` (items + doneCount/totalCount/updatedAt).
+- **RBAC baru** `assertCanViewOperations` / `assertCanManageOperations`
+  (`db/config-repo.ts`); route thin handler `app/api/operations/` (GET
+  status, POST upsert, same-origin + auth + RBAC).
+- **Halaman `/operasional`** + **nav "Operasional" diaktifkan** (sebelumnya
+  dead link/tombol mati). Checklist buka-tutup harian + progress bar + panel
+  "Jadwal operasional" read-only (dari Pengaturan). `operations=manage` bisa
+  menandai; view hanya lihat.
+- **Dashboard di-wire**: KPI "Status operasional" memakai `operationsStatus`
+  (doneCount/totalCount) — menggantikan nilai "—" dan "Modul operasional
+  belum tersedia". Label stale `aria-label="Simulasi aktivasi modul"` →
+  "Aktivasi modul".
+- **Perbaikan test sensitif hari**: dua test `ticket-sales` (`createSale is
+  atomic`, `listSalesByDate/todaySummary`) kini mengaktifkan tarif weekend
+  dulu (deterministik di hari apa pun), mengikuti pola test lain.
+- **CSS** `.operations-*` di `app/globals.css`.
+- Migration 0009 hanya dijalankan di DB lokal/test; **rollout Turso remote
+  menunggu otorisasi owner** (AGENTS.md).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  **42/42 pass**, `db:generate` no-op, smoke API (anon 401, admin 200,
+  upsert persist, manager 200, viewer 403) pada DB lokal.
+
+## Quick Wins Dashboard + Modal Void (15 Agustus 2026)
+
+- **Dashboard `app/page.tsx`**:
+  - Tombol mati di-wire: "Lihat detail" → `/fasilitas` dan "Semua komplain" →
+    `/complaints` (kini `Link`).
+  - Kartu cuaca hardcoded ("31°C Cerah berawan Ngaliyan") diganti kartu
+    jujur "Hari ini — Data operasional dari transaksi nyata".
+  - Label "Penjualan live" → "Data hari ini" (data di-fetch sekali, bukan
+    live stream).
+  - Tombol tanggal & lonceng notifikasi yang tidak berfungsi dihapus;
+    tanggal ditampilkan sebagai teks statis (`date-button-static`).
+  - KPI "Fasilitas aktif" `suffix="dari 3"` hardcoded → total fasilitas
+    real (`facility.facilities.length`).
+- **Modal void penjualan** (`app/penjualan/page.tsx`): `window.prompt()`
+  diganti modal proper (pola `/keuangan`): form alasan + password, tombol
+  Batal/konfirmasi, state submitting, close via overlay. Menutup rekomendasi
+  ASESMEN #2 untuk halaman penjualan.
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  pass.
+
+## Kalender Hari Libur (15 Agustus 2026)
+
+- **Tabel `holidays`** baru di `db/schema.ts` + migration
+  `drizzle/0010_checkpoint_19_holidays.sql` — satu baris per tanggal WIB
+  (unique `date`), kolom `name`, `createdBy`, `createdAt`.
+- **Slice baru `app/features/holidays/`** (types, repo, api, index,
+  MANIFEST, test) — `listHolidays`, `listHolidayDates`, `upsertHoliday`
+  (idempotent per tanggal), `deleteHoliday`.
+- **Route `app/api/holidays/route.ts`** (GET/POST/DELETE) — RBAC
+  `settings` manage.
+- **Penentuan tarif**: helper baru `dayTypeForWithHolidays` +
+  `effectivePriceFor(product, date, holidayDates)` di `shared/date.ts`;
+  `priceSale` (server) membaca `holidays` sehingga tanggal libur weekday
+  memakai tarif weekend. Preview client `SaleForm` fetch holidays agar
+  konsisten.
+- **UI Pengaturan** → section baru "Hari libur": form tanggal + nama,
+  daftar, tombol hapus (hanya `settings` manage; view hanya lihat).
+- Migration 0010 hanya dijalankan di DB lokal/test; **rollout Turso remote
+  menunggu otorisasi owner** (AGENTS.md).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing), `npm test`
+  **48/48 pass** (6 test baru: holidays repo ×3, priceSale holiday,
+  dayTypeForWithHolidays, effectivePriceFor holiday), `db:generate` no-op,
+  smoke API (anon 401, admin CRUD 200, viewer 403) pada DB lokal.
 
 - [x] **P1 #4 — Receipt sequence bebas race condition**
   - Tabel baru `receipt_counters` (counter per hari kalender WIB) dengan

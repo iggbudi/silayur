@@ -32,6 +32,7 @@ import {
   type SettingsItem as ConfigItem,
   type SettingsSectionKey as SectionKey,
 } from "../lib/settings-items";
+import { createHoliday, listHolidays, removeHoliday, type Holiday } from "../features/holidays";
 import type {
   ConfigItemsState,
   TicketProduct,
@@ -69,6 +70,14 @@ const sections: Array<{
     description: "Buat jadwal normal, akhir pekan, atau hari khusus.",
     icon: "◷",
     addLabel: "Tambah jadwal",
+  },
+  {
+    key: "holidays",
+    label: "Hari libur",
+    eyebrow: "Kalender",
+    description: "Tanggal libur khusus yang memakai tarif akhir pekan.",
+    icon: "★",
+    addLabel: "",
   },
   {
     key: "facilities",
@@ -137,6 +146,7 @@ const initialItems: Record<SectionKey, ConfigItem[]> = {
   ],
   tickets: [],
   hours: [],
+  holidays: [],
   facilities: [],
   revenue: [],
   users: [],
@@ -199,6 +209,11 @@ export default function SettingsPage() {
     "Turso: memeriksa… (Checkpoint 11)",
   );
   const [persistError, setPersistError] = useState("");
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [holidayDate, setHolidayDate] = useState("");
+  const [holidayName, setHolidayName] = useState("");
+  const [holidayError, setHolidayError] = useState("");
+  const [holidayNotice, setHolidayNotice] = useState("");
 
   const section = sections.find((item) => item.key === activeSection)!;
   const currentItems = items[activeSection];
@@ -258,6 +273,14 @@ export default function SettingsPage() {
     }
 
     void syncAll();
+    void (async () => {
+      try {
+        const list = await listHolidays();
+        if (!cancelled) setHolidays(list);
+      } catch {
+        if (!cancelled) setHolidays([]);
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -322,6 +345,43 @@ export default function SettingsPage() {
         item.detail.toLowerCase().includes(normalized),
     );
   }, [currentItems, query]);
+
+  async function handleAddHoliday() {
+    setHolidayError("");
+    setHolidayNotice("");
+    try {
+      const created = await createHoliday({
+        date: holidayDate,
+        name: holidayName,
+      });
+      setHolidays((prev) =>
+        [...prev.filter((h) => h.date !== created.date), created].sort(
+          (a, b) => b.date.localeCompare(a.date),
+        ),
+      );
+      setHolidayDate("");
+      setHolidayName("");
+      setHolidayNotice(`Hari libur ${created.date} disimpan.`);
+    } catch (caught) {
+      setHolidayError(
+        caught instanceof Error ? caught.message : "Gagal menyimpan hari libur.",
+      );
+    }
+  }
+
+  async function handleRemoveHoliday(date: string) {
+    setHolidayError("");
+    setHolidayNotice("");
+    try {
+      await removeHoliday(date);
+      setHolidays((prev) => prev.filter((h) => h.date !== date));
+      setHolidayNotice(`Hari libur ${date} dihapus.`);
+    } catch (caught) {
+      setHolidayError(
+        caught instanceof Error ? caught.message : "Gagal menghapus hari libur.",
+      );
+    }
+  }
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -698,7 +758,13 @@ export default function SettingsPage() {
     event.preventDefault();
     if (!canManageSettings) return;
     if (!newName.trim()) return;
-    if (activeSection === "modules" || activeSection === "users") return;
+    if (
+      activeSection === "modules" ||
+      activeSection === "users" ||
+      activeSection === "holidays"
+    ) {
+      return;
+    }
 
     const nextItem: ConfigItem = {
       id: `item-${crypto.randomUUID()}`,
@@ -975,7 +1041,7 @@ export default function SettingsPage() {
               </form>
             ) : null}
 
-            {activeSection !== "tickets" ? (
+            {activeSection !== "tickets" && activeSection !== "holidays" ? (
             <div className="settings-toolbar">
               <label>
                 <span aria-hidden="true">⌕</span>
@@ -1004,9 +1070,84 @@ export default function SettingsPage() {
               />
             ) : null}
 
+            {activeSection === "holidays" ? (
+              <div className="holiday-panel">
+                <div className="panel-heading">
+                  <h2>Kalender hari libur</h2>
+                  <span className="updated-label">
+                    Tanggal libur memakai tarif akhir pekan
+                  </span>
+                </div>
+                {holidayNotice ? (
+                  <p className="finance-notice" role="status">
+                    {holidayNotice}
+                  </p>
+                ) : null}
+                {holidayError ? (
+                  <p className="sale-form-error" role="alert">
+                    {holidayError}
+                  </p>
+                ) : null}
+                {canManageSettings ? (
+                  <div className="holiday-form">
+                    <label className="modal-field">
+                      <span>Tanggal</span>
+                      <input
+                        type="date"
+                        value={holidayDate}
+                        onChange={(e) => setHolidayDate(e.target.value)}
+                      />
+                    </label>
+                    <label className="modal-field">
+                      <span>Nama libur (opsional)</span>
+                      <input
+                        type="text"
+                        placeholder="Mis. Tahun Baru"
+                        value={holidayName}
+                        onChange={(e) => setHolidayName(e.target.value)}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="finance-btn finance-btn-primary"
+                      disabled={!holidayDate}
+                      onClick={() => void handleAddHoliday()}
+                    >
+                      Tambah hari libur
+                    </button>
+                  </div>
+                ) : null}
+                <div className="holiday-list">
+                  {holidays.length === 0 ? (
+                    <p className="holiday-empty">Belum ada hari libur.</p>
+                  ) : (
+                    holidays.map((holiday) => (
+                      <div className="holiday-row" key={holiday.id}>
+                        <div className="holiday-main">
+                          <strong>{holiday.date}</strong>
+                          <span>{holiday.name || "Hari libur"}</span>
+                        </div>
+                        {canManageSettings ? (
+                          <button
+                            type="button"
+                            className="holiday-remove"
+                            onClick={() => void handleRemoveHoliday(holiday.date)}
+                          >
+                            Hapus
+                          </button>
+                        ) : null}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : null}
+
             <div
               className={`config-list ${
-                activeSection === "users" || activeSection === "tickets"
+                activeSection === "users" ||
+                activeSection === "tickets" ||
+                activeSection === "holidays"
                   ? "config-list-hidden"
                   : ""
               }`}

@@ -17,8 +17,10 @@ Sistem tersusun dari **3 alur fungsional yang sudah hidup** dan beberapa yang
 |---|---|---|
 | **Penjualan Tiket** (ticket-sales) | ✅ Fungsional penuh (form, riwayat, summary, void) | `/penjualan` |
 | **Keuangan** (finance) | ✅ Fungsional (pemasukan, pengeluaran+approval, shift kas) | `/keuangan` |
-| **Dashboard** | ⚠️ Sebagian (KPI tiket+keuangan benar; panel fasilitas & komplain **hardcoded**) | `/` |
-| **Operasional, Fasilitas, Komplain** | ❌ Belum ada halaman/fitur sungguhan | (di sidebar) |
+| **Dashboard** | ✅ Sebagian besar real (KPI tiket, keuangan, fasilitas, komplain, operasional) | `/` |
+| **Operasional** (operations) | ✅ Fungsional (checklist buka-tutup harian + jadwal) — selesai 15 Agt 2026 | `/operasional` |
+| **Fasilitas** (facilities) | ✅ Fungsional (status harian) — selesai 14 Agt 2026 | `/fasilitas` |
+| **Komplain** (complaints) | ✅ Fungsional (alur open → resolved) — selesai 14 Agt 2026 | `/complaints` |
 | **Pengaturan** (settings) | ✅ Fungsional (role/permission/pengguna/master tiket/tarif) | `/pengaturan` |
 
 ---
@@ -128,12 +130,19 @@ Role di DB: `super_admin`, `manager`, `supervisor`, `ticket_officer`,
    14 Agt 2026**: panel "Komplain terbaru" + KPI "Komplain terbuka" kini
    data nyata dari modul `/complaints`. ✅ **Fasilitas selesai 14 Agt 2026**:
    donut "Status operasional" + panel "Kesiapan fasilitas" + KPI fasilitas
-   kini data nyata dari modul `/fasilitas` (status harian). Sisa: modul
-   Operasional (checklist).
+   kini data nyata dari modul `/fasilitas` (status harian). ✅ **Operasional
+   selesai 15 Agt 2026**: KPI "Status operasional" + halaman `/operasional`
+   (checklist buka-tutup harian, sumber item dari Pengaturan → Jam
+   operasional).
 2. **Ganti semua `window.prompt()`** dengan modal/form dialog yang proper
    (void reason, void password, close shift declared cash, dst.).
+   ✅ **Selesai 15 Agt 2026**: void penjualan kini pakai modal proper
+   (`app/penjualan/page.tsx`) + setor kas sudah modal sejak 14 Agt 2026.
 3. **(Urgent) Lengkapi tarif**: seed tarif anak + aktifkan tarif weekend, atau
-   tambahkan kalender hari libur.
+   tambahkan kalender hari libur. ✅ **Kalender hari libur selesai 15 Agt 2026**:
+   section "Hari libur" di Pengaturan — tanggal libur memakai tarif weekend
+   (`priceSale` + preview client konsisten). Seed tarif anak & aktivasi
+   weekend tersedia via `db:seed-demo-extras`.
 4. **Seed user untuk semua role** yang ingin didemokan (setidaknya
    `finance_officer`, `supervisor`) agar RBAC bisa benar-benar diuji.
 5. **Tambah riwayat/filter lintas tanggal** untuk penjualan & keuangan agar

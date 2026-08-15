@@ -4254,3 +4254,318 @@
     width: 100%;
   }
 }
+
+/* --- Operasional (halaman /operasional + dashboard) --- */
+
+.operations-workspace {
+  gap: 18px;
+}
+
+.operations-notice {
+  background: var(--success-soft);
+  border: 1px solid rgba(30, 138, 90, 0.25);
+  border-radius: 12px;
+  color: #14633f;
+  font-size: 0.9rem;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+}
+
+.operations-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+.operations-progress {
+  background: var(--surface-soft, rgba(90, 72, 214, 0.06));
+  border-radius: 12px;
+  margin: 4px 0 6px;
+  padding: 12px 14px;
+}
+
+.operations-progress-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.operations-progress-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.operations-progress-head strong {
+  color: var(--purple);
+  font-size: 0.92rem;
+}
+
+.operations-track {
+  background: #eae8f4;
+  border-radius: 99px;
+  height: 7px;
+  margin-top: 9px;
+  overflow: hidden;
+}
+
+.operations-track span {
+  background: linear-gradient(90deg, #5a48d6, #8b7cf4);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.operations-list {
+  margin-top: 8px;
+}
+
+.operations-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 2px;
+}
+
+.operations-row:first-child {
+  border-top: 0;
+}
+
+.operations-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.operations-main strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.operations-main small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.operations-note {
+  color: var(--orange);
+  font-style: italic;
+}
+
+.operations-status {
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.operations-status-done {
+  background: var(--success-soft, rgba(30, 138, 90, 0.12));
+  color: #14633f;
+}
+
+.operations-status-pending {
+  background: var(--orange-soft, rgba(237, 146, 16, 0.12));
+  color: #8a5a0d;
+}
+
+.operations-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operations-actions input {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 7px 10px;
+  width: 220px;
+}
+
+.operations-btn {
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  padding: 7px 14px;
+}
+
+.operations-btn-primary {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.operations-btn-primary:hover {
+  background: var(--forest);
+}
+
+.operations-btn-danger {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  border: 1px solid var(--red);
+  color: #b3261e;
+}
+
+.operations-btn-danger:hover {
+  background: var(--red);
+  color: #ffffff;
+}
+
+.operations-schedule {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.operations-schedule > div {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.operations-schedule strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.operations-schedule span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+@media (max-width: 620px) {
+  .operations-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .operations-actions input {
+    width: 100%;
+  }
+
+  .operations-schedule > div {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .operations-schedule span {
+    text-align: left;
+  }
+}
+
+/* --- Dashboard: link panel & tanggal statis (jujur, non-interaktif) --- */
+
+.panel-link {
+  background: var(--purple-soft, rgba(90, 72, 214, 0.08));
+  border: 1px solid rgba(90, 72, 214, 0.2);
+  border-radius: 10px;
+  color: var(--purple);
+  font-size: 0.8rem;
+  font-weight: 650;
+  padding: 7px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.panel-link:hover {
+  background: var(--purple);
+  color: #ffffff;
+}
+
+.date-button-static {
+  cursor: default;
+  opacity: 1;
+}
+
+/* --- Kalender hari libur (Pengaturan) --- */
+
+.holiday-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.holiday-form {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-soft, rgba(90, 72, 214, 0.05));
+  border-radius: 12px;
+}
+
+.holiday-form .modal-field {
+  margin: 0;
+}
+
+.holiday-list {
+  display: grid;
+  gap: 6px;
+}
+
+.holiday-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 2px;
+}
+
+.holiday-row:first-child {
+  border-top: 0;
+}
+
+.holiday-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.holiday-main strong {
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.holiday-main span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.holiday-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 4px 0;
+}
+
+.holiday-remove {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  border: 1px solid var(--red);
+  border-radius: 10px;
+  color: #b3261e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  padding: 6px 12px;
+}
+
+.holiday-remove:hover {
+  background: var(--red);
+  color: #ffffff;
+}

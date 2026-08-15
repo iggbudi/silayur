@@ -20,6 +20,11 @@ import {
   type Sale,
 } from "../features/ticket-sales";
 
+type VoidModal =
+  | { kind: "request"; saleId: string }
+  | { kind: "approve"; saleId: string }
+  | null;
+
 export default function PenjualanPage() {
   const { session, ready: authReady } = useSession();
   const { open: mobileMenuOpen, close: closeMobileMenu, toggle: toggleMobileMenu } = useMobileSidebar();
@@ -32,6 +37,10 @@ export default function PenjualanPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [voidModal, setVoidModal] = useState<VoidModal>(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidPassword, setVoidPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!authReady || !session) return;
@@ -88,39 +97,63 @@ export default function PenjualanPage() {
     setError("");
   }
 
-  async function handleRequestVoid(saleId: string) {
-    const reason = window.prompt("Alasan pembatalan (wajib, minimal 3 karakter):");
-    if (!reason || reason.trim().length < 3) {
+  function openVoidModal(saleId: string, kind: "request" | "approve") {
+    setError("");
+    setVoidReason("");
+    setVoidPassword("");
+    setVoidModal({ kind, saleId });
+  }
+
+  async function handleRequestVoid() {
+    if (!voidModal || voidModal.kind !== "request") return;
+    const reason = voidReason.trim();
+    if (reason.length < 3) {
       setError("Alasan pembatalan wajib diisi (minimal 3 karakter).");
       return;
     }
+    setSubmitting(true);
+    setError("");
     try {
+      await requestVoid(voidModal.saleId, reason);
       if (canApprove) {
-        const password = window.prompt("Konfirmasi password Anda untuk membatalkan:");
-        if (!password) return;
-        await requestVoid(saleId, reason.trim());
-        await approveVoid(saleId, password);
-      } else {
-        await requestVoid(saleId, reason.trim());
+        const password = voidPassword;
+        if (!password) {
+          setError("Konfirmasi password wajib diisi.");
+          setSubmitting(false);
+          return;
+        }
+        await approveVoid(voidModal.saleId, password);
       }
+      setVoidModal(null);
       await refreshSales();
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Gagal membatalkan transaksi.",
       );
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  async function handleApprove(saleId: string) {
-    const password = window.prompt("Konfirmasi password Anda untuk menyetujui pembatalan:");
-    if (!password) return;
+  async function handleApprove() {
+    if (!voidModal || voidModal.kind !== "approve") return;
+    const password = voidPassword;
+    if (!password) {
+      setError("Konfirmasi password wajib diisi.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
     try {
-      await approveVoid(saleId, password);
+      await approveVoid(voidModal.saleId, password);
+      setVoidModal(null);
       await refreshSales();
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Gagal menyetujui pembatalan.",
       );
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -214,11 +247,141 @@ export default function PenjualanPage() {
           <SaleHistory
             sales={sales}
             canApprove={canApprove}
-            onRequestVoid={(saleId) => void handleRequestVoid(saleId)}
-            onApprove={(saleId) => void handleApprove(saleId)}
+            onRequestVoid={(saleId) => openVoidModal(saleId, "request")}
+            onApprove={(saleId) => openVoidModal(saleId, "approve")}
           />
         </section>
       </section>
+
+      {/* Modal permintaan pembatalan */}
+      {voidModal?.kind === "request" ? (
+        <div
+          className="modal-overlay"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setVoidModal(null);
+          }}
+        >
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="void-request-title"
+          >
+            <h2 id="void-request-title">Batalkan transaksi</h2>
+            <p className="modal-subtitle">
+              Masukkan alasan pembatalan{canApprove ? " dan konfirmasi password Anda" : ""}.
+              Pembatalan akan mengurangi total penjualan hari ini.
+            </p>
+            <label className="modal-field">
+              <span>Alasan pembatalan (minimal 3 karakter)</span>
+              <input
+                type="text"
+                autoFocus
+                placeholder="Mis. salah input jumlah"
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
+              />
+            </label>
+            {canApprove ? (
+              <label className="modal-field">
+                <span>Konfirmasi password Anda</span>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={voidPassword}
+                  onChange={(e) => setVoidPassword(e.target.value)}
+                />
+              </label>
+            ) : null}
+            {error ? (
+              <p className="sale-form-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="finance-btn finance-btn-ghost"
+                disabled={submitting}
+                onClick={() => {
+                  setVoidModal(null);
+                  setError("");
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="finance-btn finance-btn-primary"
+                disabled={submitting}
+                onClick={() => void handleRequestVoid()}
+              >
+                {submitting ? "Memproses…" : "Batalkan transaksi"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Modal persetujuan pembatalan */}
+      {voidModal?.kind === "approve" ? (
+        <div
+          className="modal-overlay"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setVoidModal(null);
+          }}
+        >
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="void-approve-title"
+          >
+            <h2 id="void-approve-title">Setujui pembatalan</h2>
+            <p className="modal-subtitle">
+              Konfirmasi password Anda untuk menyetujui pembatalan transaksi.
+            </p>
+            <label className="modal-field">
+              <span>Password Anda</span>
+              <input
+                type="password"
+                autoFocus
+                placeholder="••••••••"
+                value={voidPassword}
+                onChange={(e) => setVoidPassword(e.target.value)}
+              />
+            </label>
+            {error ? (
+              <p className="sale-form-error" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="finance-btn finance-btn-ghost"
+                disabled={submitting}
+                onClick={() => {
+                  setVoidModal(null);
+                  setError("");
+                }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="finance-btn finance-btn-primary"
+                disabled={submitting}
+                onClick={() => void handleApprove()}
+              >
+                {submitting ? "Memproses…" : "Setujui pembatalan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

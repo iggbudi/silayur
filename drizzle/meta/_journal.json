@@ -64,6 +64,20 @@
       "when": 1786716992198,
       "tag": "0008_checkpoint_17_facilities",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1786787145729,
+      "tag": "0009_checkpoint_18_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1786788366336,
+      "tag": "0010_checkpoint_19_holidays",
+      "breakpoints": true
     }
   ]
 }

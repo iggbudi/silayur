@@ -12,6 +12,7 @@ import type {
 type SidebarAccess = Record<PermissionModuleKey, AccessLevel>;
 type ActiveSidebarItem =
   | "dashboard"
+  | "operations"
   | "settings"
   | "penjualan"
   | "keuangan"
@@ -42,6 +43,8 @@ const navigation: NavigationItem[] = [
     icon: "✓",
     key: "operations",
     permission: "operations",
+    href: "/operasional",
+    activeKey: "operations",
   },
   {
     label: "Fasilitas",

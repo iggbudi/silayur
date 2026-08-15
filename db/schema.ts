@@ -440,3 +440,51 @@ export const facilityStatus = sqliteTable(
     ),
   ],
 );
+
+/**
+ * Checklist operasional harian (modul Operasional).
+ * Satu baris per (checklistId, date) WIB — di-upsert saat petugas menandai.
+ * `checklistId` menunjuk config_items section `hours` (item jadwal aktif).
+ */
+export const operationsChecklist = sqliteTable(
+  "operations_checklist",
+  {
+    id: text("id").primaryKey(),
+    /** ID item checklist (ref config_items section `hours`). */
+    checklistId: text("checklist_id")
+      .notNull()
+      .references(() => configItems.id),
+    /** Tanggal kalender WIB (YYYY-MM-DD). */
+    date: text("date").notNull(),
+    done: integer("done", { mode: "boolean" }).notNull().default(false),
+    note: text("note").notNull().default(""),
+    recordedBy: text("recorded_by")
+      .notNull()
+      .references(() => users.id),
+    recordedAt: text("recorded_at").notNull(),
+  },
+  (table) => [
+    index("operations_checklist_item_date_idx").on(
+      table.checklistId,
+      table.date,
+    ),
+  ],
+);
+
+/**
+ * Hari libur khusus (modul tarif) — tanggal WIB yang memakai tarif weekend.
+ * Dikelola di Pengaturan (RBAC settings manage). Satu baris per tanggal.
+ */
+export const holidays = sqliteTable("holidays", {
+  id: text("id").primaryKey(),
+  /** Tanggal kalender WIB (YYYY-MM-DD), unik. */
+  date: text("date").notNull().unique(),
+  /** Nama hari libur (mis. "Tahun Baru"). */
+  name: text("name").notNull().default(""),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});

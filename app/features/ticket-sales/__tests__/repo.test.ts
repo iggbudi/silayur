@@ -134,13 +134,19 @@ test("createSale is atomic: failure leaves no rows and receipt does not advance"
     process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
     delete process.env.TURSO_AUTH_TOKEN;
 
-    const [{ createSale }, { getRequestDb }, { receiptCounters, sales }] =
+    const [{ createSale }, { getRequestDb }, { receiptCounters, sales, ticketPrices }] =
       await Promise.all([
         import(`../repo.ts?atomic=${Date.now()}`),
         import(`../../../../db/get-db?atomic=${Date.now()}`),
         import(`../../../../db/schema?atomic=${Date.now()}`),
       ]);
     const db = await getRequestDb();
+
+    // Deterministik di hari apa pun: aktifkan tarif weekend juga.
+    await db
+      .update(ticketPrices)
+      .set({ active: true })
+      .where(eq(ticketPrices.id, "price-adult-weekend-2026"));
 
     const ok = await createSale(
       db,
@@ -187,13 +193,19 @@ test("listSalesByDate and todaySummary filter by WIB day and status", async () =
     process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
     delete process.env.TURSO_AUTH_TOKEN;
 
-    const [{ createSale, listSalesByDate, todaySummary }, { getRequestDb }, { sales }] =
+    const [{ createSale, listSalesByDate, todaySummary }, { getRequestDb }, { sales, ticketPrices }] =
       await Promise.all([
         import(`../repo.ts?summary=${Date.now()}`),
         import(`../../../../db/get-db?summary=${Date.now()}`),
         import(`../../../../db/schema?summary=${Date.now()}`),
       ]);
     const db = await getRequestDb();
+
+    // Deterministik di hari apa pun: aktifkan tarif weekend juga.
+    await db
+      .update(ticketPrices)
+      .set({ active: true })
+      .where(eq(ticketPrices.id, "price-adult-weekend-2026"));
 
     const first = await createSale(
       db,
@@ -394,6 +406,65 @@ test("requestVoid and approveVoid transition status with audit fields", async ()
     const afterVoid = await todaySummary(db);
     assert.equal(afterVoid.count, 0);
     assert.equal(afterVoid.visitors, 0);
+  } finally {
+    cleanupTempDirectory(dir);
+  }
+});
+
+test("priceSale uses weekend tariff on configured holidays (weekday date)", async () => {
+  const { dir, env } = testDb();
+  try {
+    runScript("scripts/db-migrate.mjs", env);
+    runScript("scripts/db-seed.mjs", env);
+    process.env.TURSO_DATABASE_URL = env.TURSO_DATABASE_URL;
+    delete process.env.TURSO_AUTH_TOKEN;
+
+    const [
+      { priceSale },
+      { getRequestDb },
+      { ticketPrices, holidays },
+    ] = await Promise.all([
+      import(`../repo.ts?holiday=${Date.now()}`),
+      import(`../../../../db/get-db?holiday=${Date.now()}`),
+      import(`../../../../db/schema?holiday=${Date.now()}`),
+    ]);
+    const db = await getRequestDb();
+
+    // Aktifkan tarif weekend agar deterministik.
+    await db
+      .update(ticketPrices)
+      .set({ active: true })
+      .where(eq(ticketPrices.id, "price-adult-weekend-2026"));
+
+    // 2026-08-17 = Senin (weekday) tanpa holiday → tarif weekday.
+    const weekdayPrice = await priceSale(
+      db,
+      [{ ticketProductId: "ticket-adult", quantity: 1 }],
+      "2026-08-17",
+    );
+    assert.equal(weekdayPrice.priced[0].unitPrice, 15000);
+
+    // Jadikan 2026-08-17 hari libur → tarif weekend.
+    await db.insert(holidays).values({
+      id: "hol-test-1",
+      date: "2026-08-17",
+      name: "HUT RI",
+      createdBy: "admin-resepsionis",
+    });
+    const holidayPrice = await priceSale(
+      db,
+      [{ ticketProductId: "ticket-adult", quantity: 1 }],
+      "2026-08-17",
+    );
+    assert.equal(holidayPrice.priced[0].unitPrice, 20000);
+
+    // Hari Sabtu tetap weekend tanpa perlu holiday.
+    const saturday = await priceSale(
+      db,
+      [{ ticketProductId: "ticket-adult", quantity: 1 }],
+      "2026-08-15",
+    );
+    assert.equal(saturday.priced[0].unitPrice, 20000);
   } finally {
     cleanupTempDirectory(dir);
   }

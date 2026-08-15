@@ -7,11 +7,11 @@
 
 import { and, desc, eq, gte, lte, lt, ne, sql } from "drizzle-orm";
 import {
-  dayTypeFor,
+  dayTypeForWithHolidays,
   localDayUtcRange,
   todayIsoDate,
 } from "../../../shared/date";
-import { receiptCounters, saleItems, sales, users, ticketProducts, ticketPrices } from "../../../db/schema";
+import { receiptCounters, saleItems, sales, users, ticketProducts, ticketPrices, holidays } from "../../../db/schema";
 import type { AppDb } from "../../../db/get-db";
 import type { TicketDayType, TicketProduct } from "../../../shared/config";
 import type {
@@ -24,6 +24,12 @@ import type {
 
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
+}
+
+/** Tanggal hari libur khusus (WIB YYYY-MM-DD) untuk penentuan tarif. */
+async function listHolidayDates(db: AppDb): Promise<string[]> {
+  const rows = await db.select({ date: holidays.date }).from(holidays);
+  return rows.map((row) => row.date);
 }
 
 function findEffectivePrice(
@@ -57,7 +63,9 @@ export async function priceSale(
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("Minimal satu item tiket wajib diisi.");
   }
-  const dayType = dayTypeFor(visitDate);
+  // Hari libur khusus memakai tarif weekend (dari kalender holidays).
+  const holidayDates = await listHolidayDates(db);
+  const dayType = dayTypeForWithHolidays(visitDate, holidayDates);
   const priced: PricedItem[] = [];
   let totalAmount = 0;
   let totalQuantity = 0;

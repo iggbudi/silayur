@@ -46,6 +46,23 @@ export function dayTypeFor(dateIso: string): TicketDayType {
 }
 
 /**
+ * Jenis hari dengan mempertimbangkan hari libur khusus: tanggal dalam
+ * `holidayDates` (format `YYYY-MM-DD`) dianggap weekend (tarif libur),
+ * meskipun jatuh pada hari kerja. `dayTypeFor` (tanpa parameter) tetap
+ * tersedia untuk call-site yang tidak butuh data holiday.
+ */
+export function dayTypeForWithHolidays(
+  dateIso: string,
+  holidayDates: Iterable<string>,
+): TicketDayType {
+  if (isWeekend(dateIso)) return "weekend";
+  for (const holiday of holidayDates) {
+    if (holiday === dateIso) return "weekend";
+  }
+  return "weekday";
+}
+
+/**
  * Rentang waktu UTC untuk satu hari kalender WIB (ISO; ujung bawah
  * inklusif, ujung atas eksklusif). Hari WIB dimulai 7 jam lebih awal dari
  * UTC, jadi tanggal D dimulai pukul 17:00 UTC hari sebelumnya.
@@ -119,12 +136,16 @@ export function eachDateInRange(fromIso: string, toIso: string): string[] {
  * dayType yang sesuai dan periode `validFrom`/`validUntil` mencakup tanggal.
  * Bila beberapa periode berlaku, ambil yang mulai paling akhir.
  * Kembali `null` bila belum ada tarif yang berlaku.
+ * `holidayDates` (opsional) membuat tanggal libur memakai tarif weekend.
  */
 export function effectivePriceFor(
   product: TicketProduct,
   dateIso: string,
+  holidayDates?: Iterable<string>,
 ): TicketPrice | null {
-  const dayType = dayTypeFor(dateIso);
+  const dayType = holidayDates
+    ? dayTypeForWithHolidays(dateIso, holidayDates)
+    : dayTypeFor(dateIso);
   const candidates = product.prices
     .filter(
       (price) =>
