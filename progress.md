@@ -191,11 +191,22 @@ Dijalankan pada worktree CP11:
 - [x] Verifikasi aplikasi production setelah deployment CP9.
 - [x] Terapkan migration dan seed CP11 pada database Turso target.
 - [x] Verifikasi master tiket CP11 melalui API lokal terhadap Turso remote.
+- [x] **Terapkan migration 0003–0010 (CP12–CP19) pada database Turso target**
+  (15 Agustus 2026, otorisasi owner): `npm run db:migrate` → semua 11
+  migration terdaftar di `__drizzle_migrations`; 19 tabel ada di remote
+  (termasuk `sales`, `receipt_counters`, `revenue_entries`, `expenses`,
+  `cash_sessions`, `complaints`, `facility_status`, `operations_checklist`,
+  `holidays`). Seed idempotent dijalankan tanpa menimpa data operasional
+  (`adminPasswordConfigured: false`).
+- [x] **Smoke end-to-end di remote** (15 Agustus 2026): login admin →
+  GET `/api/operations`, `/api/facilities`, `/api/complaints`, `/api/sales`,
+  `/api/holidays`, `/api/reports` semua 200; POST checklist operasional
+  tersimpan (lalu data uji dihapus).
 - [ ] Deploy UI CP10–CP11 ke Sites.
 
-Schema CP11 dan master tiket awal sudah tersedia pada database Turso target.
-Aplikasi Sites masih menggunakan deployment UI sebelumnya sampai rollout
-CP10–CP11 dilakukan.
+Schema hingga migration 0010 (CP19) sudah tersedia pada database Turso target
+(terverifikasi via `sqlite_master` + `__drizzle_migrations`). Aplikasi Sites
+masih menggunakan deployment UI sebelumnya sampai rollout CP10–CP11 dilakukan.
 
 ## Pekerjaan Produk yang Belum Dikerjakan
 
