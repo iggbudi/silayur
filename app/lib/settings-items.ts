@@ -19,6 +19,7 @@ export type SettingsItem = {
   moduleKey?: ModuleKey;
   section?: ConfigSectionKey;
   sortOrder?: number;
+  phase?: "buka" | "tutup";
 };
 
 export function toConfigItemsState(
@@ -32,6 +33,7 @@ export function toConfigItemsState(
       detail: item.detail,
       active: item.active,
       sortOrder: item.sortOrder ?? (index + 1) * 10,
+      phase: item.phase,
     }));
 
   return {

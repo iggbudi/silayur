@@ -65,7 +65,7 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     const configCount = await client.query(
       "SELECT COUNT(*) AS c FROM config_items",
     );
-    assert.equal(Number(configCount.rows[0].c), 15);
+    assert.equal(Number(configCount.rows[0].c), 19);
 
     const ticketProducts = await client.query(
       "SELECT code, visitor_category, validity_mode FROM ticket_products ORDER BY visitor_category",

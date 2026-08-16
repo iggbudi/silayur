@@ -8,10 +8,12 @@
 export type OperationsChecklistItem = {
   id: string;
   checklistId: string;
-  /** Nama item dari config (mis. "Jadwal reguler"). */
+  /** Nama item dari config (mis. "Siapkan uang kembalian loket"). */
   name: string;
-  /** Detail item dari config (mis. "Senin-Minggu · 08.00-16.00"). */
+  /** Detail item dari config (deskripsi tugas). */
   detail: string;
+  /** Tahap tugas: buka / tutup (null bila belum ditentukan). */
+  phase: "buka" | "tutup" | null;
   done: boolean;
   note: string;
   recordedBy: string;
@@ -38,12 +40,23 @@ export type OperatingHour = {
   time: string;
 };
 
+/** Satu kelompok checklist per tahap (buka/tutup). */
+export type OperationsGroup = {
+  phase: "buka" | "tutup";
+  label: string;
+  items: OperationsChecklistItem[];
+  doneCount: number;
+  totalCount: number;
+};
+
 /** Ringkasan checklist hari ini (halaman & dashboard). */
 export type OperationsStatus = {
   items: OperationsChecklistItem[];
   doneCount: number;
   totalCount: number;
   updatedAt: string | null;
+  /** Kelompok tugas berdasarkan tahap (Persiapan buka / Penutupan). */
+  groups: OperationsGroup[];
   /** Jam buka taman aktif dari Pengaturan (bisa kosong bila belum diatur). */
   operatingHours: OperatingHour[];
 };

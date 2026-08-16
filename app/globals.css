@@ -5159,6 +5159,73 @@
   text-align: right;
 }
 
+.operations-hours-line {
+  background: var(--surface-soft, rgba(90, 72, 214, 0.06));
+  border: 1px solid rgba(90, 72, 214, 0.16);
+  border-radius: 10px;
+  color: var(--purple);
+  font-size: 0.85rem;
+  margin: 2px 0 10px;
+  padding: 8px 12px;
+}
+
+.operations-group {
+  margin-top: 10px;
+}
+
+.operations-group-head {
+  align-items: baseline;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 2px 4px;
+}
+
+.operations-group-head strong {
+  color: var(--forest);
+  font-size: 0.9rem;
+}
+
+.operations-group-head span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+details.operations-guide > summary {
+  cursor: pointer;
+  color: var(--purple);
+  font-size: 0.88rem;
+  font-weight: 650;
+  list-style: none;
+  padding: 2px 0;
+}
+
+details.operations-guide > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.operations-guide[open] > summary {
+  margin-bottom: 6px;
+}
+
+.config-phase {
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.config-phase-buka {
+  background: var(--success-soft, rgba(30, 138, 90, 0.12));
+  color: #14633f;
+}
+
+.config-phase-tutup {
+  background: rgba(90, 72, 214, 0.12);
+  color: #4f40b8;
+}
+
 @media (max-width: 620px) {
   .operations-actions {
     align-items: flex-start;

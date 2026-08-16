@@ -150,8 +150,8 @@ async function main() {
     for (const item of seedData.configItems) {
       await client.query(
         `INSERT INTO config_items
-         (id, section, name, detail, active, sort_order, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, now(), now())
+         (id, section, name, detail, active, sort_order, phase, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, now(), now())
          ON CONFLICT(id) DO NOTHING`,
         [
           item.id,
@@ -160,6 +160,7 @@ async function main() {
           item.detail,
           item.active,
           item.sortOrder,
+          item.phase || null,
         ],
       );
     }

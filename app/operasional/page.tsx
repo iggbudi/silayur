@@ -152,52 +152,7 @@ export default function OperationsPage() {
           </p>
         ) : null}
 
-        {status && status.operatingHours.length > 0 ? (
-          <section className="panel">
-            <div className="panel-heading">
-              <h2>Jam buka taman</h2>
-              <span className="updated-label">
-                Diatur admin di Pengaturan &gt; Jam buka taman
-              </span>
-            </div>
-            <div className="operations-list">
-              {status.operatingHours.map((hours) => (
-                <div className="operations-row" key={hours.id}>
-                  <div className="operations-main">
-                    <strong>{hours.name}</strong>
-                  </div>
-                  <span className="operations-status operations-status-done">
-                    {hours.time}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* Panduan singkat untuk pengguna */}
-        <section className="panel operations-guide">
-          <div className="panel-heading">
-            <h2>Panduan singkat</h2>
-          </div>
-          <ul className="operations-guide-list">
-            <li>
-              <strong>Apa ini?</strong> Daftar pekerjaan harian untuk
-              menyiapkan dan menutup taman — misalnya cek kebersihan,
-              menyiapkan uang loket, atau memastikan fasilitas siap.
-            </li>
-            <li>
-              <strong>Cara pakai:</strong> centang <em>Selesai</em> setiap
-              tugas yang sudah dikerjakan. Tambahkan catatan bila perlu.
-              Tugas yang belum dikerjakan tampil berstatus <em>Belum</em>.
-            </li>
-            <li>
-              <strong>Catatan:</strong> daftar tugas ini diatur oleh admin di
-              menu Pengaturan → Daftar tugas harian. Hubungi admin bila ada
-              tugas yang perlu ditambah atau diubah.
-            </li>
-          </ul>
-        </section>
+        {/* Panel tugas harian (pemeran utama). Jam buka & panduan dirapikan di bawahnya. */}
 
         <section className="panel">
           <div className="panel-heading">
@@ -213,10 +168,19 @@ export default function OperationsPage() {
             ) : null}
           </div>
 
+          {status && status.operatingHours.length > 0 ? (
+            <p className="operations-hours-line">
+              🕗 Jam buka taman:{" "}
+              {status.operatingHours
+                .map((hours) => `${hours.name} · ${hours.time}`)
+                .join(" · ")}
+            </p>
+          ) : null}
+
           {loading ? <p className="operations-empty">Memuat…</p> : null}
           {status && status.items.length === 0 ? (
             <p className="operations-empty">
-              Belum ada tugas. Minta admin menambahkan jadwal operasional di
+              Belum ada tugas. Minta admin menambahkan daftar tugas harian di
               Pengaturan &gt; Daftar tugas harian.
             </p>
           ) : null}
@@ -236,89 +200,104 @@ export default function OperationsPage() {
             </div>
           ) : null}
 
-          <div className="operations-list">
-            {status?.items.map((item) => (
-              <div
-                key={item.checklistId}
-                className={`operations-row ${item.done ? "operations-row-done" : ""}`}
-              >
-                <div className="operations-main">
-                  <strong>{item.name}</strong>
-                  {item.detail ? <small>{item.detail}</small> : null}
-                  {item.note ? (
-                    <small className="operations-note">“{item.note}”</small>
-                  ) : null}
+          {status && status.groups.length > 0 ? (
+            status.groups.map((group) => (
+              <div className="operations-group" key={group.phase}>
+                <div className="operations-group-head">
+                  <strong>{group.label}</strong>
+                  <span>
+                    {numberFormat.format(group.doneCount)} dari{" "}
+                    {numberFormat.format(group.totalCount)} selesai
+                  </span>
                 </div>
-                <span
-                  className={`operations-status ${item.done ? "operations-status-done" : "operations-status-pending"}`}
-                >
-                  {item.done ? "Selesai" : "Belum"}
-                </span>
-                {canManageOperations ? (
-                  <div className="operations-actions">
-                    <input
-                      type="text"
-                      placeholder="Catatan (opsional)"
-                      value={notes[item.checklistId] ?? ""}
-                      onChange={(e) =>
-                        setNotes((prev) => ({
-                          ...prev,
-                          [item.checklistId]: e.target.value,
-                        }))
-                      }
-                    />
-                    {item.done ? (
-                      <button
-                        type="button"
-                        className="operations-btn operations-btn-danger"
-                        onClick={() =>
-                          void handleToggle(item.checklistId, false)
-                        }
+                <div className="operations-list">
+                  {group.items.map((item) => (
+                    <div
+                      key={item.checklistId}
+                      className={`operations-row ${item.done ? "operations-row-done" : ""}`}
+                    >
+                      <div className="operations-main">
+                        <strong>{item.name}</strong>
+                        {item.detail ? <small>{item.detail}</small> : null}
+                        {item.note ? (
+                          <small className="operations-note">“{item.note}”</small>
+                        ) : null}
+                      </div>
+                      <span
+                        className={`operations-status ${item.done ? "operations-status-done" : "operations-status-pending"}`}
                       >
-                        Batal
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        className="operations-btn operations-btn-primary"
-                        onClick={() =>
-                          void handleToggle(item.checklistId, true)
-                        }
-                      >
-                        Selesai
-                      </button>
-                    )}
-                  </div>
-                ) : null}
+                        {item.done ? "Selesai" : "Belum"}
+                      </span>
+                      {canManageOperations ? (
+                        <div className="operations-actions">
+                          <input
+                            type="text"
+                            placeholder="Catatan (opsional)"
+                            value={notes[item.checklistId] ?? ""}
+                            onChange={(e) =>
+                              setNotes((prev) => ({
+                                ...prev,
+                                [item.checklistId]: e.target.value,
+                              }))
+                            }
+                          />
+                          {item.done ? (
+                            <button
+                              type="button"
+                              className="operations-btn operations-btn-danger"
+                              onClick={() =>
+                                void handleToggle(item.checklistId, false)
+                              }
+                            >
+                              Batal
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="operations-btn operations-btn-primary"
+                              onClick={() =>
+                                void handleToggle(item.checklistId, true)
+                              }
+                            >
+                              Selesai
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            ))
+          ) : status && status.items.length > 0 ? (
+            <p className="operations-empty">
+              Tugas belum dikelompokkan ke tahap buka/tutup. Hubungi admin agar
+              mengaturnya di Pengaturan &gt; Daftar tugas harian.
+            </p>
+          ) : null}
         </section>
 
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Daftar tugas tersedia</h2>
-            <span className="updated-label">
-              Diatur admin di Pengaturan &gt; Daftar tugas harian
-            </span>
-          </div>
-          <p className="operations-empty">
-            Ini daftar tugas yang bisa dikerjakan hari ini. Bila ada tugas
-            yang perlu ditambah atau diubah, hubungi admin.
-          </p>
-          {status && status.items.length === 0 ? (
-            <p className="operations-empty">Belum ada tugas terdaftar.</p>
-          ) : (
-            <div className="operations-schedule">
-              {status?.items.map((item) => (
-                <div key={item.checklistId}>
-                  <strong>{item.name}</strong>
-                  <span>{item.detail || "—"}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Panduan singkat (collapsible, tidak menghalangi aksi utama) */}
+        <details className="panel operations-guide">
+          <summary>Butuh bantuan? Panduan singkat</summary>
+          <ul className="operations-guide-list">
+            <li>
+              <strong>Apa ini?</strong> Daftar pekerjaan harian untuk
+              menyiapkan dan menutup taman — misalnya cek kebersihan,
+              menyiapkan uang loket, atau memastikan fasilitas siap.
+            </li>
+            <li>
+              <strong>Cara pakai:</strong> centang <em>Selesai</em> setiap
+              tugas yang sudah dikerjakan. Tambahkan catatan bila perlu.
+              Tugas yang belum dikerjakan tampil berstatus <em>Belum</em>.
+            </li>
+            <li>
+              <strong>Catatan:</strong> daftar tugas ini diatur oleh admin di
+              menu Pengaturan → Daftar tugas harian. Hubungi admin bila ada
+              tugas yang perlu ditambah atau diubah.
+            </li>
+          </ul>
+        </details>
       </section>
     </main>
   );

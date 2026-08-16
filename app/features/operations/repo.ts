@@ -7,11 +7,13 @@
 import { and, eq } from "drizzle-orm";
 import type { AppDb } from "../../../db/get-db";
 import { configItems, operationsChecklist, users } from "../../../db/schema";
+import { OPERATION_PHASE_LABELS } from "../../../shared/config";
 import { todayIsoDate } from "../../../shared/date";
 import type {
   OperatingHour,
   OperationsChecklistInput,
   OperationsChecklistItem,
+  OperationsGroup,
   OperationsStatus,
 } from "./types";
 
@@ -21,7 +23,7 @@ function newId(prefix: string): string {
 
 type ChecklistStatusRow = Omit<
   OperationsChecklistItem,
-  "name" | "detail"
+  "name" | "detail" | "phase"
 >;
 
 function mapChecklistItem(row: {
@@ -76,6 +78,7 @@ export async function upsertOperationsChecklist(
       id: configItems.id,
       name: configItems.name,
       detail: configItems.detail,
+      phase: configItems.phase,
       active: configItems.active,
     })
     .from(configItems)
@@ -102,6 +105,7 @@ export async function upsertOperationsChecklist(
       )),
       name: row.name,
       detail: row.detail,
+      phase: row.phase ?? null,
     };
   }
 
@@ -129,6 +133,7 @@ export async function upsertOperationsChecklist(
     )),
     name: row.name,
     detail: row.detail,
+    phase: row.phase ?? null,
   };
 }
 
@@ -147,6 +152,7 @@ export async function listOperationsChecklist(
         id: configItems.id,
         name: configItems.name,
         detail: configItems.detail,
+        phase: configItems.phase,
       })
       .from(configItems)
       .where(and(eq(configItems.section, "hours"), eq(configItems.active, true)))
@@ -174,6 +180,7 @@ export async function listOperationsChecklist(
       checklistId: item.id,
       name: item.name,
       detail: item.detail,
+      phase: item.phase ?? null,
       done: record?.done ?? false,
       note: record?.note ?? "",
       recordedBy: record?.recordedBy ?? "",
@@ -227,11 +234,31 @@ export async function operationsStatus(
       updatedAt = item.recordedAt;
     }
   }
+
+  const phaseOrder: Array<"buka" | "tutup"> = ["buka", "tutup"];
+  const groups: OperationsGroup[] = [];
+  for (const phase of phaseOrder) {
+    const phaseItems = items.filter((item) => item.phase === phase);
+    if (phaseItems.length === 0) continue;
+    let phaseDone = 0;
+    for (const item of phaseItems) {
+      if (item.done) phaseDone += 1;
+    }
+    groups.push({
+      phase,
+      label: OPERATION_PHASE_LABELS[phase],
+      items: phaseItems,
+      doneCount: phaseDone,
+      totalCount: phaseItems.length,
+    });
+  }
+
   return {
     items,
     doneCount,
     totalCount: items.length,
     updatedAt,
+    groups,
     operatingHours,
   };
 }

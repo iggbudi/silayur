@@ -117,6 +117,7 @@ export async function loadConfigSnapshot(db: AppDb): Promise<AppConfigSnapshot> 
       detail: row.detail,
       active: Boolean(row.active),
       sortOrder: row.sortOrder,
+      phase: row.phase ?? undefined,
     });
   }
   for (const section of CONFIG_SECTION_KEYS) {
@@ -177,6 +178,12 @@ export async function saveConfigItems(
       if (!name) throw new Error("Nama konfigurasi wajib diisi.");
       if (ids.has(id)) throw new Error(`ID konfigurasi duplikat: ${id}`);
       ids.add(id);
+      // Tugas harian (section hours) aktif wajib menentukan tahap buka/tutup.
+      if (section === "hours" && active && item.phase !== "buka" && item.phase !== "tutup") {
+        throw new Error(
+          `Pilih tahap (Persiapan buka / Penutupan) untuk tugas "${name}".`,
+        );
+      }
       if (isHourRangeSection) {
         if (active && !detail) {
           throw new Error(
@@ -203,6 +210,7 @@ export async function saveConfigItems(
           detail,
           active,
           sortOrder,
+          phase: item.phase ?? null,
         })
         .onConflictDoUpdate({
           target: configItems.id,
@@ -212,6 +220,7 @@ export async function saveConfigItems(
             detail,
             active,
             sortOrder,
+            phase: item.phase ?? null,
             updatedAt: new Date().toISOString(),
           },
         });

@@ -56,6 +56,15 @@ export type ConfigSectionKey =
   | "revenue"
   | "identity";
 
+/** Tahap tugas harian (section `hours`): saat buka atau tutup taman. */
+export type OperationPhase = "buka" | "tutup";
+
+/** Label tampilan tahap tugas harian. */
+export const OPERATION_PHASE_LABELS: Record<OperationPhase, string> = {
+  buka: "Persiapan buka",
+  tutup: "Penutupan",
+};
+
 export type ConfigItem = {
   id: string;
   section: ConfigSectionKey;
@@ -63,6 +72,8 @@ export type ConfigItem = {
   detail: string;
   active: boolean;
   sortOrder: number;
+  /** Tahap tugas harian (section `hours`): buka / tutup. */
+  phase?: OperationPhase;
 };
 
 export type ConfigItemsState = Record<ConfigSectionKey, ConfigItem[]>;

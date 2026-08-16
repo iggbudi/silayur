@@ -214,6 +214,7 @@ export default function SettingsPage() {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDetail, setNewDetail] = useState("");
+  const [newPhase, setNewPhase] = useState<"buka" | "tutup">("buka");
   const [savedNotice, setSavedNotice] = useState(false);
   const [moduleConfig, setModuleConfig] = useState<ModuleState>(
     DEFAULT_MODULE_CONFIG,
@@ -845,6 +846,12 @@ export default function SettingsPage() {
       return;
     }
 
+    const isHourTaskSection = activeSection === "hours";
+    if (isHourTaskSection && newPhase !== "buka" && newPhase !== "tutup") {
+      setPersistError("Pilih tahap tugas (Persiapan buka / Penutupan).");
+      return;
+    }
+
     const nextItem: ConfigItem = {
       id: `item-${crypto.randomUUID()}`,
       name: newName.trim(),
@@ -854,6 +861,7 @@ export default function SettingsPage() {
       active: true,
       section: activeSection,
       sortOrder: (items[activeSection].length + 1) * 10,
+      phase: isHourTaskSection ? newPhase : undefined,
     };
 
     const previous = items;
@@ -864,6 +872,7 @@ export default function SettingsPage() {
     setItems(nextItems);
     setNewName("");
     setNewDetail("");
+    setNewPhase("buka");
     setAdding(false);
     void persistConfig({
       configItems: toConfigItemsState(nextItems),
@@ -1107,6 +1116,21 @@ export default function SettingsPage() {
                     onChange={(event) => setNewDetail(event.target.value)}
                   />
                 </div>
+                {activeSection === "hours" ? (
+                  <div>
+                    <label htmlFor="config-phase">Tahap</label>
+                    <select
+                      id="config-phase"
+                      value={newPhase}
+                      onChange={(event) =>
+                        setNewPhase(event.target.value as "buka" | "tutup")
+                      }
+                    >
+                      <option value="buka">Persiapan buka</option>
+                      <option value="tutup">Penutupan</option>
+                    </select>
+                  </div>
+                ) : null}
                 <button type="submit">Tambahkan</button>
                 <button
                   className="cancel-action"
@@ -1291,6 +1315,11 @@ export default function SettingsPage() {
                       </div>
                       <p>{item.detail}</p>
                     </div>
+                    {activeSection === "hours" && item.phase ? (
+                      <span className={`config-phase config-phase-${item.phase}`}>
+                        {item.phase === "buka" ? "Buka" : "Tutup"}
+                      </span>
+                    ) : null}
                     <span className={`config-status ${item.active ? "config-active" : ""}`}>
                       {item.active ? "Aktif" : "Nonaktif"}
                     </span>

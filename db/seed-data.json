@@ -251,20 +251,58 @@
   ],
   "configItems": [
     {
-      "id": "hours-regular",
+      "id": "task-buka-loket",
       "section": "hours",
-      "name": "Jadwal reguler",
-      "detail": "Senin-Minggu · 08.00-16.00",
+      "name": "Siapkan uang kembalian loket",
+      "detail": "Pastikan uang pecahan cukup untuk awal shift",
       "active": true,
-      "sortOrder": 10
+      "sortOrder": 10,
+      "phase": "buka"
     },
     {
-      "id": "hours-holiday",
+      "id": "task-buka-bersih",
       "section": "hours",
-      "name": "Hari libur khusus",
-      "detail": "Belum dikonfigurasi",
-      "active": false,
-      "sortOrder": 20
+      "name": "Cek kebersihan area pintu masuk",
+      "detail": "Sapu dan pastikan area masuk bersih",
+      "active": true,
+      "sortOrder": 20,
+      "phase": "buka"
+    },
+    {
+      "id": "task-buka-wahana",
+      "section": "hours",
+      "name": "Pastikan wahana siap beroperasi",
+      "detail": "Periksa kesiapan wahana dan area bermain",
+      "active": true,
+      "sortOrder": 30,
+      "phase": "buka"
+    },
+    {
+      "id": "task-tutup-rapi",
+      "section": "hours",
+      "name": "Rapikan area & buang sampah",
+      "detail": "Bersihkan lokasi pengunjung sebelum tutup",
+      "active": true,
+      "sortOrder": 40,
+      "phase": "tutup"
+    },
+    {
+      "id": "task-tutup-kunci",
+      "section": "hours",
+      "name": "Kunci wahana & pintu taman",
+      "detail": "Pastikan wahana dan pintu terkunci aman",
+      "active": true,
+      "sortOrder": 50,
+      "phase": "tutup"
+    },
+    {
+      "id": "task-tutup-setor",
+      "section": "hours",
+      "name": "Setor uang sampai kasir",
+      "detail": "Amanatkan hasil penjualan ke kasir",
+      "active": true,
+      "sortOrder": 60,
+      "phase": "tutup"
     },
     {
       "id": "op-hours-regular",

@@ -1,6 +1,22 @@
 # Progress Pengembangan DIGITAMA
 
-Pembaruan terakhir: **16 Agustus 2026** — rebrand produk dari **SILAYUR** menjadi
+Pembaruan terakhir: **17 Agustus 2026** — menjadikan menu **Operasional**
+**Daftar tugas harian** sebagai checklist harian sungguhan khas taman wisata:
+- Section `config_items` `hours` kini berisi **tugas harian nyata** bertahap
+  **Persiapan buka** / **Penutupan**, dengan kolom baru `phase`.
+- Migration baru `drizzle/0004_*`: menambah kolom `phase` pada `config_items`
+  dan menonaktifkan item placeholder lama (`hours-regular`/`hours-holiday`)
+  pada install lama; seed idempotent (`scripts/db-seed.mjs`) ikut menulis `phase`.
+- `/operasional` dikelompokkan per tahap dengan sub-progress; jam buka taman
+  (dari section `operating-hours`) tampil sebagai satu baris info — bukan panel
+  terpisah maupun item checklist; panel duplikat "Daftar tugas tersedia" dihapus;
+  panduan singkat menjadi collapsible di bawah checklist.
+- Pengaturan → Daftar tugas harian: admin memilih **Tahap** (Persiapan buka /
+  Penutupan) saat menambah tugas, dengan lencana tahap pada daftar.
+- RBAC & route tetap (`assertCanView/ManageOperations`): `manage` menandai;
+  view hanya melihat. Validasi: `type-check`, `lint` (0 error), `npm test` hijau.
+
+Pembaruan sebelumnya: **16 Agustus 2026** — rebrand produk dari **SILAYUR** menjadi
 **DIGITAMA** (nama generik untuk sistem tata kelola tempat wisata). Detail:
 - Teks brand di UI (`app/`) dan dokumen inti diganti ke **DIGITAMA**.
 - **Fitur baru «Identitas taman»** (Pengaturan → Identitas taman): nama taman

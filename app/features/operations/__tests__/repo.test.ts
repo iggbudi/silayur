@@ -13,13 +13,16 @@ async function freshDb() {
   const [
     { listOperationsChecklist, operationsStatus, upsertOperationsChecklist },
     { getRequestDb },
+    { configItems: configItemsTable },
   ] = await Promise.all([
     import(`../repo.ts?v=${stamp}`),
     import(`../../../../db/get-db?v=${stamp}`),
+    import(`../../../../db/schema?v=f${stamp}`),
   ]);
   const db = await getRequestDb();
   return {
     db,
+    configItemsTable,
     listOperationsChecklist,
     operationsStatus,
     upsertOperationsChecklist,
@@ -27,7 +30,7 @@ async function freshDb() {
 }
 
 test("operations: upsert validates input and checklist must exist & be active", async () => {
-  const { db, upsertOperationsChecklist } = await freshDb();
+  const { db, configItemsTable, upsertOperationsChecklist } = await freshDb();
   try {
     await assert.rejects(
       upsertOperationsChecklist(
@@ -47,11 +50,21 @@ test("operations: upsert validates input and checklist must exist & be active", 
       ),
       /Checklist tidak ditemukan/,
     );
-    // `hours-holiday` ada di seed tapi nonaktif.
+
+    // Sisipkan tugas hours nonaktif untuk menguji penolakan.
+    await db.insert(configItemsTable).values({
+      id: "task-inactive-test",
+      section: "hours",
+      name: "Tugas nonaktif",
+      detail: "",
+      active: false,
+      sortOrder: 99,
+      phase: "buka",
+    });
     await assert.rejects(
       upsertOperationsChecklist(
         db,
-        { checklistId: "hours-holiday", done: true },
+        { checklistId: "task-inactive-test", done: true },
         "admin-resepsionis",
         "2026-08-14",
       ),
@@ -60,14 +73,15 @@ test("operations: upsert validates input and checklist must exist & be active", 
 
     const created = await upsertOperationsChecklist(
       db,
-      { checklistId: "hours-regular", done: true, note: "Loket dibuka" },
+      { checklistId: "task-buka-loket", done: true, note: "Loket siap" },
       "admin-resepsionis",
       "2026-08-14",
     );
-    assert.equal(created.checklistId, "hours-regular");
+    assert.equal(created.checklistId, "task-buka-loket");
     assert.equal(created.done, true);
-    assert.equal(created.note, "Loket dibuka");
+    assert.equal(created.note, "Loket siap");
     assert.equal(created.recordedBy, "admin-resepsionis");
+    assert.equal(created.phase, "buka");
   } finally {
     // state dibersihkan oleh resetTestDb berikutnya
   }
@@ -82,13 +96,13 @@ test("operations: upsert same checklist+date keeps single row, last status wins"
     );
     await upsertOperationsChecklist(
       db,
-      { checklistId: "hours-regular", done: false },
+      { checklistId: "task-buka-loket", done: false },
       "admin-resepsionis",
       "2026-08-14",
     );
     const updated = await upsertOperationsChecklist(
       db,
-      { checklistId: "hours-regular", done: true },
+      { checklistId: "task-buka-loket", done: true },
       "admin-resepsionis",
       "2026-08-14",
     );
@@ -97,7 +111,7 @@ test("operations: upsert same checklist+date keeps single row, last status wins"
     const rows = await db
       .select()
       .from(table)
-      .where(eq(table.checklistId, "hours-regular"));
+      .where(eq(table.checklistId, "task-buka-loket"));
     assert.equal(rows.length, 1, "hanya satu baris per item per hari");
     assert.equal(rows[0].done, true);
   } finally {
@@ -105,31 +119,41 @@ test("operations: upsert same checklist+date keeps single row, last status wins"
   }
 });
 
-test("operations: list shows active checklist items with today's status, default undone", async () => {
+test("operations: list shows active checklist items with phase, default undone", async () => {
   const { db, listOperationsChecklist, upsertOperationsChecklist } =
     await freshDb();
   try {
     await upsertOperationsChecklist(
       db,
-      { checklistId: "hours-regular", done: true },
+      { checklistId: "task-buka-loket", done: true },
       "admin-resepsionis",
       "2026-08-14",
     );
 
     const list = await listOperationsChecklist(db, "2026-08-14");
     const names = list.map((item: { name: string }) => item.name);
-    // Active: Jadwal reguler. Hari libur khusus inactive → tidak muncul.
-    assert.ok(names.includes("Jadwal reguler"));
-    assert.ok(!names.includes("Hari libur khusus"), "item nonaktif tidak muncul");
+    // 6 tugas seed aktif (3 buka + 3 tutup). Item nonaktif tidak muncul.
+    assert.equal(list.length, 6, "hanya item aktif yang muncul");
+    assert.ok(names.includes("Siapkan uang kembalian loket"));
 
-    const regular = list.find(
-      (item: { checklistId: string }) => item.checklistId === "hours-regular",
+    const buka = list.filter(
+      (item: { phase: "buka" | "tutup" | null }) => item.phase === "buka",
     );
-    assert.equal(regular?.done, true);
-    assert.ok(regular?.recordedAt, "tercatat hari ini");
+    const tutup = list.filter(
+      (item: { phase: "buka" | "tutup" | null }) => item.phase === "tutup",
+    );
+    assert.equal(buka.length, 3);
+    assert.equal(tutup.length, 3);
+
+    const loket = list.find(
+      (item: { checklistId: string }) => item.checklistId === "task-buka-loket",
+    );
+    assert.equal(loket?.done, true);
+    assert.equal(loket?.phase, "buka");
+    assert.ok(loket?.recordedAt, "tercatat hari ini");
 
     const emptyDay = await listOperationsChecklist(db, "2000-01-01");
-    assert.equal(emptyDay.length, 1, "hanya item aktif yang muncul");
+    assert.equal(emptyDay.length, 6, "hanya item aktif yang muncul");
     assert.equal(emptyDay[0].done, false, "default saat belum dicatat");
     assert.equal(emptyDay[0].recordedAt, null);
   } finally {
@@ -137,24 +161,37 @@ test("operations: list shows active checklist items with today's status, default
   }
 });
 
-test("operations: summary counts done/total and updatedAt", async () => {
-  const { db, operationsStatus, upsertOperationsChecklist } =
-    await freshDb();
+test("operations: summary counts done/total, groups per phase, and updatedAt", async () => {
+  const { db, operationsStatus, upsertOperationsChecklist } = await freshDb();
   try {
     const empty = await operationsStatus(db, "2000-01-01");
-    assert.equal(empty.totalCount, 1);
+    assert.equal(empty.totalCount, 6);
     assert.equal(empty.doneCount, 0);
+    assert.equal(empty.groups.length, 2, "2 fase: buka & tutup");
+    assert.equal(empty.groups[0].totalCount, 3);
+    assert.equal(empty.groups[0].phase, "buka");
+    assert.equal(empty.groups[1].totalCount, 3);
+    assert.equal(empty.groups[1].phase, "tutup");
     assert.equal(empty.updatedAt, null);
 
+    // Tandai 2 tugas fase buka selesai.
     await upsertOperationsChecklist(
       db,
-      { checklistId: "hours-regular", done: true },
+      { checklistId: "task-buka-loket", done: true },
+      "admin-resepsionis",
+      "2026-08-14",
+    );
+    await upsertOperationsChecklist(
+      db,
+      { checklistId: "task-buka-bersih", done: true },
       "admin-resepsionis",
       "2026-08-14",
     );
     const status = await operationsStatus(db, "2026-08-14");
-    assert.equal(status.totalCount, 1);
-    assert.equal(status.doneCount, 1);
+    assert.equal(status.totalCount, 6);
+    assert.equal(status.doneCount, 2);
+    assert.equal(status.groups[0].doneCount, 2, "fase buka 2 dari 3 selesai");
+    assert.equal(status.groups[1].doneCount, 0, "fase tutup belum");
     assert.ok(status.updatedAt, "updatedAt dari catatan terbaru");
   } finally {
     // state dibersihkan oleh resetTestDb berikutnya

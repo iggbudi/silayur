@@ -188,7 +188,7 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
   assert.equal(health.status, 200);
   const healthBody = await health.json();
   assert.equal(healthBody.checkpoint, "11");
-  assert.equal(healthBody.counts.config_items, 15);
+  assert.equal(healthBody.counts.config_items, 19);
   assert.equal(healthBody.counts.ticket_products, 2);
   assert.equal(healthBody.counts.ticket_prices, 2);
 

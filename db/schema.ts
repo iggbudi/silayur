@@ -144,6 +144,8 @@ export const configItems = pgTable(
     detail: text("detail").notNull().default(""),
     active: boolean("active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
+    /** Tahap tugas harian (section `hours`): buka / tutup (nullable, optional). */
+    phase: text("phase").$type<"buka" | "tutup" | null>(),
     createdAt: text("created_at")
       .notNull()
       .default(sql`now()`),

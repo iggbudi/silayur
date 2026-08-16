@@ -7,5 +7,6 @@ export type {
   OperatingHour,
   OperationsChecklistInput,
   OperationsChecklistItem,
+  OperationsGroup,
   OperationsStatus,
 } from "./types";
