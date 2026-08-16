@@ -89,20 +89,32 @@ PostgreSQL: `drizzle.config` dialect `postgresql`, client `pg`).
 
 ---
 
-## Rencana 4 — Sinkronisasi env var di produksi
+## Rencana 4 — Sinkronisasi env var & deploy produksi
 
-Env var & cookie di-rename di sisi kode. Saat deploy ke Hosting/Sites, pastikan
-**nilai lama `SILAYUR_*` tidak lagi terbaca**:
+Runtime produksi memakai `DATABASE_URL` **Postgres** (dibaca `worker/index.ts`
+lewat `exposeDbEnv` → `process.env.DATABASE_URL`). Env diberi dari **platform
+Sites** (`project_id` di `.openai/hosting.json`), dikelola via "ChatGPT Sites
+tooling" eksternal — bukan CLI di repo.
 
-- [ ] Di kelola secret/platform produksi (Sites/workerd), set:
-      `DIGITAMA_SEED_ADMIN_PASSWORD`, `DIGITAMA_SEED_DEFAULT_PASSWORD`,
-      `DIGITAMA_NEW_PASSWORD`, `DIGITAMA_DEMO_ALLOW_REMOTE`.
-- [ ] Hapus / tidak usah pakai var lama `SILAYUR_*` agar tidak ambigu.
-- [ ] Pastikan nama cookie `digitama_session` diterima (sesi lama dengan
-      `silayur_session` otomatis tidak berlaku).
-- [ ] Verifikasi smoke pasca-deploy: login admin 200, seed idempotent
-      (config_items = 15 termasuk `identity-park-name`), endpoint publik
-      `/api/config/identity` mengembalikan `parkName`.
+Wajib diset di env produksi Sites:
+- `DATABASE_URL` (Postgres) — runtime wajib.
+- `DIGITAMA_SEED_ADMIN_PASSWORD`, `DIGITAMA_SEED_DEFAULT_PASSWORD` — bila
+  re-seed produksi (idempotent, hanya menambah).
+- `DIGITAMA_NEW_PASSWORD` — bila reset password admin.
+- `DIGITAMA_DEMO_ALLOW_REMOTE` — jangan di-set di produksi (guard demo).
+
+Lebih detail:
+- Set env di platform Sites (bukan file local; file `.env`/`.dev.vars` tidak
+  ter-baca di produksi).
+- `npm run build` → hasil `dist/` memuat metadata `hosting.json` + `drizzle`.
+- Deploy ke Sites memakai "ChatGPT Sites tooling" (command langs lihat docs
+  internal Sites; umumnya trigger via host platform).
+- Sesi lama (`silayur_session`) otomatis tidak berlaku usai deploy; pengguna
+  perlu login ulang dengan cookie `digitama_session`.
+
+Status: `[ ]` — menunggu akses ke platform "ChatGPT Sites tooling" (atau
+di-execute owner) untuk men-set `DATABASE_URL` Postgres + env `DIGITAMA_*`
+dan memicu deploy. Otorisasi pemilik sudah diberikan (16 Agt 2026).
 
 ---
 
