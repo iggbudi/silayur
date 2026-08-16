@@ -63,6 +63,9 @@ async function main() {
     "facility_status",
     "operations_checklist",
     "holidays",
+    "employees",
+    "schedule_shifts",
+    "pic_assignments",
   ];
   const counts = {};
   for (const table of tables) {
