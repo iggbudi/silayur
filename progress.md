@@ -23,6 +23,10 @@ Pembaruan terakhir: **16 Agustus 2026** — penyesuaian teks halaman
 - Catatan operasional: DB test `silayur_test` sempat tanpa tabel (test macet
   di `relation "modules" does not exist`) — diperbaiki dengan migrate + seed
   manual ke `silayur_test` (bukan produksi).
+- **Deploy produksi selesai (16 Agustus 2026, otorisasi owner)**: build ulang
+  + `systemctl restart digitama` → `/` dan `/pengaturan` HTTP 200; bundle yang
+  disajikan berisi teks baru ("Konfigurasi taman") dan tidak lagi memuat
+  "Checkpoint 11".
 
 Pembaruan sebelumnya: **17 Agustus 2026** — menjadikan menu **Operasional**
 **Daftar tugas harian** sebagai checklist harian sungguhan khas taman wisata:
