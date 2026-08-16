@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
+import { useDrawerSwipe } from "../hooks/use-drawer-swipe";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SidebarFooter } from "../components/sidebar-footer";
+import { MobileDrawer } from "../components/mobile-drawer";
+import { MobileMenuButton } from "../components/mobile-menu-button";
 import { SessionGate } from "../components/session-gate";
 import { todayIsoDate } from "../../shared/date";
 import {
@@ -22,7 +25,10 @@ export default function OperationsPage() {
     open: mobileMenuOpen,
     close: closeMobileMenu,
     toggle: toggleMobileMenu,
+    drawerRef,
+    triggerRef,
   } = useMobileSidebar();
+  useDrawerSwipe(drawerRef, mobileMenuOpen, closeMobileMenu);
 
   const [status, setStatus] = useState<OperationsStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,15 +108,18 @@ export default function OperationsPage() {
 
   return (
     <main className="app-shell">
-      <button
-        type="button"
-        className="mobile-menu-btn"
-        aria-label="Buka menu navigasi"
-        onClick={toggleMobileMenu}
+      <MobileMenuButton
+        open={mobileMenuOpen}
+        onToggle={toggleMobileMenu}
+        controls="dashboard-sidebar"
+        triggerRef={triggerRef}
+      />
+      <MobileDrawer
+        id="dashboard-sidebar"
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        drawerRef={drawerRef}
       >
-        ☰
-      </button>
-      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
         <Brand />
         <SidebarNavigation
           access={access}
@@ -125,7 +134,7 @@ export default function OperationsPage() {
             void logout();
           }}
         />
-      </aside>
+      </MobileDrawer>
 
       <section className="workspace operations-workspace">
         <header className="topbar">

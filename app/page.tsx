@@ -6,10 +6,13 @@ import { canManage, canView } from "./lib/access";
 import { putRemoteConfig } from "./lib/config-api";
 import { useSession } from "./hooks/use-session";
 import { useMobileSidebar } from "./hooks/use-mobile-sidebar";
+import { useDrawerSwipe } from "./hooks/use-drawer-swipe";
 import { useParkName } from "./hooks/use-park-name";
 import { Brand } from "./components/brand";
 import { SidebarNavigation } from "./components/sidebar-navigation";
 import { SidebarFooter } from "./components/sidebar-footer";
+import { MobileDrawer } from "./components/mobile-drawer";
+import { MobileMenuButton } from "./components/mobile-menu-button";
 import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
@@ -191,7 +194,10 @@ export default function DashboardPage() {
     open: mobileMenuOpen,
     close: closeMobileMenu,
     toggle: toggleMobileMenu,
+    drawerRef,
+    triggerRef,
   } = useMobileSidebar();
+  useDrawerSwipe(drawerRef, mobileMenuOpen, closeMobileMenu);
   const [saveError, setSaveError] = useState("");
   const [summary, setSummary] = useState<{
     visitors: number;
@@ -507,20 +513,13 @@ export default function DashboardPage() {
 
   return (
     <main className="app-shell">
-      <aside
-        className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}
+      <MobileDrawer
         id="dashboard-sidebar"
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        drawerRef={drawerRef}
       >
         <Brand />
-        <button
-          className="sidebar-close-button"
-          type="button"
-          aria-label="Tutup menu"
-          onClick={closeMobileMenu}
-        >
-          ×
-        </button>
-
         <SidebarNavigation
           access={access}
           modules={modules}
@@ -540,21 +539,17 @@ export default function DashboardPage() {
           roleLabel={roleLabel}
           onLogout={handleLogout}
         />
-      </aside>
+      </MobileDrawer>
 
       <section className="workspace">
         <header className="topbar">
           <div className="title-group">
-            <button
-              className="menu-button"
-              type="button"
-              aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
-              aria-controls="dashboard-sidebar"
-              aria-expanded={mobileMenuOpen}
-              onClick={toggleMobileMenu}
-            >
-              ☰
-            </button>
+            <MobileMenuButton
+              open={mobileMenuOpen}
+              onToggle={toggleMobileMenu}
+              controls="dashboard-sidebar"
+              triggerRef={triggerRef}
+            />
             <div>
               <div className="title-line">
                 <h1>Dashboard Operasional</h1>
@@ -859,14 +854,6 @@ export default function DashboardPage() {
         </footer>
       </section>
 
-      {mobileMenuOpen ? (
-        <button
-          className="sidebar-backdrop"
-          type="button"
-          aria-label="Tutup menu"
-          onClick={closeMobileMenu}
-        />
-      ) : null}
     </main>
   );
 }

@@ -1,6 +1,30 @@
 # Progress Pengembangan DIGITAMA
 
-Pembaruan terakhir: **16 Agustus 2026** — penyesuaian teks halaman
+Pembaruan terakhir: **17 Agustus 2026** — poles drawer menu mobile (opsi A:
+pertahankan drawer off-canvas, fokus aksesibilitas + swipe + lebar responsif):
+- **Komponen bersama baru**: `MobileDrawer` (aside + tombol tutup + backdrop
+  dengan ARIA dialog saat terbuka) dan `MobileMenuButton` (hamburger dengan
+  `aria-controls`/`aria-expanded`/`aria-haspopup`). Semua 9 halaman (Dashboard,
+  Operasional, Fasilitas, Penjualan, Keuangan, Komplain, Tim & Jadwal, Laporan,
+  Pengaturan) kini memakai shell yang sama — sebelumnya 7 halaman tidak punya
+  backdrop/tombol tutup/ARIA, dan 5 halaman memakai class `mobile-menu-btn`
+  yang **tidak ter-style sama sekali** (bug hamburger tak tampil rapi).
+- **Focus trap + manajemen fokus** di `useMobileSidebar`: saat drawer terbuka,
+  fokus pindah ke tombol tutup, Tab di-wrap di dalam drawer, Escape menutup,
+  dan fokus kembali ke tombol hamburger saat ditutup. Drawer tertutup kini
+  `visibility: hidden` (delay 200ms agar animasi slide-out tetap terlihat)
+  sehingga tautan di dalamnya tidak fokusable di mobile.
+- **Swipe-to-close** (`useDrawerSwipe`): geser ke kanan menutup drawer
+  (ambang 72px atau kecepatan 0,5px/ms); `touch-action: pan-y` menjaga scroll
+  vertikal drawer tetap native; backdrop fade-in 180ms.
+- **Lebar drawer responsif**: `min(86vw, 320px)` saat mobile (sebelumnya 246px
+  sama dengan desktop).
+- Blok `@media print` ikut menyembunyikan `.menu-button` (class `mobile-menu-btn`
+  dihapus).
+- Validasi: type-check hijau, lint 0 error (16 warning pre-existing), build
+  sukses, **72/72 test pass**.
+
+Pembaruan sebelumnya: **16 Agustus 2026** — penyesuaian teks halaman
 **Pengaturan** dari nuansa prototype/checkpoint menjadi sesuai produksi:
 - Kicker "Checkpoint 11" pada kartu ringkasan diubah menjadi
   **"Konfigurasi taman"**; kalimat "Tidak semua bagian harus diisi sekarang…

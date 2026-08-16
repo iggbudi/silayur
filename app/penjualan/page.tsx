@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
+import { useDrawerSwipe } from "../hooks/use-drawer-swipe";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SidebarFooter } from "../components/sidebar-footer";
+import { MobileDrawer } from "../components/mobile-drawer";
+import { MobileMenuButton } from "../components/mobile-menu-button";
 import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
 import { todayIsoDate } from "../../shared/date";
@@ -28,7 +31,8 @@ type VoidModal =
 
 export default function PenjualanPage() {
   const { session, ready: authReady, logout } = useSession();
-  const { open: mobileMenuOpen, close: closeMobileMenu, toggle: toggleMobileMenu } = useMobileSidebar();
+  const { open: mobileMenuOpen, close: closeMobileMenu, toggle: toggleMobileMenu, drawerRef, triggerRef } = useMobileSidebar();
+  useDrawerSwipe(drawerRef, mobileMenuOpen, closeMobileMenu);
   const [products, setProducts] = useState<TicketProduct[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(() => todayIsoDate());
@@ -161,15 +165,18 @@ export default function PenjualanPage() {
 
   return (
     <main className="app-shell">
-      <button
-        className="menu-button"
-        type="button"
-        aria-label="Buka menu"
-        onClick={toggleMobileMenu}
+      <MobileMenuButton
+        open={mobileMenuOpen}
+        onToggle={toggleMobileMenu}
+        controls="dashboard-sidebar"
+        triggerRef={triggerRef}
+      />
+      <MobileDrawer
+        id="dashboard-sidebar"
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        drawerRef={drawerRef}
       >
-        ☰
-      </button>
-      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
         <Brand />
         <SidebarNavigation
           access={access}
@@ -184,7 +191,7 @@ export default function PenjualanPage() {
             void logout();
           }}
         />
-      </aside>
+      </MobileDrawer>
 
       <section className="workspace">
         <header className="topbar">

@@ -46,11 +46,14 @@ dashboard/
 │  │   ├── settings-user-form  │
 │  │   ├── ticket-settings.tsx │
 │  │   ├── dashboard-widgets   │
+│  │   ├── mobile-drawer.tsx   │
+│  │   ├── mobile-menu-button  │
 │  │   └── dev-runtime-guard   │
 │  │                           │
 │  ├── hooks/                  │
 │  │   ├── use-session.ts      │
-│  │   └── use-mobile-sidebar  │
+│  │   ├── use-mobile-sidebar  │
+│  │   └── use-drawer-swipe.ts │
 │  │                           │
 │  ├── lib/                    │
 │  │   ├── config-api.ts       │
@@ -166,7 +169,7 @@ dashboard/
 | **complaints** | `app/features/complaints/`, `app/api/complaints/*`, `app/complaints/` | Komplain pengunjung (catat, status, tindak lanjut) |
 | **facilities** | `app/features/facilities/`, `app/api/facilities/*`, `app/fasilitas/` | Status fasilitas harian (beroperasi/perlu cek/ditutup) |
 | **jadwal-karyawan** | `app/features/jadwal-karyawan/`, `app/api/jadwal-karyawan/*`, `app/jadwal-karyawan/` | Jadwal shift, PIC, kehadiran karyawan |
-| **platform** | `app/components/{brand,toggle,dev-runtime-guard}.tsx`, `app/hooks/use-mobile-sidebar.ts`, `app/lib/*` | Cross-cutting utilities |
+| **platform** | `app/components/{brand,toggle,dev-runtime-guard,mobile-drawer,mobile-menu-button}.tsx`, `app/hooks/{use-mobile-sidebar,use-drawer-swipe}.ts`, `app/lib/*` | Cross-cutting utilities (shell UI, drawer mobile aksesibel, swipe) |
 
 ## Cross-slice Dependency
 

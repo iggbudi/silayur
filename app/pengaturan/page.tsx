@@ -6,9 +6,12 @@ import { canManage, canView } from "../lib/access";
 import { fetchRemoteConfig, putRemoteConfig } from "../lib/config-api";
 import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
+import { useDrawerSwipe } from "../hooks/use-drawer-swipe";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SidebarFooter } from "../components/sidebar-footer";
+import { MobileDrawer } from "../components/mobile-drawer";
+import { MobileMenuButton } from "../components/mobile-menu-button";
 import { SessionGate } from "../components/session-gate";
 import { Toggle } from "../components/toggle";
 import { SettingsUserForm } from "../components/settings-user-form";
@@ -205,7 +208,10 @@ export default function SettingsPage() {
     open: mobileMenuOpen,
     close: closeMobileMenu,
     toggle: toggleMobileMenu,
+    drawerRef,
+    triggerRef,
   } = useMobileSidebar();
+  useDrawerSwipe(drawerRef, mobileMenuOpen, closeMobileMenu);
   const currentUser = session?.user ?? null;
   const parkName = useParkName();
   const [activeSection, setActiveSection] = useState<SectionKey>("modules");
@@ -905,20 +911,14 @@ export default function SettingsPage() {
 
   return (
     <main className="app-shell settings-shell">
-      <aside
-        className={`sidebar settings-sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}
+      <MobileDrawer
         id="settings-sidebar"
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        drawerRef={drawerRef}
+        className="settings-sidebar"
       >
         <Brand />
-        <button
-          className="sidebar-close-button"
-          type="button"
-          aria-label="Tutup menu"
-          onClick={closeMobileMenu}
-        >
-          ×
-        </button>
-
         <SidebarNavigation
           access={session.access}
           modules={moduleConfig}
@@ -931,20 +931,16 @@ export default function SettingsPage() {
           roleLabel={currentRoleLabel}
           onLogout={handleLogout}
         />
-      </aside>
+      </MobileDrawer>
 
       <section className="workspace settings-workspace">
         <header className="settings-header">
-          <button
-            className="menu-button"
-            type="button"
-            aria-label={mobileMenuOpen ? "Tutup menu" : "Buka menu"}
-            aria-controls="settings-sidebar"
-            aria-expanded={mobileMenuOpen}
-            onClick={toggleMobileMenu}
-          >
-            ☰
-          </button>
+          <MobileMenuButton
+            open={mobileMenuOpen}
+            onToggle={toggleMobileMenu}
+            controls="settings-sidebar"
+            triggerRef={triggerRef}
+          />
           <div>
             <Link href="/" className="back-link">
               ← Kembali ke dashboard
@@ -1734,15 +1730,6 @@ export default function SettingsPage() {
           </section>
         </section>
       </section>
-
-      {mobileMenuOpen ? (
-        <button
-          className="sidebar-backdrop"
-          type="button"
-          aria-label="Tutup menu"
-          onClick={closeMobileMenu}
-        />
-      ) : null}
     </main>
   );
 }

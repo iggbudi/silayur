@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
+import { useDrawerSwipe } from "../hooks/use-drawer-swipe";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
 import { SidebarFooter } from "../components/sidebar-footer";
+import { MobileDrawer } from "../components/mobile-drawer";
+import { MobileMenuButton } from "../components/mobile-menu-button";
 import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
 import { todayIsoDate } from "../../shared/date";
@@ -44,7 +47,10 @@ export default function ComplaintsPage() {
     open: mobileMenuOpen,
     close: closeMobileMenu,
     toggle: toggleMobileMenu,
+    drawerRef,
+    triggerRef,
   } = useMobileSidebar();
+  useDrawerSwipe(drawerRef, mobileMenuOpen, closeMobileMenu);
 
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [openCount, setOpenCount] = useState(0);
@@ -177,15 +183,18 @@ export default function ComplaintsPage() {
 
   return (
     <main className="app-shell">
-      <button
-        type="button"
-        className="mobile-menu-btn"
-        aria-label="Buka menu navigasi"
-        onClick={toggleMobileMenu}
+      <MobileMenuButton
+        open={mobileMenuOpen}
+        onToggle={toggleMobileMenu}
+        controls="dashboard-sidebar"
+        triggerRef={triggerRef}
+      />
+      <MobileDrawer
+        id="dashboard-sidebar"
+        open={mobileMenuOpen}
+        onClose={closeMobileMenu}
+        drawerRef={drawerRef}
       >
-        ☰
-      </button>
-      <aside className={`sidebar ${mobileMenuOpen ? "sidebar-open" : ""}`}>
         <Brand />
         <SidebarNavigation
           access={access}
@@ -200,7 +209,7 @@ export default function ComplaintsPage() {
             void logout();
           }}
         />
-      </aside>
+      </MobileDrawer>
 
       <section className="workspace complaint-workspace">
         <header className="topbar">
