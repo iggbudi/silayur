@@ -77,10 +77,13 @@ memutus sistem yang berjalan dan tidak terlihat pengguna:
 - URL Turso (legacy): `libsql://silayur-nayantaka...` (di docs).
 - File SQLite lokal (legacy): `.data/silayur.db`, `.data/demo-silayur.db`.
 
-Keputusan:
-- [ ] **Tetap** (rekomendasi): biarkan seperti sekarang. Migrasi kini memakai
-      PostgreSQL sehingga Turso/SQLite hanya artefak lama.
-- [ ] **Opsional** bila benar-benar ingin bersih: buat DB baru `digitama` /
+Keputusan (**16 Agustus 2026**): **biarkan saja** — nama DB Postgres `silayur` /
+`silayur_test` dipertahankan (nama DB tidak terlihat pengguna, 0 risiko).
+Artefak Turso/libSQL hanya legacy & tidak aktif di runtime (project murni
+PostgreSQL: `drizzle.config` dialect `postgresql`, client `pg`).
+
+- [x] **Tetap** (diputuskan): biarkan seperti sekarang.
+- [ ] **Opsional** (kalau di masa depan ingin bersih): buat DB baru `digitama` /
       `digitama_test`, pindahkan data, lalu ubah `DATABASE_URL` + `drizzle.config`.
       ⚠️ Perlu otorisasi owner & backup sebelum menjalankan apa pun.
 
@@ -109,5 +112,5 @@ Env var & cookie di-rename di sisi kode. Saat deploy ke Hosting/Sites, pastikan
 |---|---|---|
 | 1 | Commit perubahan saat ini | `[ ]` |
 | 2 | Perbarui dokumen historis (selektif) | `[ ]` |
-| 3 | Identitas infrastruktur (biarkan / opsional bersihkan) | `[~]` keputusan di tangan owner |
+| 3 | Identitas infrastruktur (biarkan / opsional bersihkan) | `[x]` biarkan `silayur`/`silayur_test` (16 Agt 2026) |
 | 4 | Sinkronisasi env var di produksi | `[ ]` (perlu deploy) |
