@@ -1,5 +1,10 @@
 # Tarif Activation Runbook — Master Tiket Masuk
 
+> ⚠️ **Dokumen era Turso (sebelum migrasi Postgres, dipertahankan sebagai
+> catatan historis)**. Project sekarang memakai **PostgreSQL** via
+> `DATABASE_URL`. Abaikan referensi "Turso remote" di bawah; langkahnya tetap
+> berlaku dengan `npm run db:*` yang menunjuk target Postgres yang benar.
+
 > **Tujuan**: memandu owner mengaktifkan **tarif operasional** untuk tiket
 > Dewasa dan Anak (weekday + weekend) sehingga slice `ticket-sales/`
 > bisa menerima transaksi nyata.

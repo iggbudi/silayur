@@ -42,8 +42,9 @@ Setiap perubahan mengikuti siklus **4 langkah berurutan**:
 
 ## Batasan yang Tidak Boleh Dilanggar
 
-- **Jangan jalankan migrasi Turso remote / deploy ke Sites tanpa otorisasi
-  eksplisit dari owner.** Validasi lokal TIDAK sama dengan izin produksi.
+- **Jangan jalankan migrasi database remote (Postgres produksi) / deploy ke
+  Sites tanpa otorisasi eksplisit dari owner.** Validasi lokal TIDAK sama
+  dengan izin produksi.
 - **Jangan percaya identitas dari header client.** Identitas & permission
   selalu ditentukan server-side dari sesi (cookie `HttpOnly`).
 - **Jangan commit** `.env` / `.dev.vars` (di-ignore, berisi rahasia lokal)

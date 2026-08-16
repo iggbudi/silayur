@@ -130,7 +130,7 @@ export async function loadConfigSnapshot(db: AppDb): Promise<AppConfigSnapshot> 
     users: userList,
     ticketProducts: ticketProductList,
     configItems: configItemState,
-    source: "turso",
+    source: "postgres",
     checkpoint: "11",
   };
 }

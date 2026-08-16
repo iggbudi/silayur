@@ -60,12 +60,11 @@ dashboard/
 ├── db/                           # Data layer
 │   ├── schema.ts                 # Drizzle schema (single source)
 │   ├── *-repo.ts                 # Repository per domain
-│   ├── client.ts                 # Node libSQL client
-│   ├── client-web.ts             # Fetch-based libSQL (Workers)
-│   ├── env.ts                    # Env resolver
+│   ├── client.ts                 # PostgreSQL client (node-postgres, scripts/tests)
+│   ├── env.ts                    # Env resolver (DATABASE_URL)
 │   ├── runtime-env.ts            # Runtime env loader (.env → process.env)
 │   ├── http.ts                   # HTTP helpers (jsonOk, jsonError, same-origin)
-│   ├── get-db.ts                 # DB factory (choose Node/Web)
+│   ├── get-db.ts                 # DB factory (pg Pool singleton untuk API routes)
 │   ├── seed-data.json            # Idempotent seed
 │   └── __tests__/                # Co-located tests (lihat Fase 1)
 │

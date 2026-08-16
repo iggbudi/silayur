@@ -97,12 +97,13 @@ npm run start:local
 ```
 
 Menjalankan build lalu server standalone (Node) di `http://localhost:3000`.
-Mode ini memakai database file lokal (`.data/silayur.db` sesuai `.env`) dan
+Mode ini memakai PostgreSQL lokal (sesuai `DATABASE_URL` di `.env`) dan
 mendukung semua fitur. Login demo: `admin.resepsionis` / `SilayurLocal-2026!`
 (password sesuai `SILAYUR_SEED_ADMIN_PASSWORD` di `.env`).
 
-> `npm run dev` memakai workerd (Miniflare) yang **tidak** mendukung database
-> file `file:` — gunakan hanya saat `.env` menunjuk Turso remote.
+> `npm run dev` memakai workerd (Miniflare) — gunakan hanya saat `DATABASE_URL`
+> menunjuk layanan Postgres yang bisa diakses worker; untuk Postgres lokal
+> gunakan `npm run start:local`.
 
 ## Dokumentasi
 

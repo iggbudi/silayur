@@ -84,9 +84,8 @@ dashboard/
 │  │                           │
 │  ├── ticket-repo.ts          ─┤ Slice: ticket-master
 │  │                           │
-│  ├── client.ts               │ Node libSQL
-│  ├── client-web.ts           │ Web libSQL (Workers)
-│  ├── get-db.ts               │ Factory
+│  ├── client.ts               │ PostgreSQL (scripts/tests)
+│  ├── get-db.ts               │ Factory (API routes)
 │  │                           │
 │  ├── env.ts                  │ Env resolver
 │  ├── runtime-env.ts          │ .env loader

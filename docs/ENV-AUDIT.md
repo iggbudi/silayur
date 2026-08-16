@@ -1,5 +1,11 @@
 # Environment Audit — CP12 Deploy Readiness
 
+> ⚠️ **Dokumen era Turso (sebelum migrasi Postgres, dipertahankan sebagai
+> catatan historis)**. Project sekarang memakai **PostgreSQL** via
+> `DATABASE_URL` (lihat `db/get-db.ts`). Referensi `TURSO_DATABASE_URL` /
+> `TURSO_AUTH_TOKEN` di bawah **tidak berlaku lagi**; satu-satunya kredensial
+> DB adalah `DATABASE_URL` (plus `TEST_DATABASE_URL` untuk test).
+
 > **Dibuat**: 29 Juli 2026 · **Auditor**: agent (Fase B) · **Tujuan**:
 > inventaris environment variables, secrets, dan konfigurasi yang
 > dibutuhkan untuk deploy ke Cloudflare Sites.

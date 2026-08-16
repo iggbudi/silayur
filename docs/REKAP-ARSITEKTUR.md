@@ -1,5 +1,11 @@
 # Rekap Arsitektur — Checkpoint 12
 
+> ⚠️ **Dokumen era Turso (sebelum migrasi Postgres, dipertahankan sebagai
+> catatan historis)**. Project sekarang memakai **PostgreSQL** via
+> `DATABASE_URL` (lihat `db/get-db.ts`), bukan Turso/libSQL. Bagian "Apply
+> migration ke Turso" di bawah sekarang setara `npm run db:migrate` dengan
+> `.env` yang menunjuk target Postgres yang benar.
+
 > Dokumen ini adalah **handover summary** untuk owner.
 > Untuk detail, lihat [`ARCHITECTURE.md`](../ARCHITECTURE.md),
 > [`docs/adr/0001-...`](../adr/0001-hybrid-layered-with-co-location.md),

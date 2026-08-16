@@ -1,5 +1,12 @@
 # Deployment Runbook — CP12 (UI Penjualan + Master Tiket)
 
+> ⚠️ **Dokumen era Turso (sebelum migrasi Postgres, dipertahankan sebagai
+> catatan historis)**. Project sekarang memakai **PostgreSQL** via
+> `DATABASE_URL` (lihat `db/get-db.ts`). Seluruh referensi
+> `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, dan perintah `turso ...` di bawah
+> **tidak berlaku lagi** — gunakan `npm run db:migrate` / `db:seed` /
+> `db:check` dengan `.env` yang menunjuk target Postgres yang benar.
+
 > **Tujuan**: mendeploy UI Checkpoint 10–12 ke Cloudflare Sites sehingga
 > user (operator loket, admin) bisa mengakses menu **Penjualan** di
 > sidebar dan fitur **Master Tiket & Tarif** dari `/pengaturan`.

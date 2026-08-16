@@ -921,6 +921,26 @@ dihapus/dinetralkan:
   footer panel modul dan pesan error penyimpanan modul dinetralkan.
 - `app/api/db/health/route.ts`: field `driver` diperbarui dari
   `"turso-libsql"` → `"postgres"` (menyesuaikan `db/get-db.ts`).
+- `shared/config.ts` + `db/config-repo.ts`: field snapshot `source`
+  diperbarui dari `"turso"` → `"postgres"` (tidak ada konsumen lain).
 - `app/globals.css`: class `.db-status-line` dihapus (tidak terpakai).
 - Validasi: type-check hijau, lint 0 error (16 warning pre-existing),
   test suite 61/61 lulus.
+
+### Penyesuaian dokumentasi (agar tidak membingungkan agent coding)
+
+- `AGENTS.md`: aturan larangan "migrasi Turso remote" dinetralkan menjadi
+  "migrasi database remote (Postgres produksi)".
+- `ARCHITECTURE.md` & `docs/folder-map.md`: pohon folder `db/` disesuaikan —
+  `client.ts` = PostgreSQL (node-postgres), `client-web.ts` (libSQL, sudah
+  tidak ada) dihapus dari daftar, `get-db.ts` = pg Pool singleton.
+- `README.md`: catatan `start:local`/`dev` tidak lagi menyebut database file
+  `.data/silayur.db` / Turso remote — semuanya merujuk `DATABASE_URL`
+  (Postgres).
+- Runbook era Turso (`docs/DEPLOY-CHECKLIST.md`, `docs/ENV-AUDIT.md`,
+  `docs/RUNBOOK-DEMO.md`, `docs/TARIFF-ACTIVATION.md`,
+  `docs/REKAP-ARSITEKTUR.md`) diberi banner status "dokumen era Turso"
+  di bagian atas: perintah `turso ...` dan env `TURSO_*` tidak berlaku,
+  gunakan `npm run db:*` dengan `DATABASE_URL`. Isi dokumen dipertahankan
+  sebagai catatan historis.
+- ADR dan dokumen PLAN historis tidak diubah (rekaman keputusan/riwayat).

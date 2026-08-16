@@ -96,7 +96,7 @@ export type AppConfigSnapshot = {
   users: AppUser[];
   ticketProducts: TicketProduct[];
   configItems: ConfigItemsState;
-  source: "turso";
+  source: "postgres";
   checkpoint: "11";
 };
 

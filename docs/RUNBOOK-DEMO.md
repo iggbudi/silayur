@@ -1,5 +1,11 @@
 # Runbook: Demo dengan Data Dummy (aman, tanpa menyentuh DB remote)
 
+> ⚠️ **Dokumen era Turso (sebelum migrasi Postgres, dipertahankan sebagai
+> catatan historis)**. Project sekarang memakai **PostgreSQL** via
+> `DATABASE_URL`. Database "file lokal" `.data/*.db` (libSQL) **tidak dipakai
+> lagi** — gunakan database Postgres lokal terpisah untuk demo (atur
+> `DATABASE_URL` di `.env`), bukan remote/produksi.
+
 Tujuan: mengisi **data contoh** (penjualan tiket, pemasukan non-tiket,
 pengeluaran, rekap kas shift) ke **database file lokal** supaya fitur yang sudah
 ada bisa langsung terlihat & diuji, sehingga atasan dapat menilai kecukupan.
