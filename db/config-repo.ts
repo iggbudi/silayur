@@ -2,11 +2,13 @@ import { and, eq } from "drizzle-orm";
 import {
   CONFIG_SECTION_KEYS,
   DEFAULT_MODULE_CONFIG,
+  HOUR_RANGE_SECTIONS,
   MODULE_KEYS,
   PERMISSION_KEYS,
   createEmptyConfigItems,
   createEmptyPermissions,
   isAccessLevel,
+  isValidHourRange,
   type AccessLevel,
   type AppConfigSnapshot,
   type AppUser,
@@ -27,6 +29,7 @@ import {
   modules,
   rolePermissions,
   roles,
+  scheduleShifts,
   users,
 } from "./schema";
 
@@ -160,17 +163,33 @@ export async function saveConfigItems(
     if (!Array.isArray(rows)) {
       throw new Error(`Daftar konfigurasi ${section} tidak valid.`);
     }
+    const isHourRangeSection = HOUR_RANGE_SECTIONS.includes(section);
     const ids = new Set<string>();
+    let activeCount = 0;
     for (const [index, item] of rows.entries()) {
       const id = item.id.trim();
       const name = item.name.trim();
       const detail = item.detail.trim();
+      const active = item.active !== false;
       if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) {
         throw new Error(`ID konfigurasi tidak valid: ${item.id}`);
       }
       if (!name) throw new Error("Nama konfigurasi wajib diisi.");
       if (ids.has(id)) throw new Error(`ID konfigurasi duplikat: ${id}`);
       ids.add(id);
+      if (isHourRangeSection) {
+        if (active && !detail) {
+          throw new Error(
+            `Rentang jam wajib diisi untuk "${name}" (contoh 08.00-16.00).`,
+          );
+        }
+        if (detail && !isValidHourRange(detail)) {
+          throw new Error(
+            `Format jam tidak valid untuk "${name}": gunakan HH.mm-HH.mm (contoh 08.00-16.00).`,
+          );
+        }
+      }
+      if (active) activeCount += 1;
       const sortOrder = Number.isSafeInteger(item.sortOrder)
         ? item.sortOrder
         : (index + 1) * 10;
@@ -182,7 +201,7 @@ export async function saveConfigItems(
           section,
           name,
           detail,
-          active: item.active !== false,
+          active,
           sortOrder,
         })
         .onConflictDoUpdate({
@@ -191,11 +210,30 @@ export async function saveConfigItems(
             section,
             name,
             detail,
-            active: item.active !== false,
+            active,
             sortOrder,
             updatedAt: new Date().toISOString(),
           },
         });
+    }
+
+    if (section === "shifts") {
+      if (rows.length > 0 && activeCount < 1) {
+        throw new Error("Minimal satu jam kerja (shift) harus tetap aktif.");
+      }
+      // Shift yang masih dipakai jadwal tidak boleh dihapus
+      // (nonaktifkan saja bila tidak dipakai lagi).
+      const used = await db
+        .selectDistinct({ shift: scheduleShifts.shift })
+        .from(scheduleShifts);
+      const stillUsed = used
+        .map((row) => row.shift)
+        .filter((shift) => !ids.has(shift));
+      if (stillUsed.length > 0) {
+        throw new Error(
+          `Jam kerja masih dipakai jadwal dan tidak dapat dihapus: ${stillUsed.join(", ")}. Nonaktifkan saja.`,
+        );
+      }
     }
 
     const existing = await db

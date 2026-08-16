@@ -3,8 +3,13 @@
  * `date` = tanggal kalender WIB untuk pengelompokan harian.
  */
 
-import { and, asc, eq, sql } from "drizzle-orm";
-import { employees, picAssignments, scheduleShifts } from "../../../db/schema";
+import { and, asc, eq } from "drizzle-orm";
+import {
+  configItems,
+  employees,
+  picAssignments,
+  scheduleShifts,
+} from "../../../db/schema";
 import type { AppDb } from "../../../db/get-db";
 import { todayIsoDate } from "../../../shared/date";
 import type {
@@ -18,9 +23,12 @@ import type {
   PicArea,
   PicAssignment,
   ScheduleShift,
+  ShiftCount,
+  ShiftDefinition,
   ShiftKey,
   UpdateScheduleStatusInput,
 } from "./types";
+import { DEFAULT_SHIFTS } from "./constants";
 
 function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
@@ -74,6 +82,33 @@ function mapPic(
     task: row.task,
     createdAt: row.createdAt,
   };
+}
+
+/**
+ * Daftar jam kerja (shift) aktif dari config_items section `shifts`
+ * (Pengaturan → Jam kerja karyawan). Fallback ke `DEFAULT_SHIFTS`
+ * bila config kosong.
+ */
+export async function listShifts(db: AppDb): Promise<ShiftDefinition[]> {
+  const rows = await db
+    .select({
+      key: configItems.id,
+      label: configItems.name,
+      time: configItems.detail,
+      active: configItems.active,
+      sortOrder: configItems.sortOrder,
+    })
+    .from(configItems)
+    .where(and(eq(configItems.section, "shifts"), eq(configItems.active, true)))
+    .orderBy(asc(configItems.sortOrder), asc(configItems.name));
+  if (rows.length === 0) return DEFAULT_SHIFTS;
+  return rows.map((row) => ({
+    key: row.key,
+    label: row.label,
+    time: row.time,
+    active: Boolean(row.active),
+    sortOrder: row.sortOrder,
+  }));
 }
 
 /** Daftar karyawan (default hanya aktif). */
@@ -141,11 +176,19 @@ export async function listSchedulesByDate(
     .from(scheduleShifts)
     .innerJoin(employees, eq(employees.id, scheduleShifts.employeeId))
     .where(eq(scheduleShifts.date, dateIso))
-    .orderBy(
-      sql`CASE WHEN ${scheduleShifts.shift} = 'morning' THEN 0 ELSE 1 END`,
-      asc(employees.name),
+    .orderBy(asc(employees.name));
+  // Urutkan ulang sesuai urutan shift di config (sortOrder), nama tetap urut.
+  const shiftOrder = new Map(
+    (await listShifts(db)).map((shift, index) => [shift.key, index]),
+  );
+  return rows
+    .map(mapSchedule)
+    .sort(
+      (a, b) =>
+        (shiftOrder.get(a.shift) ?? Number.MAX_SAFE_INTEGER) -
+          (shiftOrder.get(b.shift) ?? Number.MAX_SAFE_INTEGER) ||
+        a.employeeName.localeCompare(b.employeeName),
     );
-  return rows.map(mapSchedule);
 }
 
 /** Buat atau update jadwal shift (upsert berdasarkan employeeId + date). */
@@ -153,6 +196,10 @@ export async function createSchedule(
   db: AppDb,
   input: CreateScheduleInput,
 ): Promise<ScheduleShift> {
+  const activeShifts = await listShifts(db);
+  if (!activeShifts.some((shift) => shift.key === input.shift)) {
+    throw new Error("Shift tidak valid. Pilih jam kerja yang aktif di Pengaturan.");
+  }
   const now = new Date().toISOString();
   const id = newId("sch");
   const status: AttendanceStatus = input.status ?? "hadir";
@@ -306,38 +353,46 @@ export async function getJadwalSummary(
   dateIso?: string,
 ): Promise<JadwalSummary> {
   const date = dateIso ?? todayIsoDate();
-  const [schedulesToday, picsToday] = await Promise.all([
+  const [schedulesToday, picsToday, activeShifts] = await Promise.all([
     listSchedulesByDate(db, date),
     listPicsByDate(db, date),
+    listShifts(db),
   ]);
 
   const totalScheduled = schedulesToday.length;
-  const morningShift = schedulesToday.filter(
-    (s) => s.shift === "morning" && s.status !== "tidak_hadir" && s.status !== "libur",
-  ).length;
-  const eveningShift = schedulesToday.filter(
-    (s) => s.shift === "evening" && s.status !== "tidak_hadir" && s.status !== "libur",
-  ).length;
+  const shiftCounts: ShiftCount[] = activeShifts.map((shift) => ({
+    key: shift.key,
+    label: shift.label,
+    time: shift.time,
+    count: schedulesToday.filter(
+      (s) =>
+        s.shift === shift.key &&
+        s.status !== "tidak_hadir" &&
+        s.status !== "libur",
+    ).length,
+  }));
   const absent = schedulesToday.filter(
     (s) => s.status === "tidak_hadir",
   ).length;
 
   return {
     totalScheduled,
-    morningShift,
-    eveningShift,
+    shiftCounts,
     absent,
     picsToday,
     schedulesToday,
   };
 }
 
-/** Response lengkap: summary + list untuk satu tanggal. */
+/** Response lengkap: summary + list + shift aktif untuk satu tanggal. */
 export async function listJadwal(
   db: AppDb,
   dateIso?: string,
 ): Promise<JadwalListResponse> {
   const date = dateIso ?? todayIsoDate();
-  const summary = await getJadwalSummary(db, date);
-  return { date, summary };
+  const [summary, shifts] = await Promise.all([
+    getJadwalSummary(db, date),
+    listShifts(db),
+  ]);
+  return { date, summary, shifts };
 }

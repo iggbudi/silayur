@@ -153,6 +153,29 @@ export default function OperationsPage() {
           </p>
         ) : null}
 
+        {status && status.operatingHours.length > 0 ? (
+          <section className="panel">
+            <div className="panel-heading">
+              <h2>Jam buka taman</h2>
+              <span className="updated-label">
+                Diatur admin di Pengaturan &gt; Jam buka taman
+              </span>
+            </div>
+            <div className="operations-list">
+              {status.operatingHours.map((hours) => (
+                <div className="operations-row" key={hours.id}>
+                  <div className="operations-main">
+                    <strong>{hours.name}</strong>
+                  </div>
+                  <span className="operations-status operations-status-done">
+                    {hours.time}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {/* Panduan singkat untuk pengguna */}
         <section className="panel operations-guide">
           <div className="panel-heading">

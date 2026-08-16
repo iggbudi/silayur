@@ -9,6 +9,7 @@ import type { AppDb } from "../../../db/get-db";
 import { configItems, operationsChecklist, users } from "../../../db/schema";
 import { todayIsoDate } from "../../../shared/date";
 import type {
+  OperatingHour,
   OperationsChecklistInput,
   OperationsChecklistItem,
   OperationsStatus,
@@ -181,12 +182,43 @@ export async function listOperationsChecklist(
   });
 }
 
+/**
+ * Jam buka taman aktif dari config_items section `operating-hours`
+ * (Pengaturan → Jam buka taman).
+ */
+export async function listOperatingHours(
+  db: AppDb,
+): Promise<OperatingHour[]> {
+  const rows = await db
+    .select({
+      id: configItems.id,
+      name: configItems.name,
+      time: configItems.detail,
+    })
+    .from(configItems)
+    .where(
+      and(
+        eq(configItems.section, "operating-hours"),
+        eq(configItems.active, true),
+      ),
+    )
+    .orderBy(configItems.sortOrder);
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    time: row.time,
+  }));
+}
+
 /** Ringkasan checklist harian (dashboard & halaman). */
 export async function operationsStatus(
   db: AppDb,
   dateIso?: string,
 ): Promise<OperationsStatus> {
-  const items = await listOperationsChecklist(db, dateIso);
+  const [items, operatingHours] = await Promise.all([
+    listOperationsChecklist(db, dateIso),
+    listOperatingHours(db),
+  ]);
   let doneCount = 0;
   let updatedAt: string | null = null;
   for (const item of items) {
@@ -195,5 +227,11 @@ export async function operationsStatus(
       updatedAt = item.recordedAt;
     }
   }
-  return { items, doneCount, totalCount: items.length, updatedAt };
+  return {
+    items,
+    doneCount,
+    totalCount: items.length,
+    updatedAt,
+    operatingHours,
+  };
 }

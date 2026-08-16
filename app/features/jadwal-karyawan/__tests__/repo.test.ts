@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { sql } from "drizzle-orm";
-import type { Employee } from "../types";
+import type { Employee, ShiftCount } from "../types";
 import { prepareTestEnv, resetTestDb } from "../../../../tests/test-utils.mjs";
 
 async function freshDb() {
@@ -253,8 +253,15 @@ test("jadwal-karyawan: getJadwalSummary counts shifts and absent correctly", asy
 
   const summary = await getJadwalSummary(db, DATE_A);
   assert.equal(summary.totalScheduled, 5);
-  assert.equal(summary.morningShift, 2, "pagi aktif = hadir + izin");
-  assert.equal(summary.eveningShift, 1, "sore aktif = hadir saja");
+  assert.equal(summary.shiftCounts.length, 2, "dua shift aktif dari config");
+  const morning = summary.shiftCounts.find(
+    (s: ShiftCount) => s.key === "morning",
+  );
+  const evening = summary.shiftCounts.find(
+    (s: ShiftCount) => s.key === "evening",
+  );
+  assert.equal(morning?.count, 2, "pagi aktif = hadir + izin");
+  assert.equal(evening?.count, 1, "sore aktif = hadir saja");
   assert.equal(summary.absent, 1, "absen = tidak_hadir saja");
   assert.equal(summary.schedulesToday.length, 5);
   assert.equal(summary.picsToday.length, 0);

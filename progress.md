@@ -1,8 +1,8 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **16 Agustus 2026** — pembersihan sisa teks "Turso"
-dari antarmuka (halaman dashboard & pengaturan) setelah migrasi ke
-PostgreSQL.
+Pembaruan terakhir: **16 Agustus 2026** — jam kerja karyawan (shift) dan
+jam buka taman kini dapat diubah lewat Pengaturan (section `shifts` dan
+`operating-hours` di `config_items`), tidak lagi hardcoded.
 
 ## Status Saat Ini
 
@@ -13,6 +13,7 @@ PostgreSQL.
 - Modul Operasional — checklist harian: **selesai** (15 Agustus 2026)
 - Kalender hari libur — tarif weekend untuk tanggal libur: **selesai** (15 Agustus 2026)
 - Modul Tim & Jadwal — jadwal shift, PIC, kehadiran karyawan: **selesai** (16 Agustus 2026)
+- Pengaturan jam kerja (shift) & jam buka taman dari config: **selesai** (16 Agustus 2026)
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`

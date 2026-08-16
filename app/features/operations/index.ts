@@ -4,6 +4,7 @@
 
 export { operationsStatus, setOperationsChecklist } from "./api";
 export type {
+  OperatingHour,
   OperationsChecklistInput,
   OperationsChecklistItem,
   OperationsStatus,

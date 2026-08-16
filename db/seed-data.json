@@ -267,6 +267,38 @@
       "sortOrder": 20
     },
     {
+      "id": "op-hours-regular",
+      "section": "operating-hours",
+      "name": "Jadwal reguler",
+      "detail": "08.00-16.00",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "op-hours-holiday",
+      "section": "operating-hours",
+      "name": "Hari libur khusus",
+      "detail": "",
+      "active": false,
+      "sortOrder": 20
+    },
+    {
+      "id": "morning",
+      "section": "shifts",
+      "name": "Shift Pagi",
+      "detail": "06.00 - 14.00",
+      "active": true,
+      "sortOrder": 10
+    },
+    {
+      "id": "evening",
+      "section": "shifts",
+      "name": "Shift Sore",
+      "detail": "14.00 - 22.00",
+      "active": true,
+      "sortOrder": 20
+    },
+    {
       "id": "facility-pool",
       "section": "facilities",
       "name": "Kolam Renang",

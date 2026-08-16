@@ -14,7 +14,7 @@ export {
 export {
   AREAS,
   ATTENDANCE_STATUSES,
-  SHIFTS,
+  DEFAULT_SHIFTS,
   getShiftLabel,
   getShiftTime,
   getStatusClass,
@@ -33,6 +33,8 @@ export type {
   PicArea,
   PicAssignment,
   ScheduleShift,
+  ShiftCount,
+  ShiftDefinition,
   ShiftKey,
   UpdateScheduleStatusInput,
 } from "./types";

@@ -19,12 +19,13 @@ import {
   type Employee,
   type JadwalSummary,
   type PicArea,
+  type ShiftDefinition,
   type ShiftKey,
 } from "../features/jadwal-karyawan";
 import {
   AREAS,
   ATTENDANCE_STATUSES,
-  SHIFTS,
+  DEFAULT_SHIFTS,
   getShiftLabel,
   getShiftTime,
   getStatusClass,
@@ -70,6 +71,7 @@ export default function JadwalKaryawanPage() {
 
   const [selectedDate, setSelectedDate] = useState(todayIsoDate());
   const [summary, setSummary] = useState<JadwalSummary | null>(null);
+  const [shifts, setShifts] = useState<ShiftDefinition[]>(DEFAULT_SHIFTS);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,6 +98,12 @@ export default function JadwalKaryawanPage() {
       fetchEmployees(),
     ]);
     setSummary(jadwal.summary);
+    setShifts(jadwal.shifts);
+    setFormShift((current) =>
+      jadwal.shifts.some((s) => s.key === current)
+        ? current
+        : (jadwal.shifts[0]?.key ?? ""),
+    );
     setEmployees(empList.employees);
   }, []);
 
@@ -327,28 +335,26 @@ export default function JadwalKaryawanPage() {
               <span>karyawan</span>
             </div>
           </div>
-          <div className="metric-card metric-blue">
-            <div className="metric-heading">
-              <div className="metric-icon">☀️</div>
+          {(summary?.shiftCounts ?? []).map((shift, index) => (
+            <div
+              className={`metric-card ${
+                ["metric-blue", "metric-orange", "metric-green"][index % 3]
+              }`}
+              key={shift.key}
+            >
+              <div className="metric-heading">
+                <div className="metric-icon">
+                  {["☀️", "🌙", "🕒"][index % 3]}
+                </div>
+              </div>
+              <p>{shift.label} Aktif</p>
+              <div className="metric-value">
+                <strong>{shift.count}</strong>
+                <span>orang</span>
+              </div>
+              <small>{shift.time}</small>
             </div>
-            <p>Shift Pagi Aktif</p>
-            <div className="metric-value">
-              <strong>{summary?.morningShift ?? 0}</strong>
-              <span>orang</span>
-            </div>
-            <small>06.00 - 14.00</small>
-          </div>
-          <div className="metric-card metric-orange">
-            <div className="metric-heading">
-              <div className="metric-icon">🌙</div>
-            </div>
-            <p>Shift Sore Aktif</p>
-            <div className="metric-value">
-              <strong>{summary?.eveningShift ?? 0}</strong>
-              <span>orang</span>
-            </div>
-            <small>14.00 - 22.00</small>
-          </div>
+          ))}
           <div className="metric-card metric-red">
             <div className="metric-heading">
               <div className="metric-icon">✗</div>
@@ -423,7 +429,7 @@ export default function JadwalKaryawanPage() {
                   value={formShift}
                   onChange={(e) => setFormShift(e.target.value as ShiftKey)}
                 >
-                  {SHIFTS.map((s) => (
+                  {shifts.map((s) => (
                     <option key={s.key} value={s.key}>
                       {s.label} ({s.time})
                     </option>
@@ -619,9 +625,9 @@ export default function JadwalKaryawanPage() {
                         {sch.employeePosition}
                       </td>
                       <td>
-                        {getShiftLabel(sch.shift)}
+                        {getShiftLabel(sch.shift, shifts)}
                         <br />
-                        <small>{getShiftTime(sch.shift)}</small>
+                        <small>{getShiftTime(sch.shift, shifts)}</small>
                       </td>
                       <td>
                         <span className={getStatusClass(sch.status)}>

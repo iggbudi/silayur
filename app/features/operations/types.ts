@@ -26,10 +26,24 @@ export type OperationsChecklistInput = {
   note?: string;
 };
 
+/**
+ * Satu aturan jam buka taman — dari config_items section `operating-hours`
+ * (Pengaturan → Jam buka taman).
+ */
+export type OperatingHour = {
+  id: string;
+  /** Nama aturan (mis. "Jadwal reguler"). */
+  name: string;
+  /** Rentang jam HH.mm-HH.mm (mis. "08.00-16.00"). */
+  time: string;
+};
+
 /** Ringkasan checklist hari ini (halaman & dashboard). */
 export type OperationsStatus = {
   items: OperationsChecklistItem[];
   doneCount: number;
   totalCount: number;
   updatedAt: string | null;
+  /** Jam buka taman aktif dari Pengaturan (bisa kosong bila belum diatur). */
+  operatingHours: OperatingHour[];
 };

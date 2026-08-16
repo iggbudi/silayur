@@ -10,8 +10,11 @@ karyawan, dan tabel jadwal.
 
 ## Asumsi bisnis
 
-- **Shift**: `morning` (Shift Pagi 06.00–14.00) | `evening` (Shift Sore
-  14.00–22.00).
+- **Shift (jam kerja)**: dibaca dari config_items section `shifts`
+  (Pengaturan → Jam kerja karyawan) — tidak lagi hardcoded. ID stabil
+  `morning` (Shift Pagi) | `evening` (Shift Sore) berasal dari seed;
+  admin bisa mengubah jam, nama, atau menambah shift baru. Fallback
+  `DEFAULT_SHIFTS` dipakai bila config kosong.
 - **Status kehadiran**: `hadir` | `izin` | `libur` | `tidak_hadir`
   (default `hadir`).
 - **PIC area**: `Operasional` | `Tiket` | `Fasilitas` | `Kebersihan` |
@@ -21,9 +24,12 @@ karyawan, dan tabel jadwal.
   ada.
 - **Upsert PIC**: satu baris per `(employee_id, date, area)` — karyawan
   bisa jadi PIC di beberapa area sekaligus di hari yang sama.
-- **Ringkasan**: `morningShift`/`eveningShift` menghitung karyawan terjadwal
-  yang **bukan** `tidak_hadir`/`libur`; `absent` hanya menghitung
-  `tidak_hadir`.
+- **Ringkasan**: `shiftCounts` (dinamis mengikuti config) menghitung
+  karyawan terjadwal per shift yang **bukan** `tidak_hadir`/`libur`;
+  `absent` hanya menghitung `tidak_hadir`.
+- **Validasi shift**: `createSchedule` menolak shift yang tidak aktif di
+  Pengaturan; penghapusan shift yang masih dipakai jadwal ditolak oleh
+  `saveConfigItems` (nonaktifkan saja).
 - **RBAC**:
   - Lihat: `jadwalKaryawan` ≥ `view`.
   - Buat jadwal, assign PIC, tambah karyawan, update status:
@@ -35,9 +41,9 @@ karyawan, dan tabel jadwal.
 
 | File | Peran |
 |------|-------|
-| `types.ts` | Tipe domain (Employee, ScheduleShift, PicAssignment, input, summary, response). |
-| `constants.ts` | Konstanta shift, area, status; helper label & class badge. |
-| `repo.ts` | `listEmployees`, `createEmployee`, `listSchedulesByDate`, `createSchedule`, `updateScheduleStatus`, `listPicsByDate`, `assignPic`, `getJadwalSummary`, `listJadwal`. |
+| `types.ts` | Tipe domain (Employee, ScheduleShift, ShiftDefinition, PicAssignment, input, summary, response). |
+| `constants.ts` | `DEFAULT_SHIFTS` (fallback), konstanta area, status; helper label & class badge. |
+| `repo.ts` | `listShifts` (config), `listEmployees`, `createEmployee`, `listSchedulesByDate`, `createSchedule`, `updateScheduleStatus`, `listPicsByDate`, `assignPic`, `getJadwalSummary`, `listJadwal`. |
 | `validation.ts` | Skema Zod untuk semua input mutasi. |
 | `api.ts` | Client wrapper: `fetchJadwal`, `createSchedule`, `updateScheduleStatus`, `assignPic`, `fetchEmployees`, `createEmployee`. |
 | `index.ts` | Public API (satu-satunya pintu impor dari luar). |
@@ -56,8 +62,8 @@ karyawan, dan tabel jadwal.
   - `app/api/jadwal-karyawan/[id]/status/route.ts` (POST update status).
 - Halaman: `app/jadwal-karyawan/page.tsx`; nav "Tim & Jadwal" diaktifkan
   (`sidebar-navigation.tsx`).
-- Seed: 7 karyawan awal di `db/seed-data.json` + entri permission
-  `jadwalKaryawan` per role.
+- Seed: 7 karyawan awal + item config `shifts` (ID `morning`/`evening`)
+  di `db/seed-data.json` + entri permission `jadwalKaryawan` per role.
 
 ## Status implementasi
 

@@ -50,6 +50,8 @@ export type UserMutation = AppUser & {
 export type ConfigSectionKey =
   | "tickets"
   | "hours"
+  | "operating-hours"
+  | "shifts"
   | "facilities"
   | "revenue";
 
@@ -123,9 +125,23 @@ export const PERMISSION_KEYS: PermissionModuleKey[] = [
 export const CONFIG_SECTION_KEYS: ConfigSectionKey[] = [
   "tickets",
   "hours",
+  "operating-hours",
+  "shifts",
   "facilities",
   "revenue",
 ];
+
+/**
+ * Section config yang detailnya berupa rentang jam (HH.mm-HH.mm),
+ * mis. "08.00-16.00" atau "06.00 - 14.00".
+ */
+export const HOUR_RANGE_SECTIONS: ConfigSectionKey[] = [
+  "operating-hours",
+  "shifts",
+];
+
+/** Pola rentang jam: dua angka HH.mm dipisah tanda minus (spasi opsional). */
+export const HOUR_RANGE_PATTERN = /^\d{2}\.\d{2}\s*-\s*\d{2}\.\d{2}$/;
 
 export const ACCESS_LEVELS: AccessLevel[] = ["none", "view", "manage"];
 
@@ -141,9 +157,35 @@ export function createEmptyConfigItems(): ConfigItemsState {
   return {
     tickets: [],
     hours: [],
+    "operating-hours": [],
+    shifts: [],
     facilities: [],
     revenue: [],
   };
+}
+
+function parseClockValue(value: string): number | null {
+  const [hourRaw, minuteRaw] = value.split(".");
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) return null;
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+/**
+ * Validasi rentang jam untuk section `operating-hours` / `shifts`.
+ * Format `HH.mm-HH.mm` (spasi di sekitar minus diperbolehkan),
+ * jam mulai harus lebih awal dari jam selesai (shift semalam tidak didukung).
+ */
+export function isValidHourRange(value: string): boolean {
+  const trimmed = value.trim();
+  if (!HOUR_RANGE_PATTERN.test(trimmed)) return false;
+  const [startRaw, endRaw] = trimmed.split(/\s*-\s*/);
+  const start = parseClockValue(startRaw);
+  const end = parseClockValue(endRaw);
+  if (start === null || end === null) return false;
+  return start < end;
 }
 
 export function createEmptyPermissions(): Record<

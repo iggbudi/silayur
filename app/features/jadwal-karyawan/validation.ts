@@ -15,7 +15,9 @@ export const createScheduleSchema = z.object({
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal wajib YYYY-MM-DD."),
-  shift: z.enum(["morning", "evening"], { message: "Shift tidak valid." }),
+  shift: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]+$/, "Shift tidak valid."),
   status: z.enum(["hadir", "izin", "libur", "tidak_hadir"]).optional(),
   notes: z.string().optional(),
 });

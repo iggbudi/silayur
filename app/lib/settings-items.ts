@@ -37,6 +37,8 @@ export function toConfigItemsState(
   return {
     tickets: convert("tickets"),
     hours: convert("hours"),
+    "operating-hours": convert("operating-hours"),
+    shifts: convert("shifts"),
     facilities: convert("facilities"),
     revenue: convert("revenue"),
   };

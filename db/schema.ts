@@ -130,7 +130,14 @@ export const configItems = pgTable(
   {
     id: text("id").primaryKey(),
     section: text("section")
-      .$type<"tickets" | "hours" | "facilities" | "revenue">()
+      .$type<
+        | "tickets"
+        | "hours"
+        | "operating-hours"
+        | "shifts"
+        | "facilities"
+        | "revenue"
+      >()
       .notNull(),
     name: text("name").notNull(),
     detail: text("detail").notNull().default(""),

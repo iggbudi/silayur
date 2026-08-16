@@ -38,6 +38,7 @@ import type {
   TicketProduct,
   UserMutation,
 } from "../../shared/config";
+import { isValidHourRange } from "../../shared/config";
 
 const sections: Array<{
   key: SectionKey;
@@ -70,6 +71,24 @@ const sections: Array<{
     description: "Atur daftar pekerjaan harian untuk buka dan tutup taman.",
     icon: "✓",
     addLabel: "Tambah tugas",
+  },
+  {
+    key: "operating-hours",
+    label: "Jam buka taman",
+    eyebrow: "Operasional",
+    description:
+      "Atur jam buka dan tutup taman per jenis hari. Format jam HH.mm-HH.mm.",
+    icon: "🕘",
+    addLabel: "Tambah jadwal jam buka",
+  },
+  {
+    key: "shifts",
+    label: "Jam kerja karyawan",
+    eyebrow: "Jadwal",
+    description:
+      "Atur shift kerja yang bisa dipilih saat membuat jadwal karyawan.",
+    icon: "⏰",
+    addLabel: "Tambah jam kerja",
   },
   {
     key: "holidays",
@@ -146,6 +165,8 @@ const initialItems: Record<SectionKey, ConfigItem[]> = {
   ],
   tickets: [],
   hours: [],
+  "operating-hours": [],
+  shifts: [],
   holidays: [],
   facilities: [],
   revenue: [],
@@ -253,6 +274,8 @@ export default function SettingsPage() {
           ),
           tickets: config.configItems.tickets,
           hours: config.configItems.hours,
+          "operating-hours": config.configItems["operating-hours"],
+          shifts: config.configItems.shifts,
           facilities: config.configItems.facilities,
           revenue: config.configItems.revenue,
         }));
@@ -306,6 +329,8 @@ export default function SettingsPage() {
           ...current,
           tickets: saved.configItems.tickets,
           hours: saved.configItems.hours,
+          "operating-hours": saved.configItems["operating-hours"],
+          shifts: saved.configItems.shifts,
           facilities: saved.configItems.facilities,
           revenue: saved.configItems.revenue,
         }));
@@ -752,10 +777,21 @@ export default function SettingsPage() {
       return;
     }
 
+    const isHourRangeSection =
+      activeSection === "operating-hours" || activeSection === "shifts";
+    if (isHourRangeSection && !isValidHourRange(newDetail)) {
+      setPersistError(
+        "Rentang jam wajib diisi dengan format HH.mm-HH.mm (contoh 08.00-16.00).",
+      );
+      return;
+    }
+
     const nextItem: ConfigItem = {
       id: `item-${crypto.randomUUID()}`,
       name: newName.trim(),
-      detail: newDetail.trim() || "Belum ada keterangan",
+      detail: isHourRangeSection
+        ? newDetail.trim()
+        : newDetail.trim() || "Belum ada keterangan",
       active: true,
       section: activeSection,
       sortOrder: (items[activeSection].length + 1) * 10,
@@ -1001,11 +1037,21 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="config-detail">Keterangan</label>
+                  <label htmlFor="config-detail">
+                    {activeSection === "operating-hours" ||
+                    activeSection === "shifts"
+                      ? "Rentang jam"
+                      : "Keterangan"}
+                  </label>
                   <input
                     id="config-detail"
                     value={newDetail}
-                    placeholder="Keterangan singkat"
+                    placeholder={
+                      activeSection === "operating-hours" ||
+                      activeSection === "shifts"
+                        ? "Contoh 08.00-16.00"
+                        : "Keterangan singkat"
+                    }
                     onChange={(event) => setNewDetail(event.target.value)}
                   />
                 </div>
