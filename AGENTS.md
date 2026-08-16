@@ -128,6 +128,32 @@ curl -sI https://digitama.nusadev.biz.id/   # harapannya 200
 > `db:migrate` menyentuh DB produksi (`silayur`) → tetap butuh otorisasi
 > eksplisit owner (lihat Batasan di atas), meskipun server ini sendiri.
 
+### GitHub credentials & push (server PUNYA kredensial)
+
+- Kredensial GitHub ada di server, tapi **milik user `ubuntu`**: CLI `gh`
+  ter-autentikasi sebagai akun `iggbudi` (protokol HTTPS, token
+  `github_pat_*` di `/home/ubuntu/.config/gh/hosts.yml`, mode 600).
+- `www-data` TIDAK punya gh auth (`HOME=/var/www`) dan tidak bisa membaca
+  `/home/ubuntu` → `sudo -u www-data git push` gagal dengan
+  `could not read Username for 'https://github.com'`. Ini NORMAL.
+- **Push commit lokal ke GitHub harus dijalankan sebagai `ubuntu`:**
+
+  ```bash
+  cd /var/www/digitama.nusadev.biz.id
+  sudo -u ubuntu git push origin digitama
+  ```
+
+- `git push` / `git fetch` sebagai `ubuntu` AMAN untuk repo ini: operasi
+  network-only, tidak menyentuh working tree/index/objects → ownership file
+  tetap `www-data` (terverifikasi).
+- ⚠️ JANGAN jalankan perintah git yang menulis working tree (checkout, stash,
+  merge, reset, apply) sebagai `ubuntu` — hasilnya file jadi milik `ubuntu`
+  dan `www-data` tidak bisa commit lagi. Perbaikan bila terlanjur:
+  `sudo find .git -user ubuntu -exec chown www-data:www-data {} +` (dan
+  `sudo chown www-data:www-data` pada file kerja yang berubah).
+- Pull/merge/branch tetap `sudo -u www-data` (repo publik — fetch/pull tidak
+  butuh auth).
+
 ### Test lokal di server
 
 - `npm test` butuh `TEST_DATABASE_URL` (sudah diisi di `.env`; helper test
