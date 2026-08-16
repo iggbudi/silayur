@@ -255,7 +255,7 @@ opsional `app/lib/access.ts` + pemakainya.
 - [ ] `npm test` hijau (termasuk test baru item terkait)
 - [ ] Docs sinkron: `progress.md` + dokumen relevan di `docs/`
 - [ ] Satu commit per item, pesan conventional commits
-- [ ] Tidak menyentuh Turso remote / Sites tanpa otorisasi
+- [ ] Tidak menyentuh database produksi / server produksi tanpa otorisasi
 
 ## Status Tracker
 

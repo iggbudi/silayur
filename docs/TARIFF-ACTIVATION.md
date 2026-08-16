@@ -10,12 +10,17 @@
 > bisa menerima transaksi nyata.
 >
 > **Status saat dokumen ini ditulis (29 Juli 2026)**:
-> - Schema CP11 (ticket_products, ticket_prices) sudah ter-rollout ke Turso remote ✅
+> - Schema CP11 (ticket_products, ticket_prices) sudah ter-rollout ✅
 > - Seed sudah include 2 produk (Dewasa `TKT-DEWASA`, Anak `TKT-ANAK`) ✅
 > - Seed include 1 tarif aktif: Dewasa weekday `Rp 15.000` (mulai 2026-07-25)
 > - Seed include 1 tarif non-aktif: Dewasa weekend `Rp 20.000` (menunggu konfirmasi)
 > - **Tarif Anak BELUM ada** — perlu diinput manual oleh owner
 > - **Tarif Dewasa weekend perlu diaktifkan** (toggle dari non-aktif ke aktif)
+>
+> **Catatan deploy saat ini**: project di-publish ke GitHub dan **deploy tidak
+> lagi menggunakan ChatGPT Sites tooling**. Jalankan aplikasi untuk aktivasi
+> lewat preview lokal (`npm run start:local`) atau di server produksi milik
+> owner (bukan domain `.chatgpt.site`).
 >
 > **Asumsi bisnis** (per `progress.md` Checkpoint 11):
 > - Dewasa = usia 12 tahun ke atas
@@ -78,7 +83,8 @@ Berlaku sampai: YYYY-MM-DD atau "selamanya"
 ### Prasyarat
 - Login sebagai Super Admin (`admin.resepsionis` + password)
 - Sidebar menampilkan menu **Pengaturan** (ikon ⚙)
-- Akses `https://silayur-dashboard.cakilbiru.chatgpt.site/pengaturan`
+- Akses halaman `/pengaturan` di aplikasi (lokal `http://localhost:3000` atau
+  domain server produksi milik owner)
 
 ### Step 1: Buka Master Tiket
 

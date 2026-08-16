@@ -92,11 +92,11 @@ PostgreSQL: `drizzle.config` dialect `postgresql`, client `pg`).
 ## Rencana 4 — Sinkronisasi env var & deploy produksi
 
 Runtime produksi memakai `DATABASE_URL` **Postgres** (dibaca `worker/index.ts`
-lewat `exposeDbEnv` → `process.env.DATABASE_URL`). Env diberi dari **platform
-Sites** (`project_id` di `.openai/hosting.json`), dikelola via "ChatGPT Sites
-tooling" eksternal — bukan CLI di repo.
+lewat `exposeDbEnv` → `process.env.DATABASE_URL`). Project di-publish ke GitHub
+(`git push origin main`) dan **deploy dijalankan owner di server sendiri** (bukan
+ChatGPT Sites tooling).
 
-Wajib diset di env produksi Sites:
+Wajib diset di env produksi:
 - `DATABASE_URL` (Postgres) — runtime wajib.
 - `DIGITAMA_SEED_ADMIN_PASSWORD`, `DIGITAMA_SEED_DEFAULT_PASSWORD` — bila
   re-seed produksi (idempotent, hanya menambah).
@@ -104,17 +104,16 @@ Wajib diset di env produksi Sites:
 - `DIGITAMA_DEMO_ALLOW_REMOTE` — jangan di-set di produksi (guard demo).
 
 Lebih detail:
-- Set env di platform Sites (bukan file local; file `.env`/`.dev.vars` tidak
-  ter-baca di produksi).
-- `npm run build` → hasil `dist/` memuat metadata `hosting.json` + `drizzle`.
-- Deploy ke Sites memakai "ChatGPT Sites tooling" (command langs lihat docs
-  internal Sites; umumnya trigger via host platform).
+- Set env di `.env` / environment server owner (bukan file lokal developer;
+  `.env`/`.dev.vars` developer tidak ter-baca di produksi).
+- `npm run build` → hasil `dist/`.
+- Jalankan produksi di server owner: `npm run start` (Node >=22.13).
 - Sesi lama (`silayur_session`) otomatis tidak berlaku usai deploy; pengguna
   perlu login ulang dengan cookie `digitama_session`.
 
-Status: `[ ]` — menunggu akses ke platform "ChatGPT Sites tooling" (atau
-di-execute owner) untuk men-set `DATABASE_URL` Postgres + env `DIGITAMA_*`
-dan memicu deploy. Otorisasi pemilik sudah diberikan (16 Agt 2026).
+Status: `[ ]` — menunggu owner men-set `DATABASE_URL` Postgres + env `DIGITAMA_*`
+di server produksinya sendiri dan men-deploy (otorisasi pemilik sudah diberikan,
+16 Agt 2026).
 
 ---
 

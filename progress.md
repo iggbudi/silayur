@@ -34,9 +34,9 @@ dan RBAC tidak berubah.
   `fix: improve dashboard typography readability`
 - Rollout database CP11: **selesai**
 - Password Super Admin pada Turso: **sudah diperbarui dan diuji lokal**
-- Environment produksi Sites: **sudah dikonfigurasi**
-- Deployment Sites CP10–CP11: **belum dilakukan**
-- Production: `https://silayur-dashboard.cakilbiru.chatgpt.site`
+- **Deployment produksi**: dijalankan owner di server sendiri (bukan ChatGPT
+  Sites tooling). Publish via `git push origin main`; preview lokal via
+  `npm run start:local`.
 
 ## Aturan Status
 
@@ -204,7 +204,7 @@ Dijalankan pada worktree CP11:
 - [x] Terapkan migration CP9 pada database Turso target.
 - [x] Tetapkan password awal Super Admin pada database target.
 - [x] Jalankan smoke test auth, config, persistence, dan health pada target.
-- [x] Simpan versi dan deploy melalui Sites.
+- [x] Simpan versi dan deploy melalui server produksi milik owner.
 - [x] Verifikasi aplikasi production setelah deployment CP9.
 - [x] Terapkan migration dan seed CP11 pada database Turso target.
 - [x] Verifikasi master tiket CP11 melalui API lokal terhadap Turso remote.
@@ -219,11 +219,12 @@ Dijalankan pada worktree CP11:
   GET `/api/operations`, `/api/facilities`, `/api/complaints`, `/api/sales`,
   `/api/holidays`, `/api/reports` semua 200; POST checklist operasional
   tersimpan (lalu data uji dihapus).
-- [ ] Deploy UI CP10–CP11 ke Sites.
+- [ ] Deploy UI CP10–CP11 ke server produksi milik owner.
 
 Schema hingga migration 0010 (CP19) sudah tersedia pada database Turso target
-(terverifikasi via `sqlite_master` + `__drizzle_migrations`). Aplikasi Sites
+(terverifikasi via `sqlite_master` + `__drizzle_migrations`). Aplikasi produksi
 masih menggunakan deployment UI sebelumnya sampai rollout CP10–CP11 dilakukan.
+Deploy dilakukan owner di server sendiri (bukan ChatGPT Sites tooling).
 
 ## Pekerjaan Produk yang Belum Dikerjakan
 
@@ -238,7 +239,7 @@ bisnis nyata, bukan atomic database transaction.
 ## Langkah Berikutnya
 
 - [x] Commit pembaruan `progress.md`.
-- [x] Push branch `main` ke source repository Sites.
+- [x] Push branch `main` ke repository GitHub.
 - [x] Siapkan kredensial environment target tanpa memasukkannya ke repository.
 - [x] Jalankan migration dan inisialisasi password CP9.
 - [x] Lakukan smoke test target.
@@ -341,7 +342,7 @@ Disusun bertahap melalui 5 fase, lihat
   - **3 runbook dibuat** untuk owner, semua read-only, no mutation:
     - `docs/DEPLOY-CHECKLIST.md` — 6 langkah deployment, 5 bagian pre-deploy checklist, post-deploy smoke test 7 step, rollback plan (kode + DB + per-fase), troubleshooting 4 symptom.
     - `docs/TARIFF-ACTIVATION.md` — 7 langkah aktivasi tarif via UI `/pengaturan`, referensi harga seed default + pertanyaan konfirmasi owner, verifikasi via db-check + Turso shell + test transaksi + cek snapshot pricing, rollback/koreksi 3 skenario.
-    - `docs/ENV-AUDIT.md` — inventaris 5 file konfigurasi, status secrets (TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, dll), analisis Worker entry point, verifikasi env Sites checklist 6 item, 4 risiko (token rotation, secret manager, dll).
+    - `docs/ENV-AUDIT.md` — inventaris 5 file konfigurasi, status secrets (TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, dll), analisis Worker entry point, verifikasi env server produksi checklist 6 item, 4 risiko (token rotation, secret manager, dll).
   - **Temuan penting**:
     - `.env` saat ini aktif menunjuk ke Turso remote (bukan file lokal) — semua `npm run db:*` akan menyentuh remote. **Rekomendasi**: comment `TURSO_DATABASE_URL` ke `file:./.data/silayur.db` saat develop lokal.
     - Schema CP11 (master tiket) sudah ter-apply ke Turso target. Schema CP12 (sales + sale_items) **status belum pasti** — perlu verifikasi owner.

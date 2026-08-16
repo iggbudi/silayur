@@ -88,9 +88,10 @@ menimpa konfigurasi operasional yang sudah berubah.
 
 ## Deployment
 
-Metadata Sites berada di `.openai/hosting.json`. Deployment sengaja tidak
-dijalankan selama verifikasi lokal; lakukan migration dan konfigurasi password
-database target sebelum menerbitkan versi baru.
+Publish dibuat dengan `git push` ke GitHub (`origin/main`). Deployment ke server
+produksi dilakukan oleh **owner di server sendiri** (bukan ChatGPT Sites
+tooling). Siapkan migration dan konfigurasi password database target sebelum
+menerbitkan versi baru.
 
 ### Menjalankan di lokal (database file)
 

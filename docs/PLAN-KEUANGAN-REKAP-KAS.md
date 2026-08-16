@@ -209,7 +209,7 @@ Semua thin handler mengikuti pola `app/api/sales/route.ts` (same-origin, auth, R
 - [ ] Migration `0006_*` ter-generate & ter-track.
 - [ ] Docs sinkron: `MANIFEST.md` finance + `progress.md`.
 - [ ] Commit conventional commits per fase.
-- [ ] **Tidak** menyentuh Turso remote / Sites tanpa otorisasi.
+- [ ] **Tidak** menyentuh database produksi / server produksi tanpa otorisasi.
 
 ---
 

@@ -176,7 +176,7 @@ Setelah void/approve, refetch ringkasan (tidak menebak angka lokal).
 - [ ] Migration `0005_*` ter-generate & ter-track di git.
 - [ ] Docs sinkron: `MANIFEST.md` slice + `progress.md`.
 - [ ] Commit conventional commits.
-- [ ] **Tidak** menyentuh Turso remote / Sites tanpa otorisasi.
+- [ ] **Tidak** menyentuh database produksi / server produksi tanpa otorisasi.
 
 ---
 

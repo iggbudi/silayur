@@ -8,7 +8,13 @@
 
 > **Dibuat**: 29 Juli 2026 · **Auditor**: agent (Fase B) · **Tujuan**:
 > inventaris environment variables, secrets, dan konfigurasi yang
-> dibutuhkan untuk deploy ke Cloudflare Sites.
+> dibutuhkan untuk deploy.
+>
+> **Catatan deploy saat ini**: project di-publish ke GitHub (`git push origin
+> main`) dan **deploy tidak lagi menggunakan ChatGPT Sites tooling** — production
+> dijalankan owner di server sendiri dengan `npm run build` + `npm run start`.
+> Seluruh referensi "Sites", "`.openai/hosting.json`", dan "wrangler" di bawah
+> adalah sisa catatan historis era Cloudflare/OpenAI-Sites dan **tidak berlaku**.
 
 ---
 
@@ -18,10 +24,9 @@
 |---|---|---|
 | `.env` | Local environment untuk Node scripts (`db:migrate`, `db:seed`, `db:check`, `auth:set-password`) | ❌ No (di `.gitignore`) |
 | `.env.example` | Template `.env` (no secrets) | ✅ Yes |
-| `.dev.vars` | Local environment untuk **Wrangler dev** (simulasi env Cloudflare Worker) | ❌ No (di `.gitignore`) |
-| `.openai/hosting.json` | Metadata Sites (project_id) | ✅ Yes (no secrets) |
-| `worker/index.ts` | Entry point Cloudflare Worker, baca env via `interface Env` | ✅ Yes |
-| `wrangler.toml` (jika ada) | Konfigurasi Cloudflare Worker | N/A (tidak ada di repo saat ini) |
+| `.dev.vars` | Local environment untuk **vinext dev** (simulasi env runtime) | ❌ No (di `.gitignore`) |
+| `worker/index.ts` | Entry point worker, baca env via `interface Env` | ✅ Yes |
+| `wrangler.toml` (jika ada) | Konfigurasi worker (historis, tidak dipakai sekarang) | N/A (tidak ada di repo saat ini) |
 
 ---
 
@@ -29,9 +34,9 @@
 
 ### Status per 29 Juli 2026
 
-| Secret | Local (.env) | Sites (Cloudflare) | Status |
+| Secret | Local (.env) | Server produksi | Status |
 |---|---|---|---|
-| `TURSO_DATABASE_URL` | `libsql://silayur-nayantaka.aws-us-east-1.turso.io` | (perlu inject) | ⚠️ Sama dengan env, harus sama di Sites |
+| `TURSO_DATABASE_URL` | `libsql://silayur-nayantaka.aws-us-east-1.turso.io` | (perlu inject, historis) | ⚠️ Era Turso — lihat catatan historis di atas |
 | `TURSO_AUTH_TOKEN` | `eyJ...` (JWT) | (perlu inject) | ⚠️ Kredensial yang sama |
 | `DIGITAMA_SEED_ADMIN_PASSWORD` | (kosong/tidak ada) | (tidak perlu — admin sudah di-set) | ✅ Tidak perlu untuk re-deploy |
 | `DIGITAMA_NEW_PASSWORD` | (env-only, tidak di-commit) | N/A | ✅ Env-only |
@@ -47,14 +52,17 @@
      `file:./.data/silayur.db` agar migrate/seed tidak ganggu remote.
    - Hanya uncomment saat owner yang menjalankan untuk sync ke remote.
 
-2. **`.dev.vars` untuk Wrangler** = sama dengan `.env`. Saat `vinext dev`
+2. **`.dev.vars` untuk vinext dev** = sama dengan `.env`. Saat `vinext dev`
    dijalankan, env akan ter-inject ke `process.env` via `exposeTursoEnv`
-   di `worker/index.ts` line 31-41.
-   Atau via Sites UI yang mengelola `project_id` di `.openai/hosting.json`.
+   di `worker/index.ts` line 31-41 (catatan historis era Turso).
 
 ---
 
-## 🌐 Sites Metadata (`.openai/hosting.json`)
+## 🗂 Metadata Hosting (legacy — tidak berlaku)
+
+Dokumen historis Cloudflare/OpenAI-Sites. Project kini **tidak lagi memakai
+ChatGPT Sites tooling**; deploy dilakukan owner di server sendiri via
+`npm run build` + `npm run start`.
 
 ```json
 {
@@ -64,11 +72,8 @@
 }
 ```
 
-- **`project_id`**: identifier unik project di ChatGPT Sites
-- **`d1: null`**: tidak menggunakan Cloudflare D1 (pakai Turso/libSQL eksternal)
-- **`r2: null`**: tidak menggunakan Cloudflare R2 (pakai Turso untuk storage)
-
-**Tidak ada perubahan** yang dibutuhkan di file ini untuk CP12.
+File ini hanya disisakan agar `vite.config.ts` tetap bisa di-build seperti
+sebelumnya; bukan penentu mekanisme deploy saat ini.
 
 ---
 
@@ -119,34 +124,33 @@ TURSO_DATABASE_URL=file:./.data/silayur.db
    dari log.
 
 2. **Token rotation** — Turso mendukung rotation. Jika di-rotate,
-   update `.env`, `.dev.vars`, dan Sites env var **bersamaan**.
-   Tanpa sinkron, app di Sites akan 500 dengan auth error.
+   update `.env`, `.dev.vars`, dan env server produksi **bersamaan**.
+   Tanpa sinkron, aplikasi produksi akan 500 dengan auth error.
 
 3. **Backup `.env` ke secret manager** — untuk production, idealnya
    `.env` di-rotate ke Secrets Manager (1Password, Bitwarden, AWS SSM, dll).
    Saat ini masih plain file di workstation owner.
 
 4. **Tidak ada `wrangler.toml`** — Vinext/Vite mungkin generate otomatis
-   saat build, atau Sites handle konfigurasi via UI. Tidak ada yang perlu
-   ditambahkan untuk CP12.
+   saat build. Tidak ada yang perlu ditambahkan untuk CP12.
 
 ---
 
-## 📞 Untuk Owner
+## 📋 Untuk Owner (deploy di server sendiri)
 
-Saat deploy pertama kali ke Sites:
-1. Pastikan env vars di Sites = sama dengan di `.env`
-2. Build & deploy
+Saat deploy pertama kali ke server produksi:
+1. Pastikan env vars di server = sama dengan di `.env`
+2. Build & jalankan (`npm run build` + `npm run start`)
 3. Smoke test (lihat `DEPLOY-CHECKLIST.md`)
 4. Jika ada perbedaan DB schema antara local & remote → migrate remote
    dulu (lihat `DEPLOY-CHECKLIST.md` step 1)
 
 Saat env rotation:
 1. Update `.env` (lokal)
-2. Update Sites env vars
+2. Update env server produksi
 3. Update `.dev.vars` (untuk `vinext dev`)
 4. Restart local dev server
-5. Re-deploy Sites (untuk memastikan env baru aktif)
+5. Re-build & restart server produksi (agar env baru aktif)
 
 ---
 
@@ -164,34 +168,37 @@ Saat env rotation:
 3. Path lain → delegate ke `vinext/server/app-router-entry` (handler Next.js).
 
 ### Catatan untuk Deploy
-- Worker HARUS bisa baca `TURSO_DATABASE_URL` & `TURSO_AUTH_TOKEN` dari
-  env di runtime. Sites harus menyediakannya.
+- Worker HARUS bisa baca `DATABASE_URL` (Postgres) dari env di runtime;
+  set di environment/`.env` server produksi milik owner.
+- Env `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` di bawah hanya catatan historis
+  era Turso dan tidak lagi berlaku.
 - Tanpa env ini, request ke route yang butuh DB (mis. `/api/sales`) akan
-  error "TURSO_DATABASE_URL required".
+  error "DATABASE_URL required".
 
 ---
 
-## 📋 Verifikasi Environment Sites
+## 📋 Verifikasi Environment Server Produksi
 
-Sebelum deploy, owner perlu verifikasi:
+Sebelum deploy, owner perlu memverifikasi di server tujuan (Postgres):
 
-- [ ] Sites project untuk `appgprj_6a61ceb6ee18819192df17f590744025` sudah ada
-- [ ] Sites environment variables:
-  - [ ] `TURSO_DATABASE_URL` = `libsql://silayur-nayantaka.aws-us-east-1.turso.io`
-  - [ ] `TURSO_AUTH_TOKEN` = (sama dengan di `.env`)
-- [ ] Build command Sites: `npm run build` (sesuai `package.json` script)
-- [ ] Output directory Sites: `dist/` (lihat `vite.config.ts`)
-- [ ] Worker entry: `worker/index.ts` (atau auto-detect oleh Sites)
-- [ ] Database Turso target sudah di-migrate ke CP12 (lihat `DEPLOY-CHECKLIST.md` step 1)
+- [ ] Env `DATABASE_URL` (Postgres) benar di environment/`.env` server produksi
+  (bukan file developer yang ter-commit).
+- [ ] Build command: `npm run build` (sesuai `package.json` script)
+- [ ] Output directory: `dist/` (lihat `vite.config.ts`)
+- [ ] Runtime: Node `>=22.13`
+- [ ] Database target sudah di-migrate (lihat `DEPLOY-CHECKLIST.md` step 1)
 
 ---
 
 
-3. **Sites harus di-set env vars** via Sites dashboard / wrangler secret
-   (tergantung tooling yang mengelola deploy):
+3. **Set env vars** di environment/`.env` server produksi (bukan committable
+   file). Contoh nilai yang perlu diset di target:
+
    ```bash
-   # Contoh via wrangler (tidak digunakan saat ini)
-   wrangler secret put TURSO_DATABASE_URL
-   wrangler secret put TURSO_AUTH_TOKEN
+   # .env server produksi
+   DATABASE_URL=postgres://user:pass@host:5432/silayur
+   # DIGITAMA_SEED_ADMIN_PASSWORD, DIGITAMA_NEW_PASSWORD bila perlu reset/re-seed
    ```
-   Atau via Sites UI yang mengelola `project_id` di `.openai/hosting.json`.
+
+   Perintah `wrangler secret put` dan "Sites UI" di bawah adalah sisa catatan
+   historis era Cloudflare/OpenAI-Sites dan **tidak berlaku**.

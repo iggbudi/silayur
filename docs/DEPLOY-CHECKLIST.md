@@ -6,10 +6,16 @@
 > `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, dan perintah `turso ...` di bawah
 > **tidak berlaku lagi** — gunakan `npm run db:migrate` / `db:seed` /
 > `db:check` dengan `.env` yang menunjuk target Postgres yang benar.
+>
+> **Catatan deploy saat ini**: project di-publish ke GitHub (`git push origin
+> main`) dan **deploy tidak lagi menggunakan ChatGPT Sites tooling** — deployment
+> produksi dijalankan oleh owner di server sendiri. Semua langkah "deploy ke
+> Sites" di bawah hanya catatan historis dan tidak untuk diikuti.
 
-> **Tujuan**: mendeploy UI Checkpoint 10–12 ke Cloudflare Sites sehingga
-> user (operator loket, admin) bisa mengakses menu **Penjualan** di
-> sidebar dan fitur **Master Tiket & Tarif** dari `/pengaturan`.
+> **Tujuan (historis, tidak diikuti)**: mendeploy UI Checkpoint 10–12 ke
+> Cloudflare/OpenAI Sites sehingga user (operator loket, admin) bisa mengakses
+> menu **Penjualan** di sidebar dan fitur **Master Tiket & Tarif** dari
+> `/pengaturan`.
 >
 > **Status saat dokumen ini ditulis (29 Juli 2026)**:
 > - Kode UI sudah selesai & tervalidasi lokal (type-check ✅, lint ✅, 6/6 test ✅)
@@ -26,13 +32,13 @@
 
 Sesuai `.serena/memories/task_completion.md`:
 
-> Do not run remote Turso migrations or Sites deployment without task
-> authorization; local validation alone does not authorize production
-> mutation.
+> Do not run remote Turso/Postgres migrations or deploy to a production server
+> without task authorization; local validation alone does not authorize
+> production mutation.
 
 - **Jangan** jalankan `npm run db:migrate` terhadap Turso **remote/production**
   kecuali owner sudah memberi otorisasi eksplisit.
-- **Jangan** deploy ke Sites tanpa smoke test lokal & staging pass.
+- **Jangan** deploy ke server produksi tanpa smoke test lokal & staging pass.
 - **Backup DB** sebelum migrate (lihat bagian "Rollback").
 - **Password admin** disimpan di environment, **bukan** di commit.
 - **`.env` dan `.dev.vars` TIDAK BOLEH** masuk ke git (cek `.gitignore`).
@@ -61,9 +67,9 @@ Sesuai `.serena/memories/task_completion.md`:
 - [ ] Pastikan tabel `sales`, `sale_items` sudah ada di remote (CP12)
 - [ ] Jika belum, lihat bagian "Apply Migration ke Remote"
 
-### D. Verifikasi Environment Sites
-- [ ] `.openai/hosting.json` ada dan valid (cek `project_id`)
-- [ ] Sites environment variables tersedia: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+### D. Verifikasi Environment Server Produksi
+- [ ] `.openai/hosting.json` ada dan valid (hanya artefak build, bukan penentu deploy)
+- [ ] Env server produksi tersedia: `DATABASE_URL` Postgres (+ `DIGITAMA_*`)
 - [ ] `worker/index.ts` mereference env vars dengan benar
 
 ### E. Backup
@@ -137,35 +143,38 @@ npm run auth:set-password -- admin.resepsionis
 Pergantian password **otomatis mencabut semua sesi lama** user tsb
 (per `progress.md` Checkpoint 9).
 
-### 5. Build & Deploy ke Sites
+### 5. Build & Deploy ke Server Milik Owner
+
+Project kini di-publish ke GitHub dan **deploy ke server produksi dilakukan oleh
+owner** (bukan ChatGPT Sites tooling). Langkah owner:
 
 ```bash
 # 1. Build
 npm run build
 
-# 2. Deploy ke Sites (gunakan ChatGPT Sites tooling, bukan wrangler langsung)
-#    Cek dokumentasi Sites internal untuk command persis
-#    Umumnya: trigger lewat host platform yang mengelola project_id di .openai/hosting.json
+# 2. Jalankan server produksi (Node >=22.13) di server owner
+npm run start
+# atau, untuk Postgres lokal di Windows:
+npm run start:local
 ```
 
 **Catatan penting**:
-- Sites otomatis inject `TURSO_DATABASE_URL` & `TURSO_AUTH_TOKEN` dari
-  konfigurasi Sites (lihat `.openai/hosting.json`).
-- **Tidak** commit `.env` atau `.dev.vars` — Sites tidak akan bisa baca
-  kredensial dari file yang tidak ter-commit.
-- Worker `worker/index.ts` baca env via `exposeTursoEnv(env)` (line 31-41)
-  lalu set ke `process.env` untuk handler.
+- **Tidak** commit `.env` atau `.dev.vars` — kredensial DB target (`DATABASE_URL`
+  Postgres) di-set langsung di environment/`.env` server owner yang tidak
+  ter-commit.
+- Worker `worker/index.ts` baca env via `exposeDbEnv(env)` lalu set ke
+  `process.env` untuk handler.
 
 ### 6. Post-Deploy Smoke Test
 
 #### a. Cek halaman utama
 ```bash
-curl -I https://silayur-dashboard.cakilbiru.chatgpt.site/
+curl -I http://localhost:3000/
 # Expected: 200 OK atau 302 ke /login
 ```
 
 #### b. Login sebagai admin
-- Buka `https://silayur-dashboard.cakilbiru.chatgpt.site/login`
+- Buka `http://localhost:3000/login`
 - Login dengan `admin.resepsionis` + password yang sudah di-set
 - Expected: redirect ke `/` (dashboard) tanpa splash
 
@@ -182,7 +191,7 @@ curl -I https://silayur-dashboard.cakilbiru.chatgpt.site/
 #### e. Cek API Sales
 ```bash
 # List sales hari ini (perlu session cookie dari login)
-curl -b "session=..." https://silayur-dashboard.cakilbiru.chatgpt.site/api/sales
+curl -b "session=..." http://localhost:3000/api/sales
 # Expected: { date, count, revenue, sales: [] }
 ```
 
@@ -199,9 +208,11 @@ curl -b "session=..." https://silayur-dashboard.cakilbiru.chatgpt.site/api/sales
 
 ## 🆘 Rollback Plan
 
-### Rollback Kode (Sites)
+### Rollback Kode (server produksi milik owner)
 
-Sites umumnya punya mekanisme rollback ke deployment sebelumnya. Identifikasi deployment ID sebelumnya, lalu trigger rollback.
+Server owner umumnya punya mekanisme rollback ke versi/build sebelumnya (mis.
+mengembalikan `dist/` lama atau checkout commit sebelumnya), lalu restart ulang
+proses Node.
 
 ### Rollback DB (jika migration CP12 gagal)
 
@@ -238,7 +249,7 @@ git revert 5737833
 ### Symptom: 500 di `/penjualan` setelah deploy
 - Cek `turso db shell` untuk struktur tabel
 - Pastikan migration 0003 sudah ter-apply
-- Lihat logs Sites untuk stack trace
+- Lihat log proses server produksi milik owner untuk stack trace
 
 ### Symptom: Login loop / tidak bisa login
 - Password admin salah / belum di-set di environment target
@@ -250,7 +261,7 @@ git revert 5737833
 ## 📞 Eskalasi
 
 - **DB issues**: cek `progress.md` → "Status Database dan Deployment"
-- **Sites deployment issues**: rujuk dokumentasi internal Sites
+- **Deployment issues**: rujuk proses deploy owner di server sendiri
 - **Kode/arsitektur**: lihat `docs/adr/0001-hybrid-layered-with-co-location.md`
 
 ---
