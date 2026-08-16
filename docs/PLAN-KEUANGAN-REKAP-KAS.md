@@ -1,6 +1,6 @@
 # Rencana Implementasi — Keuangan & Rekap Kas (Sprint 3)
 
-> Dibuat: **13 Agustus 2026** · Author: agent · Reviewer: owner SILAYUR
+> Dibuat: **13 Agustus 2026** · Author: agent · Reviewer: owner DIGITAMA
 > Workflow mengikuti [`AGENTS.md`](../AGENTS.md): kerjakan → test lokal → update docs → commit.
 > Status: **Selesai diimplementasi** (13 Agustus 2026) — lihat `progress.md` & `app/features/finance/MANIFEST.md`.
 

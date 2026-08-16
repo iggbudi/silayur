@@ -361,6 +361,14 @@
       "detail": "Paket kegiatan kelompok",
       "active": false,
       "sortOrder": 40
+    },
+    {
+      "id": "identity-park-name",
+      "section": "identity",
+      "name": "Taman Wisata",
+      "detail": "Nama tempat wisata yang ditampilkan di seluruh sistem",
+      "active": true,
+      "sortOrder": 10
     }
   ],
   "employees": [

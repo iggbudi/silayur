@@ -1,12 +1,12 @@
-# SILAYUR — Arsitektur Aplikasi
+# DIGITAMA — Arsitektur Aplikasi
 
-> Dokumen ini menjelaskan filosofi organisasi kode SILAYUR Dashboard.
+> Dokumen ini menjelaskan filosofi organisasi kode DIGITAMA Dashboard.
 > Berlaku sejak Checkpoint 12. Untuk konteks produk & progress, lihat
 > [`README.md`](./README.md) dan [`progress.md`](./progress.md).
 
 ## TL;DR
 
-SILAYUR adalah **edge-deployed modular monolith** dengan organisasi kode
+DIGITAMA adalah **edge-deployed modular monolith** dengan organisasi kode
 **hybrid (layered + co-located + vertical slice)**. Kita **tidak** refactor
 besar-besaran; setiap fase dirancang agar **aman, inkremental, dan
 backward-compatible**. Sejak CP12, kita punya **pilot slice** (`ticket-sales`)

@@ -1,6 +1,19 @@
-# Progress Pengembangan SILAYUR
+# Progress Pengembangan DIGITAMA
 
-Pembaruan terakhir: **16 Agustus 2026** — redesain UI halaman `/login`
+Pembaruan terakhir: **16 Agustus 2026** — rebrand produk dari **SILAYUR** menjadi
+**DIGITAMA** (nama generik untuk sistem tata kelola tempat wisata). Detail:
+- Teks brand di UI (`app/`) dan dokumen inti diganti ke **DIGITAMA**.
+- **Fitur baru «Identitas taman»** (Pengaturan → Identitas taman): nama taman
+  kini simpan di `config_items` section `identity` dan ditampilkan dinamis di
+  halaman login, dashboard, dan laporan. Default seed: `Taman Wisata`.
+- Endpoint publik baru `/api/config/identity` (hanya nama taman, tanpa
+  autentikasi) agar halaman pra-login bisa menampilkannya.
+- Identitas teknis direname: cookie sesi `digitama_session`, env var
+  `DIGITAMA_SEED_*`, `DIGITAMA_NEW_PASSWORD`, `DIGITAMA_DEMO_ALLOW_REMOTE`.
+- ⚠️ Identitas infrastruktur **dibiarkan apa adanya** (nama DB Postgres
+  `silayur`/`silayur_test`, URL Turso `silayur-nayantaka`, file `.data/silayur.db`).
+
+Pembaruan sebelumnya: **16 Agustus 2026** — redesain UI halaman `/login`
 menjadi layout split-screen: panel hero bernuansa brand (gradient ungu gelap
 senada sidebar) di kiri dan kartu form di kanan; hero otomatis tersembunyi di
 layar sempit. Menambah toggle lihat/sembunyikan password; logika login, sesi,

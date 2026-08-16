@@ -32,12 +32,12 @@ async function loadDotEnv() {
 async function main() {
   await loadDotEnv();
   const username = process.argv[2]?.trim().toLowerCase();
-  const password = process.env.SILAYUR_NEW_PASSWORD;
+  const password = process.env.DIGITAMA_NEW_PASSWORD;
   if (!username) {
     throw new Error("Usage: npm run auth:set-password -- <username>");
   }
   if (!password) {
-    throw new Error("Set SILAYUR_NEW_PASSWORD before running this command.");
+    throw new Error("Set DIGITAMA_NEW_PASSWORD before running this command.");
   }
 
   const url = process.env.DATABASE_URL?.trim();

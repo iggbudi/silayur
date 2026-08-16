@@ -1,4 +1,4 @@
-# AGENTS.md — Pedoman Agent untuk SILAYUR Dashboard
+# AGENTS.md — Pedoman Agent untuk DIGITAMA Dashboard
 
 Pedoman kerja untuk agent coding (pi, Claude Code, Codex, dll.) yang bekerja
 di repositori ini. Sebelum mulai, baca juga

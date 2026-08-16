@@ -8,6 +8,7 @@ import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
+import { SidebarFooter } from "../components/sidebar-footer";
 import { SessionGate } from "../components/session-gate";
 import { Toggle } from "../components/toggle";
 import { SettingsUserForm } from "../components/settings-user-form";
@@ -39,6 +40,7 @@ import type {
   UserMutation,
 } from "../../shared/config";
 import { isValidHourRange } from "../../shared/config";
+import { useParkName } from "../hooks/use-park-name";
 
 const sections: Array<{
   key: SectionKey;
@@ -48,6 +50,14 @@ const sections: Array<{
   icon: string;
   addLabel: string;
 }> = [
+  {
+    key: "identity",
+    label: "Identitas taman",
+    eyebrow: "Branding",
+    description: "Nama tempat wisata yang ditampilkan di seluruh sistem.",
+    icon: "🏷️",
+    addLabel: "",
+  },
   {
     key: "modules",
     label: "Modul sistem",
@@ -170,6 +180,7 @@ const initialItems: Record<SectionKey, ConfigItem[]> = {
   holidays: [],
   facilities: [],
   revenue: [],
+  identity: [],
   users: [],
 };
 
@@ -196,6 +207,7 @@ export default function SettingsPage() {
     toggle: toggleMobileMenu,
   } = useMobileSidebar();
   const currentUser = session?.user ?? null;
+  const parkName = useParkName();
   const [activeSection, setActiveSection] = useState<SectionKey>("modules");
   const [items, setItems] = useState(initialItems);
   const [query, setQuery] = useState("");
@@ -232,6 +244,9 @@ export default function SettingsPage() {
   const [holidayName, setHolidayName] = useState("");
   const [holidayError, setHolidayError] = useState("");
   const [holidayNotice, setHolidayNotice] = useState("");
+  const [parkNameEdit, setParkNameEdit] = useState("");
+  const [parkNameNotice, setParkNameNotice] = useState(false);
+  const [parkNameError, setParkNameError] = useState("");
 
   const section = sections.find((item) => item.key === activeSection)!;
   const currentItems = items[activeSection];
@@ -265,6 +280,10 @@ export default function SettingsPage() {
         setRoles(config.roles);
         setRolePermissions(config.permissions);
         setUsers(config.users);
+        const identityItem = config.configItems.identity.find(
+          (entry) => entry.active,
+        );
+        setParkNameEdit(identityItem ? identityItem.name : "");
         setItems((current) => ({
           ...current,
           modules: current.modules.map((item) =>
@@ -278,6 +297,7 @@ export default function SettingsPage() {
           shifts: config.configItems.shifts,
           facilities: config.configItems.facilities,
           revenue: config.configItems.revenue,
+          identity: config.configItems.identity,
         }));
       } catch {
         if (cancelled) return;
@@ -333,6 +353,7 @@ export default function SettingsPage() {
           shifts: saved.configItems.shifts,
           facilities: saved.configItems.facilities,
           revenue: saved.configItems.revenue,
+          identity: saved.configItems.identity,
         }));
       }
       setSavedNotice(true);
@@ -391,6 +412,44 @@ export default function SettingsPage() {
       setHolidayError(
         caught instanceof Error ? caught.message : "Gagal menghapus hari libur.",
       );
+    }
+  }
+
+  async function saveParkName() {
+    setParkNameError("");
+    setParkNameNotice(false);
+    const name = parkNameEdit.trim();
+    if (!name) {
+      setParkNameError("Nama taman wajib diisi.");
+      return;
+    }
+    const current = items.identity[0] ?? {
+      id: "identity-park-name",
+      name,
+      detail: "Nama tempat wisata yang ditampilkan di seluruh sistem",
+      active: true,
+      sortOrder: 10,
+    };
+    const nextIdentity: ConfigItem[] = [
+      {
+        ...current,
+        name,
+        detail:
+          current.detail || "Nama tempat wisata yang ditampilkan di seluruh sistem",
+      },
+    ];
+    const previous = items.identity;
+    const nextItems: Record<SectionKey, ConfigItem[]> = {
+      ...items,
+      identity: nextIdentity,
+    };
+    setItems(nextItems);
+    try {
+      await persistConfig({ configItems: toConfigItemsState(nextItems) });
+      setParkNameNotice(true);
+      setParkNameEdit(name);
+    } catch {
+      setItems((currentState) => ({ ...currentState, identity: previous }));
     }
   }
 
@@ -858,18 +917,11 @@ export default function SettingsPage() {
           onNavigate={closeMobileMenu}
         />
 
-        <div className="sidebar-footer">
-          <div className="avatar">{getInitials(currentUser.name)}</div>
-          <div>
-            <strong>{currentUser.name}</strong>
-            <span>{currentRoleLabel}</span>
-          </div>
-          <div className="sidebar-footer-actions">
-            <button className="logout-button" type="button" onClick={handleLogout}>
-              Keluar
-            </button>
-          </div>
-        </div>
+        <SidebarFooter
+          name={currentUser.name}
+          roleLabel={currentRoleLabel}
+          onLogout={handleLogout}
+        />
       </aside>
 
       <section className="workspace settings-workspace">
@@ -925,7 +977,7 @@ export default function SettingsPage() {
         <section className="setup-overview">
           <div className="setup-copy">
             <span className="section-kicker">Checkpoint 11</span>
-            <h2>Susun sistem sesuai cara kerja Silayur Park</h2>
+            <h2>Susun sistem sesuai cara kerja {parkName}</h2>
             <p>
               Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
               atau menambahkan konfigurasi satu per satu tanpa mengubah kode.
@@ -1168,11 +1220,59 @@ export default function SettingsPage() {
               </div>
             ) : null}
 
+            {activeSection === "identity" ? (
+              <div className="holiday-panel">
+                <div className="panel-heading">
+                  <h2>Nama taman wisata</h2>
+                  <span className="updated-label">
+                    Ditampilkan di seluruh sistem
+                  </span>
+                </div>
+                {parkNameNotice ? (
+                  <p className="finance-notice" role="status">
+                    Nama taman diperbarui.
+                  </p>
+                ) : null}
+                {parkNameError ? (
+                  <p className="sale-form-error" role="alert">
+                    {parkNameError}
+                  </p>
+                ) : null}
+                {canManageSettings ? (
+                  <div className="holiday-form">
+                    <label className="modal-field">
+                      <span>Nama taman</span>
+                      <input
+                        type="text"
+                        value={parkNameEdit}
+                        placeholder="Mis. Taman Bahagia"
+                        onChange={(event) => {
+                          setParkNameEdit(event.target.value);
+                          setParkNameError("");
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="finance-btn finance-btn-primary"
+                      disabled={!parkNameEdit.trim()}
+                      onClick={() => void saveParkName()}
+                    >
+                      Simpan nama taman
+                    </button>
+                  </div>
+                ) : (
+                  <p className="holiday-empty">{parkNameEdit || "Taman Wisata"}</p>
+                )}
+              </div>
+            ) : null}
+
             <div
               className={`config-list ${
                 activeSection === "users" ||
                 activeSection === "tickets" ||
-                activeSection === "holidays"
+                activeSection === "holidays" ||
+                activeSection === "identity"
                   ? "config-list-hidden"
                   : ""
               }`}

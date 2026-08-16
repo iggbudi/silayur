@@ -1,5 +1,5 @@
 /**
- * Database entrypoint for SILAYUR (PostgreSQL).
+ * Database entrypoint for DIGITAMA (PostgreSQL).
  *
  * - API routes: `getRequestDb()` dari `./get-db`.
  * - Scripts/tests Node: `createDb()` / `getDb()` dari `./client`.

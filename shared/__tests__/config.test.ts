@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CONFIG_SECTION_KEYS,
+  DEFAULT_PARK_NAME,
   HOUR_RANGE_SECTIONS,
   createEmptyConfigItems,
+  getParkName,
   isValidHourRange,
 } from "../config";
 
@@ -41,6 +43,7 @@ test("createEmptyConfigItems memuat semua section", () => {
   assert.deepEqual(Object.keys(empty).sort(), [
     "facilities",
     "hours",
+    "identity",
     "operating-hours",
     "revenue",
     "shifts",
@@ -49,4 +52,62 @@ test("createEmptyConfigItems memuat semua section", () => {
   for (const rows of Object.values(empty)) {
     assert.deepEqual(rows, []);
   }
+});
+
+test("getParkName membaca nama taman aktif dan memakai fallback default", () => {
+  const empty = createEmptyConfigItems();
+  assert.equal(getParkName(empty), DEFAULT_PARK_NAME);
+
+  const withName = {
+    ...empty,
+    identity: [
+      {
+        id: "identity-park-name",
+        section: "identity" as const,
+        name: "Taman Bahagia",
+        detail: "",
+        active: true,
+        sortOrder: 10,
+      },
+    ],
+  };
+  assert.equal(getParkName(withName), "Taman Bahagia");
+
+  const blankName = {
+    ...empty,
+    identity: [
+      {
+        id: "identity-park-name",
+        section: "identity" as const,
+        name: "   ",
+        detail: "",
+        active: true,
+        sortOrder: 10,
+      },
+    ],
+  };
+  assert.equal(getParkName(blankName), DEFAULT_PARK_NAME);
+
+  const picksActiveFirst = {
+    ...empty,
+    identity: [
+      {
+        id: "identity-off",
+        section: "identity" as const,
+        name: "Nonaktif",
+        detail: "",
+        active: false,
+        sortOrder: 10,
+      },
+      {
+        id: "identity-on",
+        section: "identity" as const,
+        name: "Aktif",
+        detail: "",
+        active: true,
+        sortOrder: 20,
+      },
+    ],
+  };
+  assert.equal(getParkName(picksActiveFirst), "Aktif");
 });

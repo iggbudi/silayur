@@ -1,0 +1,113 @@
+# Rencana Rebrand & Penyempurnaan DIGITAMA
+
+> Dokumen ini mencatat **rencana lanjutan (1–4)** pasca-eksekusi rebrand
+> **SILAYUR → DIGITAMA** dan penambahan fitur **«Nama Taman Wisata»**
+> (Pengaturan → Identitas taman).
+>
+> Status tiap item ditandai `[ ]` (belum) / `[~]` (berjalan) / `[x]` (selesai).
+> Untuk konteks teknis perubahan yang sudah dilakukan, lihat `progress.md`
+> dan `docs/folder-map.md`.
+
+---
+
+## Rekap singkat (sudah dikerjakan)
+
+- Teks brand di UI (`app/`) dan dokumen inti diganti ke **DIGITAMA**.
+- Fitur nama taman: section `config_items` = `identity`, helper `getParkName()`
+  (fallback `Taman Wisata`), editor di **Pengaturan → Identitas taman**, dan
+  endpoint publik `/api/config/identity` untuk halaman pra-login.
+- Cookie sesi `digitama_session`; env var `DIGITAMA_SEED_*`,
+  `DIGITAMA_NEW_PASSWORD`, `DIGITAMA_DEMO_ALLOW_REMOTE`.
+- Verifikasi: `type-check` hijau, ESLint bersih (kecuali warning pre-existing),
+  build sukses, test murni 6/6 dan test integrasi `config-api` pass.
+
+---
+
+## Rencana 1 — Commit perubahan saat ini
+
+- [ ] Review `git diff` (pastikan pekerjaan user yang tidak terkait tetap utuh).
+- [ ] Jangan commit rahasia (`.env`, `.dev.vars`, dll. sudah di-ignore).
+- [ ] Pesan commit terpilih (conventional commits):
+
+  ```
+  feat: rebrand ke DIGITAMA dan tambah pengaturan nama taman (identitas)
+  ```
+
+  Atau bila ingin diperinci per scope:
+
+  ```
+  feat(branding): ubah SILAYUR menjadi DIGITAMA di UI dan dokumen inti
+  feat(settings): tambah seksi identitas untuk nama taman wisata
+  chore(env): rename SILAYUR_* ke DIGITAMA_*
+  ```
+
+- [ ] Satu commit per unit kerja; jangan campur dengan perubahan lain.
+
+---
+
+## Rencana 2 — Perbarui dokumen historis secara selektif
+
+Dokumen di `docs/*` dan ADR masih memuat kata "SILAYUR". Sebagian besar bersifat
+**historis** atau merujuk **identitas infrastruktur**, sehingga tidak diubah
+massal agar tidak menulis ulang riwayat dan tidak merusak referensi yang benar.
+
+Tujuan: mengganti **label produk** saja, tanpa menyentuh identitas teknis.
+
+- [ ] Identifikasi refeferensi **label produk** (mis. judul, narasi "SILAYUR
+      Dashboard") di: `docs/DEPLOY-CHECKLIST.md`, `docs/ENV-AUDIT.md`,
+      `docs/RUNBOOK-DEMO.md`, `docs/TARIFF-ACTIVATION.md`,
+      `docs/ASESMEN-FITUR-UI-UX.md`, `docs/PLAN-*.md`,
+      `docs/REKAP-ARSITEKTUR.md`, `docs/adr/*`.
+- [ ] Ganti ke **DIGITAMA** hanya pada bagian yang menyebut produk, bukan
+      padainfra.
+- [ ] **JANGAN** mengganti: URL Turso `silayur-nayantaka`, file
+      `.data/silayur.db`, atau nama DB Postgres `silayur`/`silayur_test`
+      (identitas infrastruktur — lihat Rencana 3).
+- [ ] Sinkronkan ulang `docs/folder-map.md` bila ada slice/boundary berubah.
+
+---
+
+## Rencana 3 — Identitas infrastruktur (dibiarkan apa adanya)
+
+Identitas berikut **sengaja dipertahankan** karena menggantinya berisiko
+memutus sistem yang berjalan dan tidak terlihat pengguna:
+
+- Nama database PostgreSQL: `silayur` / `silayur_test`
+  (`drizzle.config.ts`, `.env.example`, `.env`, `.dev.vars`).
+- URL Turso (legacy): `libsql://silayur-nayantaka...` (di docs).
+- File SQLite lokal (legacy): `.data/silayur.db`, `.data/demo-silayur.db`.
+
+Keputusan:
+- [ ] **Tetap** (rekomendasi): biarkan seperti sekarang. Migrasi kini memakai
+      PostgreSQL sehingga Turso/SQLite hanya artefak lama.
+- [ ] **Opsional** bila benar-benar ingin bersih: buat DB baru `digitama` /
+      `digitama_test`, pindahkan data, lalu ubah `DATABASE_URL` + `drizzle.config`.
+      ⚠️ Perlu otorisasi owner & backup sebelum menjalankan apa pun.
+
+---
+
+## Rencana 4 — Sinkronisasi env var di produksi
+
+Env var & cookie di-rename di sisi kode. Saat deploy ke Hosting/Sites, pastikan
+**nilai lama `SILAYUR_*` tidak lagi terbaca**:
+
+- [ ] Di kelola secret/platform produksi (Sites/workerd), set:
+      `DIGITAMA_SEED_ADMIN_PASSWORD`, `DIGITAMA_SEED_DEFAULT_PASSWORD`,
+      `DIGITAMA_NEW_PASSWORD`, `DIGITAMA_DEMO_ALLOW_REMOTE`.
+- [ ] Hapus / tidak usah pakai var lama `SILAYUR_*` agar tidak ambigu.
+- [ ] Pastikan nama cookie `digitama_session` diterima (sesi lama dengan
+      `silayur_session` otomatis tidak berlaku).
+- [ ] Verifikasi smoke pasca-deploy: login admin 200, seed idempotent
+      (config_items = 15 termasuk `identity-park-name`), endpoint publik
+      `/api/config/identity` mengembalikan `parkName`.
+
+---
+
+## Status ringkas
+
+| # | Rencana | Status |
+|---|---|---|
+| 1 | Commit perubahan saat ini | `[ ]` |
+| 2 | Perbarui dokumen historis (selektif) | `[ ]` |
+| 3 | Identitas infrastruktur (biarkan / opsional bersihkan) | `[~]` keputusan di tangan owner |
+| 4 | Sinkronisasi env var di produksi | `[ ]` (perlu deploy) |

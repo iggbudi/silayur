@@ -33,8 +33,8 @@
 |---|---|---|---|
 | `TURSO_DATABASE_URL` | `libsql://silayur-nayantaka.aws-us-east-1.turso.io` | (perlu inject) | ⚠️ Sama dengan env, harus sama di Sites |
 | `TURSO_AUTH_TOKEN` | `eyJ...` (JWT) | (perlu inject) | ⚠️ Kredensial yang sama |
-| `SILAYUR_SEED_ADMIN_PASSWORD` | (kosong/tidak ada) | (tidak perlu — admin sudah di-set) | ✅ Tidak perlu untuk re-deploy |
-| `SILAYUR_NEW_PASSWORD` | (env-only, tidak di-commit) | N/A | ✅ Env-only |
+| `DIGITAMA_SEED_ADMIN_PASSWORD` | (kosong/tidak ada) | (tidak perlu — admin sudah di-set) | ✅ Tidak perlu untuk re-deploy |
+| `DIGITAMA_NEW_PASSWORD` | (env-only, tidak di-commit) | N/A | ✅ Env-only |
 
 ### ⚠️ Temuan
 
@@ -101,8 +101,8 @@ TURSO_AUTH_TOKEN=eyJhbGc...  (JWT)
 ```ini
 TURSO_DATABASE_URL=file:./.data/silayur.db
 # TURSO_AUTH_TOKEN=
-# SILAYUR_SEED_ADMIN_PASSWORD=
-# SILAYUR_NEW_PASSWORD=
+# DIGITAMA_SEED_ADMIN_PASSWORD=
+# DIGITAMA_NEW_PASSWORD=
 ```
 
 **Rekomendasi**:
@@ -154,7 +154,7 @@ Saat env rotation:
 
 - **v1** (29 Juli 2026) — initial environment audit
 - Author: agent (Fase B)
-- Reviewer: owner SILAYUR
+- Reviewer: owner DIGITAMA
 
 
 ### Yang Terjadi Saat Request Masuk

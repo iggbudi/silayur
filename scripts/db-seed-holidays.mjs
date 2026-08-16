@@ -6,7 +6,7 @@
  * Daftar ini statis untuk tahun 2026; tambahkan tahun berikutnya di sini.
  *
  * Aman: menolak database non-lokal (localhost/127.0.0.1) kecuali di-force
- * SILAYUR_DEMO_ALLOW_REMOTE=1.
+ * DIGITAMA_DEMO_ALLOW_REMOTE=1.
  *
  * Penggunaan:
  *   node scripts/db-seed-holidays.mjs
@@ -69,11 +69,11 @@ async function main() {
   if (!url) throw new Error("DATABASE_URL is required (postgres://...).");
 
   if (!isLocalHost(url)) {
-    const allow = process.env.SILAYUR_DEMO_ALLOW_REMOTE?.trim() === "1";
+    const allow = process.env.DIGITAMA_DEMO_ALLOW_REMOTE?.trim() === "1";
     if (!allow) {
       throw new Error(
         "Menolak seed libur nasional ke database non-lokal. " +
-          "Set SILAYUR_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
+          "Set DIGITAMA_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
       );
     }
   }

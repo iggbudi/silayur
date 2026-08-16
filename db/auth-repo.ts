@@ -8,7 +8,7 @@ import type { AppUser } from "../shared/config";
 import type { AppDb } from "./get-db";
 import { authSessions, users } from "./schema";
 
-export const SESSION_COOKIE_NAME = "silayur_session";
+export const SESSION_COOKIE_NAME = "digitama_session";
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 
 export class AuthenticationError extends Error {

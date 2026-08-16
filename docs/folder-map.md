@@ -1,4 +1,4 @@
-# Folder Map SILAYUR
+# Folder Map DIGITAMA
 
 > Visual map dari organisasi kode. Untuk filosofi, lihat
 > [`../ARCHITECTURE.md`](../ARCHITECTURE.md). Untuk keputusan teknis,

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchSession, loginRemote } from "../lib/config-api";
 import { Brand } from "../components/brand";
+import { useParkName } from "../hooks/use-park-name";
 
 const HERO_POINTS = [
   {
@@ -33,6 +34,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const parkName = useParkName();
 
   useEffect(() => {
     if (loggedOut) return;
@@ -77,9 +79,9 @@ export default function LoginPage() {
         <section className="login-panel">
           <div className="login-card login-loading">
             <span className="login-spinner" aria-hidden="true" />
-            <span className="section-kicker">Sesi SILAYUR</span>
+            <span className="section-kicker">Sesi DIGITAMA</span>
             <h1>Memeriksa sesi aman…</h1>
-            <p>Menyiapkan akses SILAYUR.</p>
+            <p>Menyiapkan akses DIGITAMA.</p>
           </div>
         </section>
       </main>
@@ -93,11 +95,11 @@ export default function LoginPage() {
           <Brand compact />
 
           <div className="login-hero-copy">
-            <span className="login-hero-kicker">Silayur Park · Semarang</span>
+            <span className="login-hero-kicker">{parkName}</span>
             <h2>Kendalikan operasional taman dari satu dasbor.</h2>
             <p>
               Tiket, penjualan, jadwal tim, dan laporan keuangan tersatu dalam
-              sistem SILAYUR — khusus untuk akun operasional.
+              sistem DIGITAMA — khusus untuk akun operasional.
             </p>
           </div>
 

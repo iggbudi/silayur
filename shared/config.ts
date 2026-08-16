@@ -53,7 +53,8 @@ export type ConfigSectionKey =
   | "operating-hours"
   | "shifts"
   | "facilities"
-  | "revenue";
+  | "revenue"
+  | "identity";
 
 export type ConfigItem = {
   id: string;
@@ -129,6 +130,7 @@ export const CONFIG_SECTION_KEYS: ConfigSectionKey[] = [
   "shifts",
   "facilities",
   "revenue",
+  "identity",
 ];
 
 /**
@@ -161,6 +163,7 @@ export function createEmptyConfigItems(): ConfigItemsState {
     shifts: [],
     facilities: [],
     revenue: [],
+    identity: [],
   };
 }
 
@@ -210,4 +213,17 @@ export function isAccessLevel(value: unknown): value is AccessLevel {
     typeof value === "string" &&
     (ACCESS_LEVELS as string[]).includes(value)
   );
+}
+
+/** Nama tampilan cadangan bila taman/brand belum dikonfigurasi. */
+export const DEFAULT_PARK_NAME = "Taman Wisata";
+
+/**
+ * Nama tampilan tempat wisata dari section `identity` (item aktif pertama).
+ * Berguna untuk halaman login (pra-login) hingga dashboard yang sudah masuk.
+ */
+export function getParkName(configItems: ConfigItemsState): string {
+  const item = configItems.identity.find((entry) => entry.active);
+  const name = item?.name?.trim();
+  return name || DEFAULT_PARK_NAME;
 }

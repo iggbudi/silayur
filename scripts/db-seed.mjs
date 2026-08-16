@@ -43,8 +43,8 @@ async function main() {
 
   const client = new Client({ connectionString: url });
   await client.connect();
-  const adminPassword = process.env.SILAYUR_SEED_ADMIN_PASSWORD?.trim();
-  const defaultPassword = process.env.SILAYUR_SEED_DEFAULT_PASSWORD?.trim();
+  const adminPassword = process.env.DIGITAMA_SEED_ADMIN_PASSWORD?.trim();
+  const defaultPassword = process.env.DIGITAMA_SEED_DEFAULT_PASSWORD?.trim();
 
   try {
     await client.query("BEGIN");

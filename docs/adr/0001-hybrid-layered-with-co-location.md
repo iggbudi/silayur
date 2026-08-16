@@ -3,12 +3,12 @@
 - **Status**: Accepted & Implemented
 - **Date**: 26 Juli 2026
 - **Context**: Checkpoint 12 — refactor fondasi organisasi kode
-- **Deciders**: Owner SILAYUR
+- **Deciders**: Owner DIGITAMA
 - **Implemented**: 26 Juli 2026 (commit `5737833` — akhir Fase 5)
 
 ## Context
 
-SILAYUR Dashboard adalah **edge-deployed modular monolith** (satu Cloudflare
+DIGITAMA Dashboard adalah **edge-deployed modular monolith** (satu Cloudflare
 Worker, satu database Turso, banyak domain: auth, settings, ticket-master,
 dashboard, RBAC). Saat ini organisasi kode **dominan layered**:
 

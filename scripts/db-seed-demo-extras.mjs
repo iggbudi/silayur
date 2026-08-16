@@ -9,7 +9,7 @@
  *      supervisor, field_officer, customer_service) — password default demo.
  *
  * ✅ Aman: menolak database non-lokal (host selain localhost/127.0.0.1)
- *    kecuali di-force `SILAYUR_DEMO_ALLOW_REMOTE=1`.
+ *    kecuali di-force `DIGITAMA_DEMO_ALLOW_REMOTE=1`.
  *    Idempotent: hanya menambah bila belum ada; aktivasi tarif via upsert
  *    `active=1` tidak mengubah harga master yang sudah dikonfigurasi.
  *
@@ -116,12 +116,12 @@ async function main() {
 
   const isLocal = isLocalHost(url);
   if (!isLocal) {
-    const allow = process.env.SILAYUR_DEMO_ALLOW_REMOTE?.trim() === "1";
+    const allow = process.env.DIGITAMA_DEMO_ALLOW_REMOTE?.trim() === "1";
     if (!allow) {
       throw new Error(
         "Menolak men-seed data demo ke database non-lokal (" + url + ").\n" +
           "Demo hanya boleh masuk ke database lokal (localhost/127.0.0.1). " +
-          "Untuk non-lokal, set SILAYUR_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
+          "Untuk non-lokal, set DIGITAMA_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
       );
     }
   }
@@ -131,7 +131,7 @@ async function main() {
 
   await client.query(`SELECT COUNT(*) AS c FROM ticket_prices`);
   const defaultPassword =
-    process.env.SILAYUR_SEED_DEFAULT_PASSWORD?.trim() || "silayur-demo";
+    process.env.DIGITAMA_SEED_DEFAULT_PASSWORD?.trim() || "silayur-demo";
   const passwordHash = await hashPassword(defaultPassword);
 
   try {

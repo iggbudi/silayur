@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 /**
- * SILAYUR foundation and configuration tables (PostgreSQL).
+ * DIGITAMA foundation and configuration tables (PostgreSQL).
  * Covers RBAC, secure sessions, and durable operational configuration.
  */
 
@@ -137,6 +137,7 @@ export const configItems = pgTable(
         | "shifts"
         | "facilities"
         | "revenue"
+        | "identity"
       >()
       .notNull(),
     name: text("name").notNull(),
@@ -186,7 +187,7 @@ export const schemaVersion = pgTable("schema_version", {
 });
 
 /**
- * SILAYUR ticket sales (Checkpoint 12+).
+ * DIGITAMA ticket sales (Checkpoint 12+).
  * Setiap transaksi penjualan tiket di loket dicatat di sini.
  * sale_items adalah line items (1 transaksi bisa multi tiket / multi kategori).
  */

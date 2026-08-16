@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SILAYUR — Dashboard Operasional",
+  title: "DIGITAMA — Dashboard Operasional",
   description:
-    "Dashboard operasional Silayur Park Semarang.",
+    "Dasbor operasional tempat wisata: tiket, keuangan, jadwal tim, dan laporan.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

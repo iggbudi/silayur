@@ -27,8 +27,8 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
   const env = {
     ...process.env,
     DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
-    SILAYUR_SEED_ADMIN_PASSWORD: testPassword,
-    SILAYUR_SEED_DEFAULT_PASSWORD: testPassword,
+    DIGITAMA_SEED_ADMIN_PASSWORD: testPassword,
+    DIGITAMA_SEED_DEFAULT_PASSWORD: testPassword,
   };
   const client = await connectTestDb();
 
@@ -65,7 +65,7 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     const configCount = await client.query(
       "SELECT COUNT(*) AS c FROM config_items",
     );
-    assert.equal(Number(configCount.rows[0].c), 14);
+    assert.equal(Number(configCount.rows[0].c), 15);
 
     const ticketProducts = await client.query(
       "SELECT code, visitor_category, validity_mode FROM ticket_products ORDER BY visitor_category",
@@ -91,7 +91,7 @@ test("migrations and seed create a secure, non-destructive foundation", async ()
     assert.match(
       runScript(
         "scripts/auth-set-password.mjs",
-        { ...env, SILAYUR_NEW_PASSWORD: resetPassword },
+        { ...env, DIGITAMA_NEW_PASSWORD: resetPassword },
         ["admin.resepsionis"],
       ),
       /"sessionsRevoked": true/,

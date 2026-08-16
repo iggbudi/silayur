@@ -6,7 +6,7 @@
  * `ON CONFLICT ... DO NOTHING` — hanya menambah, tidak menimpa data operasional.
  *
  * ✅ Aman: MENOLAK database non-lokal (host selain localhost/127.0.0.1)
- *    kecuali di-force lewat env `SILAYUR_DEMO_ALLOW_REMOTE=1`
+ *    kecuali di-force lewat env `DIGITAMA_DEMO_ALLOW_REMOTE=1`
  *    (perlu otorisasi owner).
  *
  * Penggunaan:
@@ -119,12 +119,12 @@ async function main() {
 
   const isLocal = isLocalHost(url);
   if (!isLocal) {
-    const allow = process.env.SILAYUR_DEMO_ALLOW_REMOTE?.trim() === "1";
+    const allow = process.env.DIGITAMA_DEMO_ALLOW_REMOTE?.trim() === "1";
     if (!allow) {
       throw new Error(
         "Menolak men-seed data demo ke database non-lokal (" + url + ").\n" +
           "Demo hanya boleh masuk ke database lokal (localhost/127.0.0.1). " +
-          "Untuk non-lokal, set SILAYUR_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
+          "Untuk non-lokal, set DIGITAMA_DEMO_ALLOW_REMOTE=1 hanya dengan otorisasi owner.",
       );
     }
   }

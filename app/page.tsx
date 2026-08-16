@@ -6,8 +6,10 @@ import { canManage, canView } from "./lib/access";
 import { putRemoteConfig } from "./lib/config-api";
 import { useSession } from "./hooks/use-session";
 import { useMobileSidebar } from "./hooks/use-mobile-sidebar";
+import { useParkName } from "./hooks/use-park-name";
 import { Brand } from "./components/brand";
 import { SidebarNavigation } from "./components/sidebar-navigation";
+import { SidebarFooter } from "./components/sidebar-footer";
 import { SessionGate } from "./components/session-gate";
 import { MetricCard } from "./components/dashboard-widgets";
 import { Toggle } from "./components/toggle";
@@ -178,17 +180,9 @@ const facilityStatusLabel: Record<string, string> = {
   closed: "Ditutup",
 };
 
-function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
 export default function DashboardPage() {
   const { session, ready: authReady, logout } = useSession();
+  const parkName = useParkName();
   const [moduleOverride, setModuleOverride] = useState<ModuleState | null>(
     null,
   );
@@ -538,21 +532,14 @@ export default function DashboardPage() {
           <span className="sidebar-card-icon">✓</span>
           <strong>Hari ini</strong>
           <p>Data operasional dari transaksi nyata</p>
-          <small>Silayur Park</small>
+          <small>{parkName}</small>
         </div>
 
-        <div className="sidebar-footer">
-          <div className="avatar">{getInitials(currentUser.name)}</div>
-          <div>
-            <strong>{currentUser.name}</strong>
-            <span>{roleLabel}</span>
-          </div>
-          <div className="sidebar-footer-actions">
-            <button className="logout-button" type="button" onClick={handleLogout}>
-              Keluar
-            </button>
-          </div>
-        </div>
+        <SidebarFooter
+          name={currentUser.name}
+          roleLabel={roleLabel}
+          onLogout={handleLogout}
+        />
       </aside>
 
       <section className="workspace">
@@ -576,7 +563,7 @@ export default function DashboardPage() {
                   Data hari ini
                 </span>
               </div>
-              <p>Ringkasan kondisi Silayur Park hari ini</p>
+              <p>Ringkasan kondisi {parkName} hari ini</p>
             </div>
           </div>
 
@@ -865,7 +852,7 @@ export default function DashboardPage() {
         <footer className="prototype-note">
           <span>i</span>
           <p>
-            <strong>SILAYUR Checkpoint 9.</strong> Sesi aman sebagai{" "}
+            <strong>DIGITAMA.</strong> Sesi aman sebagai{" "}
             {currentUser.name} ({roleLabel}). Sumber data:{" "}
             database terpusat dengan akses berbasis role.
           </p>

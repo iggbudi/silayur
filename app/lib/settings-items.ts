@@ -41,5 +41,6 @@ export function toConfigItemsState(
     shifts: convert("shifts"),
     facilities: convert("facilities"),
     revenue: convert("revenue"),
+    identity: convert("identity"),
   };
 }

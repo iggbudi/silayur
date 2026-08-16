@@ -18,7 +18,7 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the three SILAYUR application routes", async () => {
+test("server-renders the three DIGITAMA application routes", async () => {
   const [dashboard, settings, login] = await Promise.all([
     render("/"),
     render("/pengaturan"),
@@ -33,9 +33,9 @@ test("server-renders the three SILAYUR application routes", async () => {
     settings.text(),
     login.text(),
   ]);
-  assert.match(dashboardHtml, /SILAYUR|Memuat sesi/i);
+  assert.match(dashboardHtml, /DIGITAMA|Memuat sesi/i);
   assert.match(settingsHtml, /Pengaturan Operasional|Memuat sesi/i);
   assert.match(loginHtml, /Masuk ke sistem|Memeriksa sesi aman/i);
-  assert.match(loginHtml, /Sesi SILAYUR|Akses operasional/i);
+  assert.match(loginHtml, /Sesi DIGITAMA|Akses operasional/i);
   assert.doesNotMatch(loginHtml, /pilih pengguna aktif/i);
 });

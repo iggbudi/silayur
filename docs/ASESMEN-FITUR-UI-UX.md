@@ -1,4 +1,4 @@
-# Asesmen Fitur, Layout UI, dan UX — SILAYUR Dashboard
+# Asesmen Fitur, Layout UI, dan UX — DIGITAMA Dashboard
 
 > Penilaian atas fitur yang **sudah tersedia** saat ini, ditinjau dari sisi
 > kelengkapan fitur, layout UI, dan kemudahan dipahami tiap role.

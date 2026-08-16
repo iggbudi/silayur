@@ -1,8 +1,10 @@
-# SILAYUR Dashboard
+# DIGITAMA Dashboard
 
-Dashboard operasional Silayur Park berbasis React/vinext, PostgreSQL, dan
-Drizzle ORM. Checkpoint 11 menggunakan sesi autentikasi server-side dan master
-tiket masuk terstruktur dengan tarif efektif.
+Dasbor operasional tempat wisata berbasis React/vinext, PostgreSQL, dan
+Drizzle ORM. Nama taman yang ditampilkan di sistem (login, dashboard,
+laporan) dapat disetel di menu **Pengaturan → Identitas taman**. Checkpoint 11
+menggunakan sesi autentikasi server-side dan master tiket masuk terstruktur
+dengan tarif efektif.
 
 ## Persyaratan
 
@@ -13,7 +15,7 @@ tiket masuk terstruktur dengan tarif efektif.
 
 1. Salin `.env.example` menjadi `.env`, isi `DATABASE_URL` (`postgres://...`).
 2. Buat database dev + test bila belum ada.
-3. Isi `SILAYUR_SEED_ADMIN_PASSWORD` dengan password minimal 10 karakter.
+3. Isi `DIGITAMA_SEED_ADMIN_PASSWORD` dengan password minimal 10 karakter.
 4. Jalankan:
 
 ```bash
@@ -47,7 +49,7 @@ Untuk mengganti password tanpa mengirimkannya sebagai argumen command line.
 Penggantian password otomatis mencabut seluruh sesi aktif pengguna tersebut:
 
 ```bash
-# set SILAYUR_NEW_PASSWORD di environment terlebih dahulu
+# set DIGITAMA_NEW_PASSWORD di environment terlebih dahulu
 npm run auth:set-password -- admin.resepsionis
 ```
 
@@ -99,7 +101,7 @@ npm run start:local
 Menjalankan build lalu server standalone (Node) di `http://localhost:3000`.
 Mode ini memakai PostgreSQL lokal (sesuai `DATABASE_URL` di `.env`) dan
 mendukung semua fitur. Login demo: `admin.resepsionis` / `SilayurLocal-2026!`
-(password sesuai `SILAYUR_SEED_ADMIN_PASSWORD` di `.env`).
+(password sesuai `DIGITAMA_SEED_ADMIN_PASSWORD` di `.env`).
 
 > `npm run dev` memakai workerd (Miniflare) — gunakan hanya saat `DATABASE_URL`
 > menunjuk layanan Postgres yang bisa diakses worker; untuk Postgres lokal

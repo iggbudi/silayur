@@ -13,7 +13,7 @@
 
 ## TL;DR
 
-Sejak **Checkpoint 12**, SILAYUR Dashboard mengadopsi organisasi kode
+Sejak **Checkpoint 12**, DIGITAMA Dashboard mengadopsi organisasi kode
 **hybrid (layered + co-located + vertical slice)**. Implementasi bertahap
 dalam 5+1 fase, **zero breaking change**, 6 commit terisolasi.
 

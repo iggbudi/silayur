@@ -261,7 +261,7 @@ Untuk tracking setelah aktivasi:
 
 - **v1** (29 Juli 2026) — initial runbook untuk aktivasi tarif
 - Author: agent (Fase B)
-- Reviewer: owner SILAYUR
+- Reviewer: owner DIGITAMA
 
 ## 🔗 Referensi
 

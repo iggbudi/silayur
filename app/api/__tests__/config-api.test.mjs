@@ -42,7 +42,7 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
   };
 
   const anonymousConfig = await request("/api/config", {
-    headers: { "x-silayur-user-id": "admin-resepsionis" },
+    headers: { "x-digitama-user-id": "admin-resepsionis" },
   });
   assert.equal(
     anonymousConfig.status,
@@ -70,7 +70,7 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
   });
   assert.equal(adminLogin.status, 200);
   const adminCookie = cookieFrom(adminLogin);
-  assert.match(adminCookie, /^silayur_session=/);
+  assert.match(adminCookie, /^digitama_session=/);
   assert.match(adminLogin.headers.get("set-cookie") ?? "", /HttpOnly/i);
   assert.doesNotMatch(await adminLogin.clone().text(), /passwordHash/i);
 
@@ -188,7 +188,7 @@ test("API enforces password sessions, RBAC, atomic updates, and persistence", as
   assert.equal(health.status, 200);
   const healthBody = await health.json();
   assert.equal(healthBody.checkpoint, "11");
-  assert.equal(healthBody.counts.config_items, 14);
+  assert.equal(healthBody.counts.config_items, 15);
   assert.equal(healthBody.counts.ticket_products, 2);
   assert.equal(healthBody.counts.ticket_prices, 2);
 

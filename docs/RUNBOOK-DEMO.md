@@ -12,7 +12,7 @@ ada bisa langsung terlihat & diuji, sehingga atasan dapat menilai kecukupan.
 
 > ⚠️ **Keamanan**: `.env` / `.dev.vars` di workstation ini menunjuk ke Turso
 > **remote**. Script demo ini **menolak menulis ke remote** secara default
-> (guard `SILAYUR_DEMO_ALLOW_REMOTE=1`). Gunakan **file lokal** untuk demo.
+> (guard `DIGITAMA_DEMO_ALLOW_REMOTE=1`). Gunakan **file lokal** untuk demo.
 
 ---
 
@@ -33,8 +33,8 @@ $env:TURSO_AUTH_TOKEN    = ''
 node scripts/db-migrate.mjs
 
 # 3. Seed dasar (modul, role, permission, user, master tiket, tarif, config)
-$env:SILAYUR_SEED_ADMIN_PASSWORD = 'DemoAdmin#2026'
-$env:SILAYUR_SEED_DEFAULT_PASSWORD = 'silayur-demo'
+$env:DIGITAMA_SEED_ADMIN_PASSWORD = 'DemoAdmin#2026'
+$env:DIGITAMA_SEED_DEFAULT_PASSWORD = 'silayur-demo'
 node scripts/db-seed.mjs
 
 # 4. Seed data demo (transaksi contoh)
@@ -49,7 +49,7 @@ Hasil: 14 penjualan, 20 item tiket, 3 pemasukan non-tiket, 4 pengeluaran,
 `.data/demo-fresh.db` (ter-ignore git).
 
 > ⚠️ **PENTING**: langkah 3 (seed dasar) **harus dijalankan dengan env
-> password** (`SILAYUR_SEED_ADMIN_PASSWORD` / `SILAYUR_SEED_DEFAULT_PASSWORD`)
+> password** (`DIGITAMA_SEED_ADMIN_PASSWORD` / `DIGITAMA_SEED_DEFAULT_PASSWORD`)
 > pada DB yang baru dibuat, karena baris user hanya mengisi `password_hash`
 > bila belum ada. Bila terlewat, login user seed dasar akan gagal.
 

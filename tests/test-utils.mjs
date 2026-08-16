@@ -123,8 +123,8 @@ export function prepareTestEnv() {
   const env = {
     ...process.env,
     DATABASE_URL: url,
-    SILAYUR_SEED_ADMIN_PASSWORD: TEST_PASSWORD,
-    SILAYUR_SEED_DEFAULT_PASSWORD: TEST_PASSWORD,
+    DIGITAMA_SEED_ADMIN_PASSWORD: TEST_PASSWORD,
+    DIGITAMA_SEED_DEFAULT_PASSWORD: TEST_PASSWORD,
   };
   const run = (script) => {
     const result = spawnSync(

@@ -1,4 +1,4 @@
-# Rencana Perbaikan — SILAYUR Dashboard
+# Rencana Perbaikan — DIGITAMA Dashboard
 
 > Dibuat: **29 Juli 2026** · Sumber: audit codebase (analisis agent).
 > Workflow: setiap item dikerjakan mengikuti `AGENTS.md`

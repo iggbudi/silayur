@@ -125,8 +125,8 @@ Expected:
 Password Super Admin harus di-set di **target environment**, bukan di kode:
 
 ```bash
-# Set SILAYUR_NEW_PASSWORD di environment
-export SILAYUR_NEW_PASSWORD="password-rahasia-min-10-karakter"
+# Set DIGITAMA_NEW_PASSWORD di environment
+export DIGITAMA_NEW_PASSWORD="password-rahasia-min-10-karakter"
 
 # Apply ke user admin
 npm run auth:set-password -- admin.resepsionis
@@ -259,4 +259,4 @@ git revert 5737833
 
 - **v1** (29 Juli 2026) — initial runbook untuk CP12 deploy
 - Author: agent (Fase B)
-- Reviewer: owner SILAYUR
+- Reviewer: owner DIGITAMA

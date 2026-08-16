@@ -1,5 +1,5 @@
 /**
- * Tanggal kalender untuk operasional SILAYUR.
+ * Tanggal kalender untuk operasional DIGITAMA.
  *
  * Kolom waktu (`sold_at`, `created_at`) tetap disimpan sebagai ISO UTC.
  * Fungsi di file ini hanya untuk **pengelompokan kalender** ("hari ini",

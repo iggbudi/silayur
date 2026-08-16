@@ -102,6 +102,16 @@ export async function logoutRemote(): Promise<void> {
   }
 }
 
+export async function fetchParkName(): Promise<string> {
+  const response = await fetch("/api/config/identity", {
+    method: "GET",
+    cache: "no-store",
+    credentials: "same-origin",
+  });
+  const data = await parseJson<{ ok: boolean; parkName: string }>(response);
+  return data.parkName;
+}
+
 export async function fetchRemoteConfig(): Promise<RemoteConfig> {
   const response = await fetch("/api/config", {
     method: "GET",
