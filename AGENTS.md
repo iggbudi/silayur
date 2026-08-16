@@ -71,6 +71,10 @@ Setiap perubahan mengikuti siklus **4 langkah berurutan**:
   npm ...`) atau via `sudo`.
 - App: Next.js/vinext standalone, dijalankan systemd `digitama.service`,
   bind **`127.0.0.1:3015`** — JANGAN pernah mengekspos port ini ke publik.
+- **Branch aktif di server: `digitama`** (bukan `main`). Update kode via
+  `git pull origin digitama`; kode baru dari upstream masuk lewat
+  `git merge origin/main` (lihat alur di bawah). `main` lokal tetap
+  disinkronkan ke `origin/main` hanya sebagai sumber merge.
 
 ### Service systemd (`digitama.service`)
 
@@ -106,7 +110,10 @@ Setiap perubahan mengikuti siklus **4 langkah berurutan**:
 
 ```bash
 cd /var/www/digitama.nusadev.biz.id
-sudo -u www-data git pull origin main
+# Branch aktif server: digitama. Ambil update dari branch ini:
+sudo -u www-data git pull origin digitama
+# Bila ada rilis baru dari upstream (origin/main), gabungkan dulu:
+#   sudo -u www-data git merge origin/main
 sudo -u www-data npm ci
 # Bila ada migration baru: backup DB dulu, baru:
 sudo -u www-data npm run db:migrate
@@ -114,6 +121,9 @@ sudo -u www-data npm run build
 sudo systemctl restart digitama
 curl -sI https://digitama.nusadev.biz.id/   # harapannya 200
 ```
+
+> Jangan pernah push ke `origin/main` dari server — perubahan spesifik server
+> (docs, konfigurasi) di-commit ke branch `digitama` saja.
 
 > `db:migrate` menyentuh DB produksi (`silayur`) → tetap butuh otorisasi
 > eksplisit owner (lihat Batasan di atas), meskipun server ini sendiri.
