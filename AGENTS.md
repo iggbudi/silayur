@@ -54,6 +54,97 @@ Setiap perubahan mengikuti siklus **4 langkah berurutan**:
 
 ---
 
+## Deployment di Server Ini (digitama.nusadev.biz.id)
+
+> Fakta operasional spesifik server VPS tempat repo ini berjalan. Bacalah
+> sebelum mengubah kode, menjalankan perintah npm, atau me-restart service.
+> Runbook umum: [`docs/DEPLOY-VPS-UBUNTU.md`](./docs/DEPLOY-VPS-UBUNTU.md)
+> (catatan: server ini memakai **Apache**, bukan Caddy/Nginx).
+
+### Topologi
+
+- VPS Ubuntu (VM-13-18-ubuntu). Cloudflare di depan, lalu Apache
+  (mod_proxy + Let's Encrypt) sebagai reverse proxy TLS, lalu app Node.
+- Folder repo: **`/var/www/digitama.nusadev.biz.id`** (BUKAN `/opt/digitama`
+  seperti contoh runbook). Seluruh isi dimiliki `www-data:www-data` — semua
+  perintah npm/git harus dijalankan sebagai `www-data` (mis. `sudo -u www-data
+  npm ...`) atau via `sudo`.
+- App: Next.js/vinext standalone, dijalankan systemd `digitama.service`,
+  bind **`127.0.0.1:3015`** — JANGAN pernah mengekspos port ini ke publik.
+
+### Service systemd (`digitama.service`)
+
+- File: `/etc/systemd/system/digitama.service` (bukan contoh di
+  `scripts/systemd/` — sudah disesuaikan untuk server ini).
+- `User=www-data`, `WorkingDirectory=/var/www/digitama.nusadev.biz.id`,
+  `EnvironmentFile=/var/www/digitama.nusadev.biz.id/.env`.
+- `ExecStart=/opt/node-v24.14.1/bin/npm run start -- --hostname 127.0.0.1
+  --port 3015`.
+- Node: **`/opt/node-v24.14.1`** (v24.14.1). JANGAN pakai
+  `/home/ubuntu/.nvm/...` — `www-data` tidak bisa mengakses `/home/ubuntu`
+  (service gagal dengan `203/EXEC Permission denied`).
+- Perintah: `sudo systemctl status|restart|stop digitama`;
+  log: `sudo journalctl -u digitama -f`.
+
+### Port
+
+- **3015** khusus DIGITAMA. Port **3000–3012** sudah dipakai app lain
+  (safesphere:3000, eduguide:3003, dll). Sebelum mengganti port, cek
+  `ss -tlnp` agar tidak bentrok; jika ganti port, update BUKAN hanya unit
+  systemd tapi juga `ProxyPass` di vhost Apache.
+
+### Database (PostgreSQL 18 lokal)
+
+- User `digitama`; DB **`silayur`** (produksi) & **`silayur_test`** (test).
+- Kredensial & env di `.env` (chmod 600, milik `www-data`) — JANGAN commit.
+- Env penting: `DATABASE_URL`, `TEST_DATABASE_URL`,
+  `DIGITAMA_SEED_ADMIN_PASSWORD` (hanya dipakai saat seed pertama),
+  `VINEXT_TRUST_PROXY=1` (WAJIB agar cookie sesi ber-flag `Secure` di
+  belakang proxy TLS).
+
+### Deploy / Update (alur cepat)
+
+```bash
+cd /var/www/digitama.nusadev.biz.id
+sudo -u www-data git pull origin main
+sudo -u www-data npm ci
+# Bila ada migration baru: backup DB dulu, baru:
+sudo -u www-data npm run db:migrate
+sudo -u www-data npm run build
+sudo systemctl restart digitama
+curl -sI https://digitama.nusadev.biz.id/   # harapannya 200
+```
+
+> `db:migrate` menyentuh DB produksi (`silayur`) → tetap butuh otorisasi
+> eksplisit owner (lihat Batasan di atas), meskipun server ini sendiri.
+
+### Test lokal di server
+
+- `npm test` butuh `TEST_DATABASE_URL` (sudah diisi di `.env`; helper test
+  membaca `.env` sendiri). Karena `.env` chmod 600 milik `www-data`, jalankan
+  sebagai `www-data`: `sudo -u www-data npm test` (atau ekspor env manual).
+- Test memakai DB `silayur_test` (di-reset per run) — aman berjalan saat
+  service produksi aktif. `npm run db:setup` TIDAK aman dijalankan sembarangan
+  (menyentuh `silayur` produksi).
+
+### Apache reverse proxy
+
+- Vhost 443: `/etc/apache2/sites-available/digitama.nusadev.biz.id-le-ssl.conf`
+  → `ProxyPass / http://127.0.0.1:3015/` + `ProxyPreserveHost On` +
+  `RequestHeader set X-Forwarded-Proto "https"`;
+  `ProxyPass /.well-known/ !` (agar renewal certbot tetap jalan).
+- Setelah mengubah config: `sudo apache2ctl configtest && sudo systemctl
+  reload apache2`.
+
+### Password admin
+
+- Seed awal membuat `admin.resepsionis` dengan password dari
+  `DIGITAMA_SEED_ADMIN_PASSWORD` (hanya dipakai saat seed pertama).
+- Ganti password tanpa argumen CLI:
+  `DIGITAMA_NEW_PASSWORD=xxx sudo -u www-data npm run auth:set-password -- admin.resepsionis`
+
+---
+
 ## Aturan Arsitektur & Impor
 
 - Organisasi kode: **hybrid (layered + co-located + vertical slice)**.
