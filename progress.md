@@ -1,8 +1,10 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **16 Agustus 2026** — jam kerja karyawan (shift) dan
-jam buka taman kini dapat diubah lewat Pengaturan (section `shifts` dan
-`operating-hours` di `config_items`), tidak lagi hardcoded.
+Pembaruan terakhir: **16 Agustus 2026** — redesain UI halaman `/login`
+menjadi layout split-screen: panel hero bernuansa brand (gradient ungu gelap
+senada sidebar) di kiri dan kartu form di kanan; hero otomatis tersembunyi di
+layar sempit. Menambah toggle lihat/sembunyikan password; logika login, sesi,
+dan RBAC tidak berubah.
 
 ## Status Saat Ini
 
