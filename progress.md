@@ -1,8 +1,8 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **16 Agustus 2026** — modul Tim & Jadwal (jadwal
-shift, PIC, kehadiran karyawan) dengan 3 tabel baru, slice vertical, API
-RBAC, dan halaman `/jadwal-karyawan`.
+Pembaruan terakhir: **16 Agustus 2026** — pembersihan sisa teks "Turso"
+dari antarmuka (halaman dashboard & pengaturan) setelah migrasi ke
+PostgreSQL.
 
 ## Status Saat Ini
 
@@ -906,3 +906,21 @@ finance 4), seed holidays idempotent (13 inserted → 0/13 existing).
   remote menunggu otorisasi owner** (AGENTS.md).
 - Validasi: type-check hijau, lint 0 error (warning pre-existing),
   `db:generate` no-op.
+
+## 16 Agustus 2026 — Pembersihan teks "Turso" dari UI
+
+Setelah migrasi database ke PostgreSQL, sisa teks "Turso" di antarmuka
+dihapus/dinetralkan:
+
+- `app/pengaturan/page.tsx`: blok sidebar "Persistence aktif" (termasuk
+  baris status `Turso OK · N user · N role · N tiket (CP11)`) dihapus
+  beserta state `dbStatus` dan semua pemanggil `setDbStatus`-nya; teks
+  "Tersimpan di Turso" / "ditulis ke Turso" dinetralkan menjadi
+  "Tersimpan di database" / "sudah disimpan".
+- `app/page.tsx`: footer "Sumber data: Turso…" → "database terpusat",
+  footer panel modul dan pesan error penyimpanan modul dinetralkan.
+- `app/api/db/health/route.ts`: field `driver` diperbarui dari
+  `"turso-libsql"` → `"postgres"` (menyesuaikan `db/get-db.ts`).
+- `app/globals.css`: class `.db-status-line` dihapus (tidak terpakai).
+- Validasi: type-check hijau, lint 0 error (16 warning pre-existing),
+  test suite 61/61 lulus.

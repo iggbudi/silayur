@@ -74,7 +74,7 @@ export async function GET(request: Request): Promise<Response> {
       ok: true,
       checkpoint: "11",
       configured: true,
-      driver: "turso-libsql",
+      driver: "postgres",
       counts,
     });
   } catch (error) {

@@ -487,7 +487,7 @@ export default function DashboardPage() {
       setSaveError(
         error instanceof Error
           ? error.message
-          : "Gagal menyimpan modul ke Turso.",
+          : "Gagal menyimpan modul.",
       );
     }
   }
@@ -643,7 +643,7 @@ export default function DashboardPage() {
 
             <div className="module-panel-footer">
               <span>
-                Konfigurasi modul tersimpan di Turso.
+                Konfigurasi modul tersimpan di database.
                 {saveError ? ` ${saveError}` : ""}
               </span>
               <button type="button" onClick={activateAllModules}>
@@ -867,7 +867,7 @@ export default function DashboardPage() {
           <p>
             <strong>SILAYUR Checkpoint 9.</strong> Sesi aman sebagai{" "}
             {currentUser.name} ({roleLabel}). Sumber data:{" "}
-            Turso dengan akses berbasis role.
+            database terpusat dengan akses berbasis role.
           </p>
         </footer>
       </section>

@@ -3368,13 +3368,6 @@
   opacity: 0.7;
 }
 
-.db-status-line {
-  color: rgba(214, 210, 240, 0.85);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  margin: 10px 0 0;
-}
-
 .sale-status {
   border-radius: 999px;
   font-size: 0.72rem;

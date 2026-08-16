@@ -205,9 +205,6 @@ export default function SettingsPage() {
   const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState<RoleKey>("viewer");
   const [userFormError, setUserFormError] = useState("");
-  const [dbStatus, setDbStatus] = useState<string>(
-    "Turso: memeriksa… (Checkpoint 11)",
-  );
   const [persistError, setPersistError] = useState("");
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [holidayDate, setHolidayDate] = useState("");
@@ -259,16 +256,8 @@ export default function SettingsPage() {
           facilities: config.configItems.facilities,
           revenue: config.configItems.revenue,
         }));
-        setDbStatus(
-          `Turso OK · ${config.users.length} user · ${config.roles.length} role · ${config.ticketProducts.length} tiket (CP11)`,
-        );
-      } catch (error) {
+      } catch {
         if (cancelled) return;
-        setDbStatus(
-          error instanceof Error
-            ? `Turso error: ${error.message}`
-            : "Turso error: gagal memuat konfigurasi",
-        );
       }
     }
 
@@ -321,16 +310,13 @@ export default function SettingsPage() {
           revenue: saved.configItems.revenue,
         }));
       }
-      setDbStatus(
-        `Turso OK · ${saved.users.length} user · ${saved.roles.length} role · ${saved.ticketProducts.length} tiket (CP11)`,
-      );
       setSavedNotice(true);
       return saved;
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Gagal menyimpan konfigurasi ke Turso.";
+          : "Gagal menyimpan konfigurasi.";
       setPersistError(message);
       throw error;
     }
@@ -836,13 +822,6 @@ export default function SettingsPage() {
           onNavigate={closeMobileMenu}
         />
 
-        <div className="settings-side-note">
-          <span>Persistence aktif</span>
-          <strong>Seluruh konfigurasi tersimpan</strong>
-          <p>Perubahan ditulis ke Turso dan berlaku lintas perangkat.</p>
-          <p className="db-status-line">{dbStatus}</p>
-        </div>
-
         <div className="sidebar-footer">
           <div className="avatar">{getInitials(currentUser.name)}</div>
           <div>
@@ -895,7 +874,7 @@ export default function SettingsPage() {
 
         {persistError ? (
           <div className="access-banner" role="alert">
-            <strong>Gagal menyimpan ke Turso</strong>
+            <strong>Gagal menyimpan konfigurasi</strong>
             {persistError}
           </div>
         ) : null}
@@ -903,7 +882,7 @@ export default function SettingsPage() {
         {savedNotice ? (
           <div className="access-banner" role="status" style={{ background: "var(--green-soft)", color: "#4f40b8", borderColor: "rgba(108,92,231,0.28)" }}>
             <strong>Tersimpan</strong>
-            Perubahan konfigurasi sudah ditulis ke Turso.
+            Perubahan konfigurasi sudah disimpan.
           </div>
         ) : null}
 
@@ -923,7 +902,7 @@ export default function SettingsPage() {
             </div>
             <p>
               <strong>Siap diverifikasi</strong>
-              <span>Tersimpan di Turso</span>
+              <span>Tersimpan di database</span>
             </p>
           </div>
         </section>
@@ -1054,7 +1033,7 @@ export default function SettingsPage() {
               <span className={savedNotice ? "saved-notice saved-notice-show" : "saved-notice"}>
                 ✓{" "}
                 {activeSection === "modules" || activeSection === "users"
-                  ? "Tersimpan di Turso"
+                  ? "Tersimpan di database"
                   : "Perubahan diterapkan"}
               </span>
             </div>
@@ -1493,7 +1472,7 @@ export default function SettingsPage() {
                   {selectedRole === "super_admin" ? (
                     <span className="permission-lock-badge">Akses penuh terkunci</span>
                   ) : (
-                    <span className="permission-local-badge">Tersimpan di Turso</span>
+                    <span className="permission-local-badge">Tersimpan di database</span>
                   )}
                 </div>
 
@@ -1572,7 +1551,7 @@ export default function SettingsPage() {
                 ) : (
                   <>
                     <strong>Bagian ini sudah persisten.</strong> Tambah dan aktivasi
-                    akan tersimpan di Turso dan tersedia setelah halaman dimuat ulang.
+                    akan tersimpan dan tersedia setelah halaman dimuat ulang.
                   </>
                 )}
               </p>
