@@ -205,7 +205,7 @@ export function TicketSettings({
     return (
       <div className="ticket-master-empty">
         <strong>Master tiket belum tersedia</strong>
-        <p>Jalankan migration dan seed Checkpoint 11 terlebih dahulu.</p>
+        <p>Data tiket belum terisi. Hubungi administrator untuk mengisi produk tiket dan tarif terlebih dahulu.</p>
       </div>
     );
   }

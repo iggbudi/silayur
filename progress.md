@@ -1,6 +1,30 @@
 # Progress Pengembangan DIGITAMA
 
-Pembaruan terakhir: **17 Agustus 2026** — menjadikan menu **Operasional**
+Pembaruan terakhir: **16 Agustus 2026** — penyesuaian teks halaman
+**Pengaturan** dari nuansa prototype/checkpoint menjadi sesuai produksi:
+- Kicker "Checkpoint 11" pada kartu ringkasan diubah menjadi
+  **"Konfigurasi taman"**; kalimat "Tidak semua bagian harus diisi sekarang…
+  tanpa mengubah kode" disederhanakan menjadi "Lengkapi bagian sesuai
+  kebutuhan. Operator dapat mengaktifkan atau menambahkan konfigurasi satu
+  per satu kapan saja."
+- Status kartu ringkasan "Siap diverifikasi" → **"Konfigurasi tersimpan"**
+  ("Perubahan langsung disimpan"); jumlah bagian diperbaiki dari hardcoded
+  **6 → `sections.length` (10)** pada ring skor dan label nav — sebelumnya
+  basi sejak Checkpoint 2.
+- Pill header "Mode aman" → **"Tersimpan aman"** (tidak lagi terdengar
+  seperti mode pengembangan).
+- Pesan empty-state master tiket di `TicketSettings` tidak lagi menyebut
+  "migration dan seed Checkpoint 11" (bahasa developer) — diganti instruksi
+  operator: "Data tiket belum terisi. Hubungi administrator…".
+- Tanpa perubahan schema/API; `checkpoint: "11"` di respons API dibiarkan
+  (kontrak internal, dipakai test).
+- Validasi: type-check hijau, lint 0 error (16 warning pre-existing), build
+  sukses, **72/72 test pass**.
+- Catatan operasional: DB test `silayur_test` sempat tanpa tabel (test macet
+  di `relation "modules" does not exist`) — diperbaiki dengan migrate + seed
+  manual ke `silayur_test` (bukan produksi).
+
+Pembaruan sebelumnya: **17 Agustus 2026** — menjadikan menu **Operasional**
 **Daftar tugas harian** sebagai checklist harian sungguhan khas taman wisata:
 - Section `config_items` `hours` kini berisi **tugas harian nyata** bertahap
   **Persiapan buka** / **Penutupan**, dengan kolom baru `phase`.

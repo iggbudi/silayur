@@ -956,7 +956,7 @@ export default function SettingsPage() {
               </div>
               <span className="local-pill">
                 <i />
-                Mode aman
+                Tersimpan aman
               </span>
             </div>
           </div>
@@ -985,21 +985,21 @@ export default function SettingsPage() {
 
         <section className="setup-overview">
           <div className="setup-copy">
-            <span className="section-kicker">Checkpoint 11</span>
+            <span className="section-kicker">Konfigurasi taman</span>
             <h2>Susun sistem sesuai cara kerja {parkName}</h2>
             <p>
-              Tidak semua bagian harus diisi sekarang. Operator dapat mengaktifkan
-              atau menambahkan konfigurasi satu per satu tanpa mengubah kode.
+              Lengkapi bagian sesuai kebutuhan. Operator dapat mengaktifkan atau
+              menambahkan konfigurasi satu per satu kapan saja.
             </p>
           </div>
           <div className="setup-score">
             <div className="setup-score-ring">
-              <strong>6</strong>
+              <strong>{sections.length}</strong>
               <span>bagian</span>
             </div>
             <p>
-              <strong>Siap diverifikasi</strong>
-              <span>Tersimpan di database</span>
+              <strong>Konfigurasi tersimpan</strong>
+              <span>Perubahan langsung disimpan</span>
             </p>
           </div>
         </section>
@@ -1008,7 +1008,7 @@ export default function SettingsPage() {
           <nav className="settings-section-nav" aria-label="Bagian pengaturan">
             <div className="settings-nav-heading">
               <span>Konfigurasi</span>
-              <small>6 bagian</small>
+              <small>{sections.length} bagian</small>
             </div>
             {sections.map((item) => (
               <button
