@@ -28,6 +28,7 @@ export function getRoleAccessMap(
       finance: "manage",
       facilities: "manage",
       complaints: "manage",
+      jadwalKaryawan: "manage",
       reports: "manage",
       settings: "manage",
     };
@@ -63,6 +64,8 @@ export function navPermissionForLabel(
       return "finance";
     case "Komplain":
       return "complaints";
+    case "Tim & Jadwal":
+      return "jadwalKaryawan";
     case "Laporan":
       return "reports";
     case "Pengaturan":

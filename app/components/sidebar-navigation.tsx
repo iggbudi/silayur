@@ -18,7 +18,8 @@ type ActiveSidebarItem =
   | "keuangan"
   | "laporan"
   | "complaints"
-  | "facilities";
+  | "facilities"
+  | "jadwalKaryawan";
 
 type NavigationItem = {
   label: string;
@@ -77,6 +78,14 @@ const navigation: NavigationItem[] = [
     permission: "complaints",
     href: "/complaints",
     activeKey: "complaints",
+  },
+  {
+    label: "Tim & Jadwal",
+    icon: "👥",
+    key: null,
+    permission: "jadwalKaryawan",
+    href: "/jadwal-karyawan",
+    activeKey: "jadwalKaryawan",
   },
   {
     label: "Laporan",

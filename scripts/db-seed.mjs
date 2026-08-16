@@ -164,6 +164,16 @@ async function main() {
       );
     }
 
+    for (const emp of seedData.employees || []) {
+      await client.query(
+        `INSERT INTO employees
+         (id, name, position, area, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, now(), now())
+         ON CONFLICT(id) DO NOTHING`,
+        [emp.id, emp.name, emp.position, emp.area || null, emp.active],
+      );
+    }
+
     for (const version of [
       {
         label: "checkpoint-9-secure-persistence",
@@ -199,6 +209,7 @@ async function main() {
     "ticket_products",
     "ticket_prices",
     "config_items",
+    "employees",
     "auth_sessions",
   ]) {
     const result = await client.query(`SELECT COUNT(*) AS c FROM ${table}`);

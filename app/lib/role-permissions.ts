@@ -74,6 +74,11 @@ export const PERMISSION_MODULES: Array<{
     globalModuleKey: "complaints",
   },
   {
+    key: "jadwalKaryawan",
+    label: "Tim & Jadwal",
+    description: "Jadwal shift, PIC, dan kehadiran karyawan.",
+  },
+  {
     key: "reports",
     label: "Laporan",
     description: "Rekap dan ekspor data.",
@@ -92,6 +97,7 @@ export const FULL_ACCESS: Record<PermissionModuleKey, AccessLevel> = {
   finance: "manage",
   facilities: "manage",
   complaints: "manage",
+  jadwalKaryawan: "manage",
   reports: "manage",
   settings: "manage",
 };

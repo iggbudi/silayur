@@ -588,3 +588,29 @@ export async function assertCanManageOperations(
     "operasional",
   );
 }
+
+export async function assertCanViewJadwalKaryawan(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(
+    db,
+    userId,
+    "jadwalKaryawan",
+    "view",
+    "jadwal karyawan",
+  );
+}
+
+export async function assertCanManageJadwalKaryawan(
+  db: AppDb,
+  userId: string,
+): Promise<AppUser> {
+  return assertCanAccessModule(
+    db,
+    userId,
+    "jadwalKaryawan",
+    "manage",
+    "jadwal karyawan",
+  );
+}

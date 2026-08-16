@@ -36,6 +36,16 @@ export const SEED_TICKET_PRICES = seedData.ticketPrices as TicketPrice[];
 
 export const SEED_CONFIG_ITEMS = seedData.configItems as ConfigItem[];
 
+export type SeedEmployee = {
+  id: string;
+  name: string;
+  position: string;
+  area: string | null;
+  active: boolean;
+};
+
+export const SEED_EMPLOYEES = seedData.employees as SeedEmployee[];
+
 export const PERMISSION_MODULE_KEYS =
   Object.keys(seedData.permissions.super_admin) as PermissionModuleKey[];
 

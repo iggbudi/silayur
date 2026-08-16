@@ -1,9 +1,8 @@
 # Progress Pengembangan SILAYUR
 
-Pembaruan terakhir: **15 Agustus 2026** — migrasi database dari Turso/libSQL
-(SQLite) ke **PostgreSQL** (driver `pg`, Drizzle pg-core, env `DATABASE_URL`).
-Schema 19 tabel di-rewrite, migration di-generate ulang, seed & scripts
-di-porting, test memakai Postgres terpisah (`TEST_DATABASE_URL`).
+Pembaruan terakhir: **16 Agustus 2026** — modul Tim & Jadwal (jadwal
+shift, PIC, kehadiran karyawan) dengan 3 tabel baru, slice vertical, API
+RBAC, dan halaman `/jadwal-karyawan`.
 
 ## Status Saat Ini
 
@@ -13,6 +12,7 @@ di-porting, test memakai Postgres terpisah (`TEST_DATABASE_URL`).
 - Modul keuangan — pemasukan non-tiket, pengeluaran + persetujuan, rekap kas shift: **selesai**
 - Modul Operasional — checklist harian: **selesai** (15 Agustus 2026)
 - Kalender hari libur — tarif weekend untuk tanggal libur: **selesai** (15 Agustus 2026)
+- Modul Tim & Jadwal — jadwal shift, PIC, kehadiran karyawan: **selesai** (16 Agustus 2026)
 - Branch: `main`
 - Commit production terbaru: `cbe872c` —
   `fix: improve dashboard typography readability`
@@ -859,3 +859,50 @@ finance 4), seed holidays idempotent (13 inserted → 0/13 existing).
   - Merge `app/lib/access.ts` (re-export 1 baris) sengaja **tidak**
     dilakukan — adapter tipis yang tidak mengganggu; di-defer agar diff
     minim (keputusan di PLAN-PERBAIKAN #7).
+
+## Modul Tim & Jadwal (16 Agustus 2026)
+
+- **Tabel baru** di `db/schema.ts`: `employees` (master karyawan — id, nama,
+  posisi, area, aktif), `schedule_shifts` (jadwal shift per tanggal, unik
+  per `employee_id+date`, shift `morning`/`evening`, status
+  `hadir`/`izin`/`libur`/`tidak_hadir`), `pic_assignments` (penugasan PIC
+  per area per tanggal, unik per `employee_id+date+area`). FK cascade dari
+  `employees`; 6 index untuk query performance.
+- **Migration** `drizzle/0003_jadwal_karyawan.sql` (nama deskriptif;
+  awalnya auto-generate `amazing_harpoon`, di-rename sebelum commit).
+  `db:generate` no-op — schema sinkron.
+- **Slice `app/features/jadwal-karyawan/`** (types, constants, repo,
+  validation, api, index, MANIFEST, test): `listEmployees`,
+  `createEmployee`, `listSchedulesByDate`, `createSchedule` (upsert per
+  employee+date), `updateScheduleStatus`, `listPicsByDate`, `assignPic`
+  (upsert per employee+date+area), `getJadwalSummary`, `listJadwal`.
+- **Route `app/api/jadwal-karyawan/*`** (GET/POST jadwal, GET/POST
+  karyawan, POST PIC, POST `[id]/status`) — RBAC `jadwalKaryawan`
+  view/manage.
+- **RBAC**: modul `jadwalKaryawan` ditambahkan ke `shared/config.ts`
+  (`PermissionModuleKey`, `PERMISSION_KEYS`, `createEmptyPermissions`),
+  `shared/access.ts` (Super Admin full, nav label "Tim & Jadwal"),
+  `db/config-repo.ts` (`assertCanViewJadwalKaryawan` /
+  `assertCanManageJadwalKaryawan`), `app/lib/role-permissions.ts`
+  (`PERMISSION_MODULES` + `FULL_ACCESS`), `app/page.tsx` (`NO_ACCESS`),
+  `db/seed-data.json` (entri permission per 8 role).
+- **Seed**: 7 karyawan awal di `db/seed-data.json` (`emp-budi`, `emp-siti`,
+  dst.) + `db/seed-data.ts` (`SEED_EMPLOYEES`) + `scripts/db-seed.mjs`
+  (insert idempotent `ON CONFLICT(id) DO NOTHING`).
+- **Nav**: "Tim & Jadwal" (👥) ditambahkan ke `sidebar-navigation.tsx`.
+- **UI** `app/jadwal-karyawan/page.tsx`: rekap metrik harian (total
+  terjadwal, shift pagi/sore aktif, tidak hadir, PIC), form atur jadwal
+  + assign PIC + tambah karyawan (hanya `manage`), tabel jadwal dengan
+  badge status kehadiran. Styling via class CSS eksplisit di
+  `app/globals.css` (`.jadwal-*`, `.badge-*`) — tanpa inline style.
+- **Test**: `app/features/jadwal-karyawan/__tests__/repo.test.ts` — 9 test
+  logic-level (createEmployee validasi+trim, listEmployees activeOnly,
+  createSchedule upsert+default, listSchedulesByDate filter+urutan,
+  updateScheduleStatus+not found, assignPic upsert+multi-area,
+  listPicsByDate urutan area+nama, getJadwalSummary hitungan shift/absen,
+  listJadwal response). `tests/test-utils.mjs` diupdate: 3 tabel baru
+  ditambahkan ke `WORK_TABLES` untuk truncate per test.
+- Migration 0003 hanya dijalankan di DB lokal/test; **rollout Postgres
+  remote menunggu otorisasi owner** (AGENTS.md).
+- Validasi: type-check hijau, lint 0 error (warning pre-existing),
+  `db:generate` no-op.

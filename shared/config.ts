@@ -26,6 +26,7 @@ export type PermissionModuleKey =
   | "finance"
   | "facilities"
   | "complaints"
+  | "jadwalKaryawan"
   | "reports"
   | "settings";
 
@@ -114,6 +115,7 @@ export const PERMISSION_KEYS: PermissionModuleKey[] = [
   "finance",
   "facilities",
   "complaints",
+  "jadwalKaryawan",
   "reports",
   "settings",
 ];
@@ -155,6 +157,7 @@ export function createEmptyPermissions(): Record<
     finance: "none",
     facilities: "none",
     complaints: "none",
+    jadwalKaryawan: "none",
     reports: "none",
     settings: "none",
   };

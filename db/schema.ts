@@ -520,3 +520,89 @@ export const holidays = pgTable("holidays", {
     .notNull()
     .default(sql`now()`),
 });
+
+/**
+ * Jadwal Karyawan & PIC — master data karyawan.
+ */
+export const employees = pgTable(
+  "employees",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    position: text("position").notNull(),
+    /** Area default (opsional): Operasional, Tiket, Fasilitas, Kebersihan, Parkir. */
+    area: text("area"),
+    active: boolean("active").notNull().default(true),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [index("employees_active_idx").on(table.active)],
+);
+
+/**
+ * Jadwal shift per tanggal per karyawan (modul Jadwal Karyawan).
+ * Satu baris per (employee_id, date) — unik agar tidak duplikat.
+ */
+export const scheduleShifts = pgTable(
+  "schedule_shifts",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    /** Tanggal kalender WIB (YYYY-MM-DD). */
+    date: text("date").notNull(),
+    /** "morning" | "evening" */
+    shift: text("shift").notNull(),
+    /** "hadir" | "izin" | "libur" | "tidak_hadir" */
+    status: text("status").notNull().default("hadir"),
+    notes: text("notes").notNull().default(""),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`now()`),
+    updatedAt: text("updated_at")
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex("schedule_employee_date_idx").on(table.employeeId, table.date),
+    index("schedule_date_idx").on(table.date),
+    index("schedule_shift_idx").on(table.shift),
+  ],
+);
+
+/**
+ * Penugasan PIC per area per tanggal (modul Jadwal Karyawan).
+ * Satu baris per (employee_id, date, area) — unik.
+ */
+export const picAssignments = pgTable(
+  "pic_assignments",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
+    /** Tanggal kalender WIB (YYYY-MM-DD). */
+    date: text("date").notNull(),
+    /** "Operasional" | "Tiket" | "Fasilitas" | "Kebersihan" | "Parkir" */
+    area: text("area").notNull(),
+    /** Deskripsi tugas spesifik (opsional). */
+    task: text("task").notNull().default(""),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex("pic_employee_date_area_idx").on(
+      table.employeeId,
+      table.date,
+      table.area,
+    ),
+    index("pic_date_idx").on(table.date),
+    index("pic_area_idx").on(table.area),
+  ],
+);

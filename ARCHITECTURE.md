@@ -231,6 +231,20 @@ handler: `app/api/facilities/*` (RBAC `assertCanViewFacilities` /
 `facilityStatusSummary` untuk donut "Status operasional", panel "Kesiapan
 fasilitas", dan KPI fasilitas.
 
+## Slice Jadwal Karyawan: `jadwal-karyawan/`
+
+Modul Jadwal Karyawan & PIC end-to-end (halaman `/jadwal-karyawan`). Tiga
+tabel baru — `employees` (master karyawan), `schedule_shifts` (jadwal shift
+per tanggal, upsert per `employee_id+date`), `pic_assignments` (penugasan
+PIC per area per tanggal, upsert per `employee_id+date+area`) — migration
+`drizzle/0003_jadwal_karyawan.sql`. Shift `morning`/`evening`, status
+kehadiran `hadir`/`izin`/`libur`/`tidak_hadir`. Public API:
+[`app/features/jadwal-karyawan/`](./app/features/jadwal-karyawan/); route
+thin handler: `app/api/jadwal-karyawan/*` (RBAC
+`assertCanViewJadwalKaryawan` / `assertCanManageJadwalKaryawan`); halaman:
+[`app/jadwal-karyawan/page.tsx`](./app/jadwal-karyawan/page.tsx). Nav
+"Tim & Jadwal" ditambahkan ke `sidebar-navigation.tsx`.
+
 ## Mengikuti Roadmap
 
 Lihat [`docs/adr/0001-hybrid-layered-with-co-location.md`](./adr/0001-hybrid-layered-with-co-location.md)

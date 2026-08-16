@@ -5129,6 +5129,116 @@
   color: #ffffff;
 }
 
+/* ===== Jadwal Karyawan & PIC ===== */
+
+.panel > .complaint-form {
+  margin-top: 12px;
+}
+
+.jadwal-pic-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.jadwal-pic-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  flex: 1 1 180px;
+  padding: 12px 16px;
+}
+
+.jadwal-pic-card strong {
+  font-size: 0.92rem;
+}
+
+.jadwal-pic-card p {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 2px 0;
+}
+
+.jadwal-pic-badge {
+  background: var(--green-soft);
+  border-radius: 999px;
+  color: var(--green);
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 4px;
+  padding: 2px 8px;
+}
+
+.jadwal-pic-task {
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin: 4px 0 0;
+}
+
+.jadwal-schedule-table {
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.jadwal-schedule-table th {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.jadwal-schedule-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+}
+
+.jadwal-schedule-table small {
+  color: var(--muted);
+}
+
+.jadwal-col-muted {
+  color: var(--muted);
+}
+
+/* Badge status kehadiran (dipakai oleh getStatusClass). */
+.badge-green,
+.badge-yellow,
+.badge-gray,
+.badge-red {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+}
+
+.badge-green {
+  background: var(--green-soft);
+  color: var(--forest);
+}
+
+.badge-yellow {
+  background: var(--orange-soft);
+  color: #8a5a0d;
+}
+
+.badge-gray {
+  background: var(--line);
+  color: var(--muted);
+}
+
+.badge-red {
+  background: var(--red-soft, rgba(229, 57, 53, 0.12));
+  color: #b3261e;
+}
+
 /* --- Laporan: header cetak & print-friendly --- */
 
 .report-print-header {

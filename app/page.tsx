@@ -45,6 +45,7 @@ const NO_ACCESS = {
   finance: "none",
   facilities: "none",
   complaints: "none",
+  jadwalKaryawan: "none",
   reports: "none",
   settings: "none",
 } as const;

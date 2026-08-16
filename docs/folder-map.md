@@ -166,6 +166,7 @@ dashboard/
 | **reports** | `app/features/reports/`, `app/api/reports/`, `app/laporan/` | Rekap & rincian lintas tanggal |
 | **complaints** | `app/features/complaints/`, `app/api/complaints/*`, `app/complaints/` | Komplain pengunjung (catat, status, tindak lanjut) |
 | **facilities** | `app/features/facilities/`, `app/api/facilities/*`, `app/fasilitas/` | Status fasilitas harian (beroperasi/perlu cek/ditutup) |
+| **jadwal-karyawan** | `app/features/jadwal-karyawan/`, `app/api/jadwal-karyawan/*`, `app/jadwal-karyawan/` | Jadwal shift, PIC, kehadiran karyawan |
 | **platform** | `app/components/{brand,toggle,dev-runtime-guard}.tsx`, `app/hooks/use-mobile-sidebar.ts`, `app/lib/*` | Cross-cutting utilities |
 
 ## Cross-slice Dependency

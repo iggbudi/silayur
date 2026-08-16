@@ -97,6 +97,7 @@
       "finance": "manage",
       "facilities": "manage",
       "complaints": "manage",
+      "jadwalKaryawan": "manage",
       "reports": "manage",
       "settings": "manage"
     },
@@ -107,6 +108,7 @@
       "finance": "manage",
       "facilities": "manage",
       "complaints": "manage",
+      "jadwalKaryawan": "manage",
       "reports": "manage",
       "settings": "manage"
     },
@@ -117,6 +119,7 @@
       "finance": "view",
       "facilities": "manage",
       "complaints": "view",
+      "jadwalKaryawan": "manage",
       "reports": "view",
       "settings": "none"
     },
@@ -127,6 +130,7 @@
       "finance": "none",
       "facilities": "none",
       "complaints": "none",
+      "jadwalKaryawan": "none",
       "reports": "none",
       "settings": "none"
     },
@@ -137,6 +141,7 @@
       "finance": "manage",
       "facilities": "none",
       "complaints": "none",
+      "jadwalKaryawan": "none",
       "reports": "view",
       "settings": "none"
     },
@@ -147,6 +152,7 @@
       "finance": "none",
       "facilities": "manage",
       "complaints": "view",
+      "jadwalKaryawan": "view",
       "reports": "none",
       "settings": "none"
     },
@@ -157,6 +163,7 @@
       "finance": "none",
       "facilities": "view",
       "complaints": "manage",
+      "jadwalKaryawan": "none",
       "reports": "none",
       "settings": "none"
     },
@@ -167,6 +174,7 @@
       "finance": "none",
       "facilities": "none",
       "complaints": "none",
+      "jadwalKaryawan": "none",
       "reports": "view",
       "settings": "none"
     }
@@ -321,6 +329,57 @@
       "detail": "Paket kegiatan kelompok",
       "active": false,
       "sortOrder": 40
+    }
+  ],
+  "employees": [
+    {
+      "id": "emp-budi",
+      "name": "Budi Santoso",
+      "position": "Supervisor Operasional",
+      "area": "Operasional",
+      "active": true
+    },
+    {
+      "id": "emp-siti",
+      "name": "Siti Rahayu",
+      "position": "Kasir",
+      "area": "Tiket",
+      "active": true
+    },
+    {
+      "id": "emp-andi",
+      "name": "Andi Saputra",
+      "position": "Staff Fasilitas",
+      "area": "Fasilitas",
+      "active": true
+    },
+    {
+      "id": "emp-maya",
+      "name": "Maya Lestari",
+      "position": "Staff Kebersihan",
+      "area": "Kebersihan",
+      "active": true
+    },
+    {
+      "id": "emp-dedi",
+      "name": "Dedi Kurniawan",
+      "position": "Staff Parkir",
+      "area": "Parkir",
+      "active": true
+    },
+    {
+      "id": "emp-rina",
+      "name": "Rina Wulandari",
+      "position": "Staff Operasional",
+      "area": "Operasional",
+      "active": true
+    },
+    {
+      "id": "emp-fajar",
+      "name": "Fajar Nugroho",
+      "position": "Staff Parkir",
+      "area": "Parkir",
+      "active": true
     }
   ]
 }

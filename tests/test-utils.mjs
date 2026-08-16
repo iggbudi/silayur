@@ -95,6 +95,9 @@ const WORK_TABLES = [
   "receipt_counters",
   "sale_items",
   "sales",
+  "employees",
+  "schedule_shifts",
+  "pic_assignments",
 ];
 
 /** Kosongkan semua tabel aplikasi (TRUNCATE ... RESTART IDENTITY CASCADE). */
