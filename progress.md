@@ -1,6 +1,28 @@
 # Progress Pengembangan DIGITAMA
 
-Pembaruan terakhir: **17 Agustus 2026** — poles drawer menu mobile (opsi A:
+Pembaruan terakhir: **17 Agustus 2026** — seed data demo lengkap ke DB produksi
+(silayur, otorisasi owner) + perluasan `db/demo-data.json`/`db-seed-demo.mjs`:
+- **Penjualan**: +6 transaksi (d-4/d-3) → total 20 demo sale; counter receipt
+  per hari ikut disesuaikan (transaksi baru di loket melanjutkan nomor).
+- **Komplain**: 5 kasus dengan siklus hidup lengkap (resolved/reopened/
+  processing/assigned/open) + riwayat transisi 15 entri; kategori nyambung
+  dengan fasilitas (Kolam Renang ↔ status fasilitas).
+- **Fasilitas**: 6 status (2 hari; kolam needs_attention hari ini konsisten
+  dengan komplain klorin). **Checklist operasional**: 9 baris (hari ini 3/6
+  buka selesai, kemarin 6/6). **Jadwal shift**: 21 baris (7 karyawan × 3 hari;
+  hadir/izin/libur/tidak_hadir). **PIC**: 10 penugasan (5 area × 2 hari).
+  **Hari libur**: 2 (17 Agustus "Hari Kemerdekaan RI" & 20 Agustus contoh).
+- **User demo**: dewi-cs, ratna-supervisor, agus-lapangan (password default
+  `silayur-demo` atau `DIGITAMA_SEED_DEFAULT_PASSWORD`) agar alur komplain
+  realistis. ⚠️ Password demo di produksi — ganti setelah masa demo.
+- Semua idempotent (ON CONFLICT DO NOTHING; holidays via konflik kolom date);
+  validasi di silayur_test dulu (integritas FK, total sale = sum subtotal,
+  status komplain = history terakhir, idempotensi) lalu produksi — semua lolos;
+  app sudah menyajikan data (smoke test login dewi.cs → API komplain).
+- Tanpa perubahan schema/app code → tanpa build/restart; gerbang: lint 0 error,
+  **72/72 test pass**.
+
+Pembaruan sebelumnya: **17 Agustus 2026** — poles drawer menu mobile (opsi A:
 pertahankan drawer off-canvas, fokus aksesibilitas + swipe + lebar responsif):
 - **Komponen bersama baru**: `MobileDrawer` (aside + tombol tutup + backdrop
   dengan ARIA dialog saat terbuka) dan `MobileMenuButton` (hamburger dengan

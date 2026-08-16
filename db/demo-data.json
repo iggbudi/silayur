@@ -176,6 +176,81 @@
         { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 },
         { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 4 }
       ]
+    },
+    {
+      "id": "demo-sale-d4-01",
+      "dayOffset": -4,
+      "seq": 1,
+      "timeWib": "09:10",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Rombongan keluarga pagi",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-d4-02",
+      "dayOffset": -4,
+      "seq": 2,
+      "timeWib": "10:35",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 1 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 2 }
+      ]
+    },
+    {
+      "id": "demo-sale-d4-03",
+      "dayOffset": -4,
+      "seq": 3,
+      "timeWib": "14:05",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Wisatawan rombongan",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 3 }
+      ]
+    },
+    {
+      "id": "demo-sale-d3-01",
+      "dayOffset": -3,
+      "seq": 1,
+      "timeWib": "08:50",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 2 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 1 }
+      ]
+    },
+    {
+      "id": "demo-sale-d3-02",
+      "dayOffset": -3,
+      "seq": 2,
+      "timeWib": "11:20",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "Kunjungan sekolah",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 4 }
+      ]
+    },
+    {
+      "id": "demo-sale-d3-03",
+      "dayOffset": -3,
+      "seq": 3,
+      "timeWib": "15:30",
+      "soldBy": "siti-tiket",
+      "status": "completed",
+      "notes": "",
+      "items": [
+        { "ticketProductId": "ticket-adult", "productName": "Tiket Masuk Dewasa", "visitorCategory": "adult", "unitPrice": 15000, "quantity": 1 },
+        { "ticketProductId": "ticket-child", "productName": "Tiket Masuk Anak", "visitorCategory": "child", "unitPrice": 10000, "quantity": 3 }
+      ]
     }
   ],
   "revenues": [
@@ -273,5 +348,151 @@
       "openedBy": "manajer-operasional",
       "status": "open"
     }
+  ],
+
+  "complaints": [
+    {
+      "id": "demo-complaint-d2-01",
+      "dayOffset": -2,
+      "timeWib": "10:30",
+      "title": "Toilet area pintu masuk kotor",
+      "description": "Pengunjung melaporkan toilet pria di dekat pintu masuk belum dibersihkan dan berbau.",
+      "category": "Umum",
+      "priority": "low",
+      "status": "resolved",
+      "reportedBy": "dewi-cs",
+      "history": [
+        { "fromStatus": null, "toStatus": "open", "timeWib": "10:30", "changedBy": "dewi-cs", "note": "Komplain diterima di loket" },
+        { "fromStatus": "open", "toStatus": "assigned", "timeWib": "10:42", "changedBy": "ratna-supervisor", "note": "Ditugaskan ke tim kebersihan" },
+        { "fromStatus": "assigned", "toStatus": "processing", "timeWib": "10:50", "changedBy": "agus-lapangan", "note": "Pembersihan dimulai" },
+        { "fromStatus": "processing", "toStatus": "resolved", "timeWib": "12:15", "changedBy": "agus-lapangan", "note": "Toilet dibersihkan dan disterilkan" }
+      ]
+    },
+    {
+      "id": "demo-complaint-d1-01",
+      "dayOffset": -1,
+      "timeWib": "09:15",
+      "title": "Antrean wahana Playground terlalu lama",
+      "description": "Orang tua mengeluh antrean wahana perosotan lebih dari 30 menit tanpa informasi waktu tunggu.",
+      "category": "Playground",
+      "priority": "medium",
+      "status": "reopened",
+      "reportedBy": "dewi-cs",
+      "history": [
+        { "fromStatus": null, "toStatus": "open", "timeWib": "09:15", "changedBy": "dewi-cs", "note": "Komplain diterima" },
+        { "fromStatus": "open", "toStatus": "assigned", "timeWib": "09:30", "changedBy": "ratna-supervisor", "note": "Ditugaskan ke staff wahana" },
+        { "fromStatus": "assigned", "toStatus": "processing", "timeWib": "09:40", "changedBy": "agus-lapangan", "note": "Menambah pembatas antrean" },
+        { "fromStatus": "processing", "toStatus": "resolved", "timeWib": "13:00", "changedBy": "agus-lapangan", "note": "Antrean terurai, info waktu tunggu dipasang" },
+        { "fromStatus": "resolved", "toStatus": "reopened", "timeWib": "15:20", "changedBy": "dewi-cs", "note": "Keluhan serupa muncul lagi saat jam ramai" }
+      ]
+    },
+    {
+      "id": "demo-complaint-d1-02",
+      "dayOffset": -1,
+      "timeWib": "15:40",
+      "title": "Area parkir penuh saat jam pulang",
+      "description": "Pengunjung kesulitan keluar karena kendaraan menumpuk di pintu keluar parkir.",
+      "category": "Area Parkir",
+      "priority": "medium",
+      "status": "processing",
+      "reportedBy": "dewi-cs",
+      "history": [
+        { "fromStatus": null, "toStatus": "open", "timeWib": "15:40", "changedBy": "dewi-cs", "note": "Komplain diterima" },
+        { "fromStatus": "open", "toStatus": "assigned", "timeWib": "15:52", "changedBy": "ratna-supervisor", "note": "Ditugaskan ke koordinator parkir" },
+        { "fromStatus": "assigned", "toStatus": "processing", "timeWib": "16:05", "changedBy": "agus-lapangan", "note": "Pembukaan jalur keluar tambahan" }
+      ]
+    },
+    {
+      "id": "demo-complaint-today-01",
+      "dayOffset": 0,
+      "timeWib": "08:50",
+      "title": "Bau klorin kolam renang menyengat",
+      "description": "Pengunjung pagi melaporkan bau klorin sangat menyengat di sekitar kolam renang.",
+      "category": "Kolam Renang",
+      "priority": "high",
+      "status": "open",
+      "reportedBy": "dewi-cs",
+      "history": [
+        { "fromStatus": null, "toStatus": "open", "timeWib": "08:50", "changedBy": "dewi-cs", "note": "Komplain diterima, prioritas tinggi" }
+      ]
+    },
+    {
+      "id": "demo-complaint-today-02",
+      "dayOffset": 0,
+      "timeWib": "10:05",
+      "title": "Kursi pengunjung rusak di area bermain",
+      "description": "Beberapa kursi plastik di dekat Playground retak dan berpotensi membahayakan pengunjung.",
+      "category": "Playground",
+      "priority": "medium",
+      "status": "assigned",
+      "reportedBy": "dewi-cs",
+      "history": [
+        { "fromStatus": null, "toStatus": "open", "timeWib": "10:05", "changedBy": "dewi-cs", "note": "Komplain diterima" },
+        { "fromStatus": "open", "toStatus": "assigned", "timeWib": "10:15", "changedBy": "ratna-supervisor", "note": "Ditugaskan ke staff fasilitas" }
+      ]
+    }
+  ],
+
+  "facilityStatus": [
+    { "id": "demo-fac-today-pool", "dayOffset": 0, "timeWib": "08:55", "facilityId": "facility-pool", "status": "needs_attention", "note": "Bau klorin menyengat; cek dosis dan pompa sirkulasi", "recordedBy": "agus-lapangan" },
+    { "id": "demo-fac-today-playground", "dayOffset": 0, "timeWib": "08:40", "facilityId": "facility-playground", "status": "operational", "note": "", "recordedBy": "agus-lapangan" },
+    { "id": "demo-fac-today-parking", "dayOffset": 0, "timeWib": "08:20", "facilityId": "facility-parking", "status": "operational", "note": "Parkir pagi lancar", "recordedBy": "agus-lapangan" },
+    { "id": "demo-fac-d1-pool", "dayOffset": -1, "timeWib": "08:30", "facilityId": "facility-pool", "status": "operational", "note": "", "recordedBy": "agus-lapangan" },
+    { "id": "demo-fac-d1-playground", "dayOffset": -1, "timeWib": "09:30", "facilityId": "facility-playground", "status": "needs_attention", "note": "Perosotan goyang, dikencangkan siang hari", "recordedBy": "agus-lapangan" },
+    { "id": "demo-fac-d1-parking", "dayOffset": -1, "timeWib": "08:15", "facilityId": "facility-parking", "status": "operational", "note": "", "recordedBy": "agus-lapangan" }
+  ],
+
+  "operationsChecklist": [
+    { "id": "demo-ops-today-loket", "dayOffset": 0, "timeWib": "07:50", "checklistId": "task-buka-loket", "done": true, "note": "", "recordedBy": "siti-tiket" },
+    { "id": "demo-ops-today-bersih", "dayOffset": 0, "timeWib": "07:55", "checklistId": "task-buka-bersih", "done": true, "note": "", "recordedBy": "agus-lapangan" },
+    { "id": "demo-ops-today-wahana", "dayOffset": 0, "timeWib": "08:05", "checklistId": "task-buka-wahana", "done": true, "note": "Playground siap, kolam masih dicek", "recordedBy": "agus-lapangan" },
+    { "id": "demo-ops-d1-loket", "dayOffset": -1, "timeWib": "07:45", "checklistId": "task-buka-loket", "done": true, "note": "", "recordedBy": "siti-tiket" },
+    { "id": "demo-ops-d1-bersih", "dayOffset": -1, "timeWib": "07:50", "checklistId": "task-buka-bersih", "done": true, "note": "", "recordedBy": "agus-lapangan" },
+    { "id": "demo-ops-d1-wahana", "dayOffset": -1, "timeWib": "08:00", "checklistId": "task-buka-wahana", "done": true, "note": "", "recordedBy": "agus-lapangan" },
+    { "id": "demo-ops-d1-rapi", "dayOffset": -1, "timeWib": "16:15", "checklistId": "task-tutup-rapi", "done": true, "note": "", "recordedBy": "manajer-operasional" },
+    { "id": "demo-ops-d1-kunci", "dayOffset": -1, "timeWib": "16:28", "checklistId": "task-tutup-kunci", "done": true, "note": "", "recordedBy": "manajer-operasional" },
+    { "id": "demo-ops-d1-setor", "dayOffset": -1, "timeWib": "16:35", "checklistId": "task-tutup-setor", "done": true, "note": "Setoran lengkap ke kasir", "recordedBy": "manajer-operasional" }
+  ],
+
+  "scheduleShifts": [
+    { "id": "demo-shift-d2-budi", "dayOffset": -2, "employeeId": "emp-budi", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-siti", "dayOffset": -2, "employeeId": "emp-siti", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-andi", "dayOffset": -2, "employeeId": "emp-andi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-maya", "dayOffset": -2, "employeeId": "emp-maya", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-dedi", "dayOffset": -2, "employeeId": "emp-dedi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-rina", "dayOffset": -2, "employeeId": "emp-rina", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d2-fajar", "dayOffset": -2, "employeeId": "emp-fajar", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-budi", "dayOffset": -1, "employeeId": "emp-budi", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-siti", "dayOffset": -1, "employeeId": "emp-siti", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-andi", "dayOffset": -1, "employeeId": "emp-andi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-maya", "dayOffset": -1, "employeeId": "emp-maya", "shift": "morning", "status": "izin", "notes": "Cuti keluarga" },
+    { "id": "demo-shift-d1-dedi", "dayOffset": -1, "employeeId": "emp-dedi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-rina", "dayOffset": -1, "employeeId": "emp-rina", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-d1-fajar", "dayOffset": -1, "employeeId": "emp-fajar", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-budi", "dayOffset": 0, "employeeId": "emp-budi", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-siti", "dayOffset": 0, "employeeId": "emp-siti", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-andi", "dayOffset": 0, "employeeId": "emp-andi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-maya", "dayOffset": 0, "employeeId": "emp-maya", "shift": "morning", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-dedi", "dayOffset": 0, "employeeId": "emp-dedi", "shift": "evening", "status": "hadir", "notes": "" },
+    { "id": "demo-shift-today-rina", "dayOffset": 0, "employeeId": "emp-rina", "shift": "morning", "status": "tidak_hadir", "notes": "Tidak hadir tanpa kabar" },
+    { "id": "demo-shift-today-fajar", "dayOffset": 0, "employeeId": "emp-fajar", "shift": "evening", "status": "libur", "notes": "Jadwal libur mingguan" }
+  ],
+
+  "picAssignments": [
+    { "id": "demo-pic-today-budi", "dayOffset": 0, "employeeId": "emp-budi", "area": "Operasional", "task": "Koordinasi buka taman dan pengawasan lapangan" },
+    { "id": "demo-pic-today-siti", "dayOffset": 0, "employeeId": "emp-siti", "area": "Tiket", "task": "Pimpin kasir loket dan setoran" },
+    { "id": "demo-pic-today-andi", "dayOffset": 0, "employeeId": "emp-andi", "area": "Fasilitas", "task": "Awasi pemeriksaan pompa kolam renang" },
+    { "id": "demo-pic-today-maya", "dayOffset": 0, "employeeId": "emp-maya", "area": "Kebersihan", "task": "Piket toilet dan area makan" },
+    { "id": "demo-pic-today-dedi", "dayOffset": 0, "employeeId": "emp-dedi", "area": "Parkir", "task": "Atur parkir pagi dan jalur keluar" },
+    { "id": "demo-pic-d1-budi", "dayOffset": -1, "employeeId": "emp-budi", "area": "Operasional", "task": "Supervisi operasional harian" },
+    { "id": "demo-pic-d1-siti", "dayOffset": -1, "employeeId": "emp-siti", "area": "Tiket", "task": "Kasir utama dan rekap setoran" },
+    { "id": "demo-pic-d1-andi", "dayOffset": -1, "employeeId": "emp-andi", "area": "Fasilitas", "task": "Perbaikan perosotan Playground" },
+    { "id": "demo-pic-d1-rina", "dayOffset": -1, "employeeId": "emp-rina", "area": "Kebersihan", "task": "Piket area pintu masuk" },
+    { "id": "demo-pic-d1-dedi", "dayOffset": -1, "employeeId": "emp-dedi", "area": "Parkir", "task": "Parkir siang dan pengaturan keluar" }
+  ],
+
+  "holidays": [
+    { "id": "demo-holiday-2026-08-17", "dayOffset": 1, "name": "Hari Kemerdekaan RI" },
+    { "id": "demo-holiday-2026-08-20", "dayOffset": 4, "name": "Hari Raya Keagamaan (contoh demo)" }
   ]
 }
