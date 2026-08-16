@@ -17,6 +17,9 @@
 > menu **Penjualan** di sidebar dan fitur **Master Tiket & Tarif** dari
 > `/pengaturan`.
 >
+> **Gunakan [`docs/DEPLOY-VPS-UBUNTU.md`](DEPLOY-VPS-UBUNTU.md)** sebagai panduan
+> deploy produksi yang aktif (Node + PostgreSQL + systemd + reverse proxy TLS).
+>
 > **Status saat dokumen ini ditulis (29 Juli 2026)**:
 > - Kode UI sudah selesai & tervalidasi lokal (type-check ✅, lint ✅, 6/6 test ✅)
 > - DB schema CP11 (master tiket) sudah ter-apply ke Turso target (lihat `progress.md`)

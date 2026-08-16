@@ -960,4 +960,10 @@ dihapus/dinetralkan:
   di bagian atas: perintah `turso ...` dan env `TURSO_*` tidak berlaku,
   gunakan `npm run db:*` dengan `DATABASE_URL`. Isi dokumen dipertahankan
   sebagai catatan historis.
+- Referensi "ChatGPT Sites tooling" / domain `.chatgpt.site` / `.openai/hosting.json`
+  dihapus dari docs (README, AGENTS, progress, runbook) dan diganti dengan model
+  deploy: publish `git push` ke GitHub + owner deploy di server sendiri.
+- Runbook baru `docs/DEPLOY-VPS-UBUNTU.md` ditambahkan (+ contoh unit systemd
+  `scripts/systemd/digitama.service`): Node >=22.13, PostgreSQL, systemd,
+  reverse proxy TLS (Caddy/Nginx+certbot), firewall, dan alur update/rollback.
 - ADR dan dokumen PLAN historis tidak diubah (rekaman keputusan/riwayat).

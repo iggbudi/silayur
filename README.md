@@ -93,6 +93,10 @@ produksi dilakukan oleh **owner di server sendiri** (bukan ChatGPT Sites
 tooling). Siapkan migration dan konfigurasi password database target sebelum
 menerbitkan versi baru.
 
+> Gubernur langkah deploy di VPS Ubuntu: lihat
+> **[`docs/DEPLOY-VPS-UBUNTU.md`](./docs/DEPLOY-VPS-UBUNTU.md)** (Node +
+> PostgreSQL + systemd + reverse proxy TLS).
+
 ### Menjalankan di lokal (database file)
 
 ```bash
@@ -113,6 +117,7 @@ mendukung semua fitur. Login demo: `admin.resepsionis` / `SilayurLocal-2026!`
 - [`AGENTS.md`](./AGENTS.md) — pedoman kerja agent: workflow sprint, aturan kode & keamanan.
 - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — filosofi & struktur organisasi kode.
 - [`docs/PLAN-PERBAIKAN.md`](./docs/PLAN-PERBAIKAN.md) — rencana perbaikan hasil audit & statusnya.
+- [`docs/DEPLOY-VPS-UBUNTU.md`](./docs/DEPLOY-VPS-UBUNTU.md) — runbook deploy ke VPS Ubuntu (Node + Postgres + systemd + TLS).
 - [`docs/folder-map.md`](./docs/folder-map.md) — visual map folder & slice.
 - [`docs/adr/0001-hybrid-layered-with-co-location.md`](./docs/adr/0001-hybrid-layered-with-co-location.md) — keputusan arsitektur (ADR).
 - [`app/slices/MANIFEST.md`](./app/slices/MANIFEST.md) — manifest 6 slice domain.
