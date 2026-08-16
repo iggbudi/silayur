@@ -5,6 +5,7 @@ import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
+import { SidebarFooter } from "../components/sidebar-footer";
 import { SessionGate } from "../components/session-gate";
 import { fetchRemoteConfig } from "../lib/config-api";
 import { todayIsoDate } from "../../shared/date";
@@ -34,7 +35,7 @@ const currency = new Intl.NumberFormat("id-ID", {
 });
 
 export default function KeuanganPage() {
-  const { session, ready: authReady } = useSession();
+  const { session, ready: authReady, logout } = useSession();
   const {
     open: mobileMenuOpen,
     close: closeMobileMenu,
@@ -245,13 +246,13 @@ export default function KeuanganPage() {
           active="keuangan"
           onNavigate={closeMobileMenu}
         />
-        <div className="sidebar-footer">
-          <div className="avatar">{session.user.name.slice(0, 2).toUpperCase()}</div>
-          <div>
-            <strong>{session.user.name}</strong>
-            <small>{session.role?.label ?? session.user.role}</small>
-          </div>
-        </div>
+        <SidebarFooter
+          name={session.user.name}
+          roleLabel={session.role?.label ?? session.user.role}
+          onLogout={() => {
+            void logout();
+          }}
+        />
       </aside>
 
       <section className="workspace finance-workspace">

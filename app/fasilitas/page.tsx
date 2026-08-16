@@ -5,6 +5,7 @@ import { useSession } from "../hooks/use-session";
 import { useMobileSidebar } from "../hooks/use-mobile-sidebar";
 import { Brand } from "../components/brand";
 import { SidebarNavigation } from "../components/sidebar-navigation";
+import { SidebarFooter } from "../components/sidebar-footer";
 import { SessionGate } from "../components/session-gate";
 import { todayIsoDate } from "../../shared/date";
 import {
@@ -25,7 +26,7 @@ const statusLabel: Record<FacilityStatusValue, string> = {
 const numberFormat = new Intl.NumberFormat("id-ID");
 
 export default function FacilitiesPage() {
-  const { session, ready: authReady } = useSession();
+  const { session, ready: authReady, logout } = useSession();
   const {
     open: mobileMenuOpen,
     close: closeMobileMenu,
@@ -124,15 +125,13 @@ export default function FacilitiesPage() {
           active="facilities"
           onNavigate={closeMobileMenu}
         />
-        <div className="sidebar-footer">
-          <div className="sidebar-avatar" aria-hidden="true">
-            {session.user.name.slice(0, 1).toUpperCase()}
-          </div>
-          <div className="sidebar-user">
-            <span className="sidebar-name">{session.user.name}</span>
-            <span className="sidebar-role">{session.user.role}</span>
-          </div>
-        </div>
+        <SidebarFooter
+          name={session.user.name}
+          roleLabel={session.role?.label ?? session.user.role}
+          onLogout={() => {
+            void logout();
+          }}
+        />
       </aside>
 
       <section className="workspace facility-workspace">
